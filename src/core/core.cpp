@@ -34,6 +34,7 @@ bool initilaizeCore(std::vector <std::string> * args) {
     } catch (std::runtime_error e) {
         errdie("unable to initialize function provider map", e.what());
     }
+    return true;
 }
 
 bool registerFuncProvider(FuncProvider* prov) {
