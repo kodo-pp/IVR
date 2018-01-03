@@ -1,4 +1,5 @@
 #include <core/core.hpp>
+#include <graphics/graphics.hpp>
 #include <functional>
 #include <vector>
 #include <string>
@@ -20,6 +21,7 @@ int main(int argc, char** argv) {
     std::cout << "Initializing core" << std::endl;
     std::cout.flush();
     initilaizeCore(args);
+    initializeGraphics(args);
     std::cout << "Initialized core" << std::endl;
     std::cout.flush();
     delete args;
