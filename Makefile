@@ -25,15 +25,23 @@ CXXFLAGS+=$(INCLUDES)
 
 # ----------------------------------------------------------------------------
 
-.PHONY: all clean run ee bee
+.PHONY: all clean run ee bee doc
 
 all: $(EXECNAME)
 
 clean:
 	$(RM) -fv $(OBJS) $(EXECNAME)
 
+cleandoc:
+	$(RM) -frv doxygen-out
+
+cleanall: clean cleandoc
+
 run: $(EXECNAME)
 	./$(EXECNAME)
+
+doc: doxygen-config.txt
+	doxygen doxygen-config.txt
 
 # Debug .PHONY targets
 ee: clean run
