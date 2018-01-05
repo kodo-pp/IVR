@@ -32,8 +32,7 @@ bool initializeGraphics(std::vector <std::string> * args) {
         return false;
     }
 
-    std::function <struct FuncResult * (const std::vector <void *> &)> handlerFunc(handlerGraphicsCreateObject);
-    FuncProvider* prov = new FuncProvider("graphics.createObject", handlerFunc);
+    FuncProvider* prov = new FuncProvider("graphics.createObject", handlerGraphicsCreateObject);
     registerFuncProvider(prov);
 
 
@@ -64,7 +63,7 @@ bool initializeGraphics(std::vector <std::string> * args) {
     graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40), irr::core::vector3df(0,5,0));
 
     graphics::irrGuiEnvironment->drawAll();
-    graphics::irrSceneManager->drawAll(); 
+    graphics::irrSceneManager->drawAll();
     graphics::irrVideoDriver->endScene();
     sleep(3);
     graphics::irrDevice->drop();
