@@ -15,6 +15,8 @@ RM=rm
 OBJS=src/main.o \
 src/core/core.o \
 src/graphics/graphics.o \
+src/log/log.o \
+src/log/log_stream.o \
 
 
 SO_LIBS+=-lIrrlicht

@@ -5,10 +5,13 @@
 #include <string>
 #include <iostream>
 #include <cassert>
+#include <log/log.hpp>
+
+#include <unistd.h>
 
 struct FuncResult * testFunc(const std::vector <void *> & args) {
     assert(args.size() >= 1);
-    std::cout << "Test!!!" << std::endl;
+    // std::cout << "Test!!!" << std::endl;
     return (struct FuncResult *)args[0];
 }
 
@@ -18,36 +21,46 @@ int main(int argc, char** argv) {
         args->at(i) = argv[i];
     }
 
-    std::cout << "Initializing core" << std::endl;
-    std::cout.flush();
+    std::function <const char *()> a = [](){
+        return "NANI?";
+    };
+    // std::cout << "a(): " << a() << std::endl;
+
+    getLogStream() << "test 1" << lssNewline;
+    sleep(5);
+    getLogStream() << "test 2\n";
+    sleep(5);
+    getLogStream() << "test finished" << lssNewline;
+    // std::cout << "Initializing core" << std::endl;
+    // std::cout.flush();
     initilaizeCore(args);
     initializeGraphics(args);
-    std::cout << "Initialized core" << std::endl;
-    std::cout.flush();
+    // std::cout << "Initialized core" << std::endl;
+    // std::cout.flush();
     delete args;
 
-    std::cout << "Registering some FuncProvider" << std::endl;
+    // std::cout << "Registering some FuncProvider" << std::endl;
     FuncProvider* prov = new FuncProvider("testCommand", testFunc);
     bool success = registerFuncProvider(prov);
     if (!success) {
-        std::cout << "Failed" << std::endl;
+        // std::cout << "Failed" << std::endl;
         return 1;
     }
-    std::cout << "Success" << std::endl;
+    // std::cout << "Success" << std::endl;
 
-    std::cout << "Calling command 'testCommand'" << std::endl;
+    // std::cout << "Calling command 'testCommand'" << std::endl;
     std::vector <void *> callArgs;
     callArgs.push_back((void *)1234567);
     FuncProvider* remoteProv = getFuncProvider("testCommand");
     assert(remoteProv != nullptr);
     struct FuncResult * retval = (*remoteProv)(callArgs);
-    std::cout << "retval = " << (size_t)(void *)retval << std::endl;
+    // std::cout << "retval = " << (size_t)(void *)retval << std::endl;
     assert((void *)retval == (void *)1234567);
-    std::cout << "OK" << std::endl;
+    // std::cout << "OK" << std::endl;
 
     // TODO: разрегистрировать перед удалением
     delete prov;
 
-    std::cout << "Exiting" << std::endl;
+    // std::cout << "Exiting" << std::endl;
     return 0;
 }
