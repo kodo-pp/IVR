@@ -6,11 +6,14 @@
 #include <functional>
 #include <cassert>
 
+
 enum LogStreamSpecial {
     lssNewline,
     lssFlush,
     lssBeginLine
 };
+
+#define log(data) getLogStream() << data << lssNewline
 
 /**
  * Класс, представляющий поток для ведения логов

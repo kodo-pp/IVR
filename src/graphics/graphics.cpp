@@ -66,6 +66,16 @@ bool initializeGraphics(std::vector <std::string> * args) {
     graphics::irrSceneManager->drawAll();
     graphics::irrVideoDriver->endScene();
     sleep(3);
+    graphics::irrVideoDriver->beginScene(true, // Неясно, что это
+        true, // Неясно, что это
+        irr::video::SColor(255, 100, 101, 140)); // Какой-то цвет, возможно, цвет фона (ARGB)
+
+    graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40), irr::core::vector3df(0,5,0));
+
+    graphics::irrGuiEnvironment->drawAll();
+    graphics::irrSceneManager->drawAll();
+    graphics::irrVideoDriver->endScene();
+    sleep(3);
     graphics::irrDevice->drop();
 
     // Конец теста
