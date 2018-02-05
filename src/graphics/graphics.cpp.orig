@@ -12,12 +12,12 @@
  * Отдельное пространство имён для изоляции
  */
 namespace graphics {
-    irr::IrrlichtDevice * irrDevice = nullptr;
-    irr::video::IVideoDriver * irrVideoDriver = nullptr;
-    irr::scene::ISceneManager * irrSceneManager = nullptr;
-    irr::gui::IGUIEnvironment * irrGuiEnvironment = nullptr;
-    std::vector < std::pair <irr::scene::ISceneNode *,
-        irr::scene::IAnimatedMesh *> > graphicalObjects;
+irr::IrrlichtDevice * irrDevice = nullptr;
+irr::video::IVideoDriver * irrVideoDriver = nullptr;
+irr::scene::ISceneManager * irrSceneManager = nullptr;
+irr::gui::IGUIEnvironment * irrGuiEnvironment = nullptr;
+std::vector < std::pair <irr::scene::ISceneNode *,
+    irr::scene::IAnimatedMesh *> > graphicalObjects;
 }
 
 static bool initializeIrrlicht(std::vector <std::string> * args);

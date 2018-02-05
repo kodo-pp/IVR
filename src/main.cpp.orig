@@ -20,6 +20,10 @@ int main(int argc, char** argv) {
     for (int i = 0; i < argc; ++i) {
         args->at(i) = argv[i];
     }
+
+    std::function <const char *()> a = [](){
+        return "NANI?";
+    };
     // std::cout << "a(): " << a() << std::endl;
 
     getLogStream() << "test 1" << lssNewline;
