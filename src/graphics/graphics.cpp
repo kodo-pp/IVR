@@ -12,12 +12,12 @@
  * Отдельное пространство имён для изоляции
  */
 namespace graphics {
-    irr::IrrlichtDevice * irrDevice = nullptr;
-    irr::video::IVideoDriver * irrVideoDriver = nullptr;
-    irr::scene::ISceneManager * irrSceneManager = nullptr;
-    irr::gui::IGUIEnvironment * irrGuiEnvironment = nullptr;
-    std::vector < std::pair <irr::scene::ISceneNode *,
-        irr::scene::IAnimatedMesh *> > graphicalObjects;
+irr::IrrlichtDevice * irrDevice = nullptr;
+irr::video::IVideoDriver * irrVideoDriver = nullptr;
+irr::scene::ISceneManager * irrSceneManager = nullptr;
+irr::gui::IGUIEnvironment * irrGuiEnvironment = nullptr;
+std::vector < std::pair <irr::scene::ISceneNode *,
+    irr::scene::IAnimatedMesh *> > graphicalObjects;
 }
 
 static bool initializeIrrlicht(std::vector <std::string> * args);
@@ -67,8 +67,8 @@ bool initializeGraphics(std::vector <std::string> * args) {
     graphics::irrVideoDriver->endScene();
     sleep(3);
     graphics::irrVideoDriver->beginScene(true, // Неясно, что это
-        true, // Неясно, что это
-        irr::video::SColor(255, 100, 101, 140)); // Какой-то цвет, возможно, цвет фона (ARGB)
+                                         true, // Неясно, что это
+                                         irr::video::SColor(255, 100, 101, 140)); // Какой-то цвет, возможно, цвет фона (ARGB)
 
     graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40), irr::core::vector3df(0,5,0));
 
