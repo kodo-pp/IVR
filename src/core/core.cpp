@@ -11,10 +11,8 @@ std::map <std::string, FuncProvider*> funcProviderMap;
 
 // Реализация функций класса FuncProvider
 FuncProvider::FuncProvider() { }
-FuncProvider::FuncProvider(std::string _command, std::function <struct FuncResult * (const std::vector <void *> &) > _func) {
-    command = _command;
-    func = _func;
-}
+FuncProvider::FuncProvider(std::string _command, std::function <struct FuncResult * (
+                               const std::vector <void *> &) > _func) : command(_command), func(_func) { }
 FuncProvider::~FuncProvider() { }
 
 struct FuncResult * FuncProvider::operator()(const std::vector <void *> & args) {
@@ -31,7 +29,7 @@ static void initializeFuncProviderMap(std::vector <std::string> * args) { }
 bool initilaizeCore(std::vector <std::string> * args) {
     try {
         initializeFuncProviderMap(args);
-    } catch (std::runtime_error e) {
+    } catch (std::runtime_error& e) {
         errdie("unable to initialize function provider map", e.what());
     }
     return true;
@@ -49,7 +47,7 @@ bool registerFuncProvider(FuncProvider* prov) {
 
         funcProviderMap.insert(make_pair(command, prov));
         return true;
-    } catch (std::runtime_error e) {
+    } catch (std::runtime_error& e) {
         errdie("unable to register function provider", e.what());
     } catch (...) {
         errdie("unable to register function provider", "unknown error");

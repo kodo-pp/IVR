@@ -23,10 +23,11 @@ public:
 };
 */
 
-LogStream::LogStream(const std::function <std::string()> & _lineBeginnerFunc) {
+LogStream::LogStream(const std::function <std::string()> & _lineBeginnerFunc) :
+    lineBeginnerFunc(_lineBeginnerFunc),
+    doBeginLine(true) {
+
     //std::cout << "Constr 1" << std::endl;
-    doBeginLine = true;
-    lineBeginnerFunc = _lineBeginnerFunc;
     streamsVec.push_back(&std::cerr);
 
     const char logFileName[] = "IVR.log"; // COMBAK: Заменить на значение, заданное аргументами командной строки
@@ -35,19 +36,21 @@ LogStream::LogStream(const std::function <std::string()> & _lineBeginnerFunc) {
     streamsVec.push_back(logFile);
 }
 
-LogStream::LogStream(std::ostream * stream, const std::function <std::string()> & _lineBeginnerFunc) {
+LogStream::LogStream(std::ostream * stream, const std::function <std::string()> & _lineBeginnerFunc) :
+    lineBeginnerFunc(_lineBeginnerFunc),
+    doBeginLine(true) {
+
     //std::cout << "Constr 2" << std::endl;
-    doBeginLine = true;
-    lineBeginnerFunc = _lineBeginnerFunc;
     assert (stream != nullptr);
     streamsVec.push_back(stream);
 }
 
-LogStream::LogStream(const std::vector <std::ostream *> & _streamsVec, const std::function <std::string()> & _lineBeginnerFunc) {
+LogStream::LogStream(const std::vector <std::ostream *> & _streamsVec,
+                     const std::function <std::string()> & _lineBeginnerFunc) :
+    lineBeginnerFunc(_lineBeginnerFunc),
+    doBeginLine(true),
+    streamsVec(_streamsVec) {
     //std::cout << "Constr 3" << std::endl;
-    doBeginLine = true;
-    lineBeginnerFunc = _lineBeginnerFunc;
-    streamsVec = _streamsVec;
 }
 
 LogStream::~LogStream() {}

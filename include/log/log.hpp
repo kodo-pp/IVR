@@ -23,13 +23,13 @@ enum LogStreamSpecial {
  */
 class LogStream {
 protected:
-    std::vector <std::ostream *> streamsVec;
     std::function <std::string()> lineBeginnerFunc;
     bool doBeginLine;
+    std::vector <std::ostream *> streamsVec;
 public:
-    LogStream(const std::function <std::string()> &);
-    LogStream(std::ostream *, const std::function <std::string()> &);
-    LogStream(const std::vector <std::ostream *> &, const std::function <std::string()> &);
+    explicit LogStream(const std::function <std::string()> &);
+    explicit LogStream(std::ostream *, const std::function <std::string()> &);
+    explicit LogStream(const std::vector <std::ostream *> &, const std::function <std::string()> &);
 
     virtual ~LogStream();
 

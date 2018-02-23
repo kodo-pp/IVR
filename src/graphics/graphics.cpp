@@ -50,7 +50,7 @@ bool initializeGraphics(std::vector <std::string> * args) {
     std::vector <void *> callArgs;
     std::string modelName = "/home/kodopp/monkey.obj";
     callArgs.push_back(&modelName);
-    struct FuncResult * res = (*testProv)(callArgs);
+    struct FuncResult * res = (*testProv)(callArgs); // COMBAK: добовить что-то вроде __attribute__((unused))
 
     graphics::irrGuiEnvironment->addStaticText(L"Hello world!", // Сам текст
             irr::core::rect <irr::s32> (10, 10, 260, 260), // Положение текста на экране (прямоугольная область)
