@@ -182,7 +182,7 @@ m2=0..*</panel_attributes>
 World(config: Map&lt;String, String&gt;)
 +writeChunks(Map&lt;ChunkId, Chunk&gt;)
 +getChunks(List&lt;ChunkId&gt;): Map&lt;ChunkId, Chunk&gt;
-+getChunksRange(position: PlayerPosition, range: float)</panel_attributes>
++getChunksRange(position: GamePosition, range: float)</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
@@ -320,7 +320,7 @@ m2=1..1</panel_attributes>
 +seed: int
 --
 +generate(chunks: List&lt;ChunkId&gt;): Map&lt;ChunkId, Chunk&gt;
-+generateRange(position: PlayerPosition, range: float): Map&lt;ChunkId, Chunk&gt;</panel_attributes>
++generateRange(position: GamePosition, range: float): Map&lt;ChunkId, Chunk&gt;</panel_attributes>
     <additional_attributes/>
   </element>
   <element>

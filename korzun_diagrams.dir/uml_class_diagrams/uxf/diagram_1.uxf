@@ -27,7 +27,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>540</x>
+      <x>400</x>
       <y>30</y>
       <w>180</w>
       <h>70</h>
@@ -42,7 +42,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>1160</x>
+      <x>1020</x>
       <y>900</y>
       <w>530</w>
       <h>130</h>
@@ -61,7 +61,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>300</x>
+      <x>160</x>
       <y>290</y>
       <w>290</w>
       <h>120</h>
@@ -79,7 +79,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>700</x>
+      <x>560</x>
       <y>300</y>
       <w>260</w>
       <h>100</h>
@@ -96,7 +96,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>670</x>
+      <x>530</x>
       <y>90</y>
       <w>180</w>
       <h>230</h>
@@ -107,7 +107,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>440</x>
+      <x>300</x>
       <y>90</y>
       <w>160</w>
       <h>220</h>
@@ -118,7 +118,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>290</x>
+      <x>150</x>
       <y>400</y>
       <w>170</w>
       <h>230</h>
@@ -129,7 +129,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>710</x>
+      <x>570</x>
       <y>50</y>
       <w>200</w>
       <h>40</h>
@@ -142,7 +142,7 @@ m2=0..*</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>1010</x>
+      <x>870</x>
       <y>950</y>
       <w>170</w>
       <h>40</h>
@@ -155,7 +155,7 @@ m2=0..*</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>200</x>
+      <x>60</x>
       <y>610</y>
       <w>210</w>
       <h>30</h>
@@ -166,7 +166,7 @@ m2=0..*</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>540</x>
+      <x>400</x>
       <y>570</y>
       <w>640</w>
       <h>120</h>
@@ -178,13 +178,13 @@ m2=0..*</panel_attributes>
 +path: String
 --
 +getChunks(List&lt;ChunkId&gt;): Map&lt;ChunkId, Chunk&gt;
-+getChunksRange(pos: PlayerPosition, range: float): Map &lt;ChunkId, Chunk&gt;</panel_attributes>
++getChunksRange(pos: GamePosition, range: float): Map &lt;ChunkId, Chunk&gt;</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>1370</x>
+      <x>1230</x>
       <y>550</y>
       <w>340</w>
       <h>130</h>
@@ -203,7 +203,7 @@ m2=0..*</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>510</x>
+      <x>370</x>
       <y>900</y>
       <w>230</w>
       <h>70</h>
@@ -218,7 +218,7 @@ m2=0..*</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>1170</x>
+      <x>1030</x>
       <y>610</y>
       <w>220</w>
       <h>40</h>
@@ -231,7 +231,7 @@ m2=1..1</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>630</x>
+      <x>490</x>
       <y>680</y>
       <w>60</w>
       <h>240</h>
@@ -244,7 +244,7 @@ m2=0..*</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>400</x>
+      <x>260</x>
       <y>610</y>
       <w>160</w>
       <h>40</h>
@@ -257,7 +257,7 @@ m2=0..*</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>780</x>
+      <x>640</x>
       <y>900</y>
       <w>240</w>
       <h>130</h>
@@ -277,7 +277,7 @@ m2=0..*</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>890</x>
+      <x>750</x>
       <y>680</y>
       <w>60</w>
       <h>240</h>
@@ -290,7 +290,7 @@ m2=1..1</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>890</x>
+      <x>750</x>
       <y>0</y>
       <w>310</w>
       <h>100</h>
@@ -307,7 +307,7 @@ m2=1..1</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>150</x>
+      <x>10</x>
       <y>900</y>
       <w>220</w>
       <h>60</h>
@@ -321,7 +321,7 @@ m2=1..1</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>360</x>
+      <x>220</x>
       <y>920</y>
       <w>170</w>
       <h>40</h>
@@ -334,7 +334,7 @@ m2=0..*</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>240</x>
+      <x>100</x>
       <y>950</y>
       <w>710</w>
       <h>150</h>
