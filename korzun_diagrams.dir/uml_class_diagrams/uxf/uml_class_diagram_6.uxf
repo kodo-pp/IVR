@@ -28,7 +28,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>UMLClass</id>
     <coordinates>
       <x>880</x>
-      <y>100</y>
+      <y>170</y>
       <w>310</w>
       <h>100</h>
     </coordinates>
@@ -45,7 +45,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>UMLClass</id>
     <coordinates>
       <x>590</x>
-      <y>130</y>
+      <y>200</y>
       <w>180</w>
       <h>70</h>
     </coordinates>
@@ -60,7 +60,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>UMLClass</id>
     <coordinates>
       <x>890</x>
-      <y>650</y>
+      <y>720</y>
       <w>530</w>
       <h>130</h>
     </coordinates>
@@ -79,7 +79,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>UMLClass</id>
     <coordinates>
       <x>230</x>
-      <y>400</y>
+      <y>470</y>
       <w>290</w>
       <h>140</h>
     </coordinates>
@@ -97,7 +97,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>UMLClass</id>
     <coordinates>
       <x>840</x>
-      <y>400</y>
+      <y>470</y>
       <w>200</w>
       <h>80</h>
     </coordinates>
@@ -113,7 +113,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>UMLClass</id>
     <coordinates>
       <x>550</x>
-      <y>400</y>
+      <y>470</y>
       <w>260</w>
       <h>120</h>
     </coordinates>
@@ -130,7 +130,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>UMLClass</id>
     <coordinates>
       <x>560</x>
-      <y>650</y>
+      <y>720</y>
       <w>240</w>
       <h>130</h>
     </coordinates>
@@ -150,7 +150,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>Relation</id>
     <coordinates>
       <x>670</x>
-      <y>190</y>
+      <y>260</y>
       <w>30</w>
       <h>230</h>
     </coordinates>
@@ -161,7 +161,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>UMLClass</id>
     <coordinates>
       <x>270</x>
-      <y>700</y>
+      <y>770</y>
       <w>210</w>
       <h>30</h>
     </coordinates>
@@ -172,7 +172,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>Relation</id>
     <coordinates>
       <x>370</x>
-      <y>190</y>
+      <y>260</y>
       <w>270</w>
       <h>230</h>
     </coordinates>
@@ -183,7 +183,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>Relation</id>
     <coordinates>
       <x>360</x>
-      <y>530</y>
+      <y>600</y>
       <w>30</w>
       <h>190</h>
     </coordinates>
@@ -194,7 +194,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>Relation</id>
     <coordinates>
       <x>730</x>
-      <y>190</y>
+      <y>260</y>
       <w>220</w>
       <h>230</h>
     </coordinates>
@@ -205,7 +205,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>Relation</id>
     <coordinates>
       <x>760</x>
-      <y>150</y>
+      <y>220</y>
       <w>140</w>
       <h>30</h>
     </coordinates>
@@ -216,7 +216,7 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>Relation</id>
     <coordinates>
       <x>470</x>
-      <y>700</y>
+      <y>770</y>
       <w>110</w>
       <h>30</h>
     </coordinates>
@@ -227,11 +227,23 @@ fontfamily=Monospaced //possible: SansSerif,Serif,Monospaced
     <id>Relation</id>
     <coordinates>
       <x>790</x>
-      <y>700</y>
+      <y>770</y>
       <w>120</w>
       <h>30</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;&lt;&lt;&lt;-</panel_attributes>
     <additional_attributes>100.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>580</x>
+      <y>60</y>
+      <w>210</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>bg=white
+Сценарий 6: Удаление модуля</panel_attributes>
+    <additional_attributes/>
   </element>
 </diagram>
