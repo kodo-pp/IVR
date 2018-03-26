@@ -3,8 +3,10 @@
 #include <ctime>
 #include <cstdio>
 #include <cstdlib>
+#include <locale>
+#include <codecvt>
 
-static LogStream logStream([]() -> std::string {
+static LogStream logStream([]() -> std::wstring {
 
     auto stl_now = std::chrono::system_clock::now();
     time_t c_now = std::chrono::system_clock::to_time_t(stl_now);
@@ -22,7 +24,23 @@ static LogStream logStream([]() -> std::string {
              tm_now->tm_hour,
              tm_now->tm_min,
              tm_now->tm_sec);
-    std::string stlLineBegin = lineBegin;
+
+    std::wstring stlLineBegin;
+
+    // Now wee need to convert narrow string to wide one.
+    // lineBegin is guaranted to contain only ASCII characters, so conversion is simple
+    // WARNING: use of pointers is unsafe
+    {
+        char* tmp = lineBegin;
+        while (*tmp != (char)0) {
+            stlLineBegin.push_back(*tmp);
+            ++tmp;
+        }
+    }
+
+    //std::wstring_convert < std::codecvt_utf8_utf16 <wchar_t> > converter;
+    //stlLineBegin = converter.from_bytes(lineBegin);
+
     free(lineBegin);
 
     delete tm_now;

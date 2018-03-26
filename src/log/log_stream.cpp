@@ -5,38 +5,38 @@
 /*
 class LogStream {
 protected:
-    std::vector <std::ostream *> streamsVec;
-    std::function <std::string()> lineBeginnerFunc;
+    std::vector <std::wostream *> streamsVec;
+    std::function <std::wstring()> lineBeginnerFunc;
 public:
-    LogStream(const std::function <std::string()> &);
-    LogStream(const std::ostream *, const std::function <std::string()> &);
-    LogStream(const std::vector <std::ostream *> &, const std::function <std::string()> &);
+    LogStream(const std::function <std::wstring()> &);
+    LogStream(const std::wostream *, const std::function <std::wstring()> &);
+    LogStream(const std::vector <std::wostream *> &, const std::function <std::wstring()> &);
 
     virtual ~LogStream();
 
-    std::vector <std::ostream *> & getStreamsVec();
+    std::vector <std::wostream *> & getStreamsVec();
 
-    std::function <std::string()> getLineBeginnerFunc();
-    void setLineBeginnerFunc(const std::function <std::string()> &);
+    std::function <std::wstring()> getLineBeginnerFunc();
+    void setLineBeginnerFunc(const std::function <std::wstring()> &);
 
     void flush();
 };
 */
 
-LogStream::LogStream(const std::function <std::string()> & _lineBeginnerFunc) :
+LogStream::LogStream(const std::function <std::wstring()> & _lineBeginnerFunc) :
     lineBeginnerFunc(_lineBeginnerFunc),
     doBeginLine(true) {
 
     //std::cout << "Constr 1" << std::endl;
-    streamsVec.push_back(&std::cerr);
+    streamsVec.push_back(&std::wcerr);
 
     const char logFileName[] = "IVR.log"; // COMBAK: Заменить на значение, заданное аргументами командной строки
-    std::ostream * logFile = new std::ofstream(logFileName, std::ios::out); // COMBAK: добавить MemoryManager
+    std::wostream * logFile = new std::wofstream(logFileName, std::ios::out); // COMBAK: добавить MemoryManager
     //assert(logFile->is_open()); // COMBAK: Бросать std::runtime_error или делать что-то подобное
     streamsVec.push_back(logFile);
 }
 
-LogStream::LogStream(std::ostream * stream, const std::function <std::string()> & _lineBeginnerFunc) :
+LogStream::LogStream(std::wostream * stream, const std::function <std::wstring()> & _lineBeginnerFunc) :
     lineBeginnerFunc(_lineBeginnerFunc),
     doBeginLine(true) {
 
@@ -45,8 +45,8 @@ LogStream::LogStream(std::ostream * stream, const std::function <std::string()> 
     streamsVec.push_back(stream);
 }
 
-LogStream::LogStream(const std::vector <std::ostream *> & _streamsVec,
-                     const std::function <std::string()> & _lineBeginnerFunc) :
+LogStream::LogStream(const std::vector <std::wostream *> & _streamsVec,
+                     const std::function <std::wstring()> & _lineBeginnerFunc) :
     lineBeginnerFunc(_lineBeginnerFunc),
     doBeginLine(true),
     streamsVec(_streamsVec) {
@@ -55,16 +55,16 @@ LogStream::LogStream(const std::vector <std::ostream *> & _streamsVec,
 
 LogStream::~LogStream() {}
 
-std::vector <std::ostream *> & LogStream::getStreamsVec() {
-    std::vector <std::ostream *> & streamsVecLink = streamsVec;
+std::vector <std::wostream *> & LogStream::getStreamsVec() {
+    std::vector <std::wostream *> & streamsVecLink = streamsVec;
     return streamsVecLink;
 }
 
-std::function <std::string()> LogStream::getLineBeginnerFunc() {
+std::function <std::wstring()> LogStream::getLineBeginnerFunc() {
     return lineBeginnerFunc;
 }
 
-void LogStream::setLineBeginnerFunc(const std::function <std::string()> & _lineBeginnerFunc) {
+void LogStream::setLineBeginnerFunc(const std::function <std::wstring()> & _lineBeginnerFunc) {
     lineBeginnerFunc = _lineBeginnerFunc;
 }
 

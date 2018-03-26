@@ -18,21 +18,24 @@ struct FuncResult * testFunc(const std::vector <void *> & args) {
 }
 
 int main(int argc, char** argv) {
+    std::setlocale(LC_CTYPE, "");
+    std::wcerr << std::boolalpha;
+    std::wcout << std::boolalpha;
     std::vector <std::string> * args = new std::vector< std::string > (argc);
     for (int i = 0; i < argc; ++i) {
         args->at(i) = argv[i];
     }
-    getLogStream() << "test 1" << lssNewline;
+    getLogStream() << L"test 1" << lssNewline;
     sleep(2);
-    getLogStream() << "test 2\n";
+    getLogStream() << L"test 2\n";
     sleep(2);
-    getLogStream() << "test finished" << lssNewline;
+    getLogStream() << L"test finished" << lssNewline;
 
 
 
     //getLogStream() << "Тест менеджера памяти" << lssNewline;
     //getLogStream() <<  << lssNewLine;
-    log("Тест менеджера памяти");
+    log(L"Тест менеджера памяти");
     //log("a) ")
     void * p1 = malloc(100);
 
@@ -48,12 +51,12 @@ int main(int argc, char** argv) {
     log(memoryManager.isTracking(p1));
     log(memoryManager.freePtr(p1));
     log(memoryManager.isTracking(p1));
-    log("<Должен бqыть Segmentation Fault (Оказывается, не должен)> ");
+    log(L"<Должен бqыть Segmentation Fault (Оказывается, не должен)> ");
     int * ip1 = (int *)p1;
     int b = *ip1; // Должен быть Segfault (Оказывается, не должен)
-    log("<Но будет>");
+    log(L"<Но будет>");
     kill(getpid(), SIGSEGV);
-    log("Тест завершён"); // Этого не должно случиться
+    log(L"Тест завершён"); // Этого не должно случиться
 
 
     initilaizeCore(args);
