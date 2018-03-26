@@ -36,3 +36,4 @@ main
 # TODO: Возможно, стоит убрать из .gitignore
 doxygen-out/
 *.swp
+IVR.log
