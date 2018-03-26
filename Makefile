@@ -3,7 +3,9 @@ EXECNAME?=main
 VERSION:=$(shell cat version.txt)
 
 CXXFLAGS+=-Wall -Wextra -std=gnu++11 -pedantic -fPIC -D_PROJECT_VERSION=$(VERSION) \
--Wno-unused
+-Wno-unused-variable -Wno-unused-parameter -Wno-nested-anon-types
+
+CXX=c++
 
 LIBS+=
 
