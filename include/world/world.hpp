@@ -4,8 +4,8 @@
 #include <string>
 #include <set>
 #include <map>
-#include <world/chunk.hpp> // TODO
-#include <geometry/game_position.hpp> // TODO
+#include <world/chunk.hpp>
+#include <geometry/game_position.hpp>
 
 using WorldId = std::wstring;
 
@@ -15,8 +15,8 @@ using WorldId = std::wstring;
 
 class World {
 public:
-    World(std::wstring name, WorldId id, std::wstring path);
-    std::map <ChunkId, Chunk> getChunks(std::set <ChunkId> chunks);
+    World(std::wstring _name, WorldId _id, std::wstring _path);
+    std::map <ChunkId, Chunk> getChunks(std::set <ChunkId> _chunks);
     std::map <ChunkId, Chunk> getChunksRange(GamePosition pos, double range);
 
     std::wstring getName();

@@ -11,7 +11,7 @@
  */
 class GuiElement {
 public:
-    GuiElement() { }
+    GuiElement() = delete;
     virtual void draw() = 0;
 protected:
     Rectangle <double> position;
@@ -24,7 +24,7 @@ protected:
  */
 class GuiItemList : public GuiElement {
 public:
-    void draw();
+    void draw() override;
     std::wstring getSelectedItem();
     size_t getSelectedItemIndex();
 protected:
@@ -33,7 +33,7 @@ protected:
 
 class GuiButton : public GuiElement {
 public:
-    void draw();
+    void draw() override;
     std::wstring getText();
 };
 
