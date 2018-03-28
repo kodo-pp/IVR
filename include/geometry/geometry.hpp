@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <utility>
+#include <stdexcept>
 
 template <typename T>
 class Rectangle {
@@ -30,8 +31,76 @@ public:
     T width() {
         return right - left;
     }
-// TODO: see below
-#error TODO: getters and setters
+
+    T getLeft() {
+        return left;
+    }
+    void setLeft(T newLeft) {
+        if (newLeft > right) {
+            throw std::range_error("The new 'left' value should not be greater than the current 'right' value");
+        }
+        left = newLeft;
+    }
+
+    T getRight() {
+        return right;
+    }
+    void setRight(T newRight) {
+        if (newRight < left) {
+            throw std::range_error("The new 'right' value should not be less than the current 'left' value");
+        }
+        right = newRight;
+    }
+
+    T getTop() {
+        return top;
+    }
+    void setTop(T newTop) {
+        if (newTop > right) {
+            throw std::range_error("The new 'top' value should not be greater than the current 'bottom' value");
+        }
+        top = newTop;
+    }
+
+    T getBottom() {
+        return bottom;
+    }
+    void setBottom(T newBottom) {
+        if (newBottom < top) {
+            throw std::range_error("The new 'bottom' value should not be less than the current 'top' value");
+        }
+        bottom = newBottom;
+    }
+
+    void setLeftRight(T newLeft, T newRight) {
+        if (newLeft > newRight) {
+            throw std::range_error("The new 'left' value should not be greater than the new 'right' value");
+        }
+        left = newLeft;
+        right = newRight;
+    }
+
+    void setTopBottom(T newTop, T newBottom) {
+        if (newTop > newBottom) {
+            throw std::range_error("The new 'top' value should not be greater than the new 'bottom' value");
+        }
+        top = newTop;
+        bottom = newBottom;
+    }
+
+    Rectangle& operator =(const Rectangle& other) {
+        left = other.left;
+        right = other.right;
+        top = other.top;
+        bottom = other.bottom;
+    }
+
+    Rectangle& operator =(const Rectangle&& other) {
+        left = other.left;
+        right = other.right;
+        top = other.top;
+        bottom = other.bottom;
+    }
 
 protected:
     T left;
