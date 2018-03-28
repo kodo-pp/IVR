@@ -8,6 +8,9 @@
 #include <geometry/game_position.hpp>
 
 using WorldId = std::wstring;
+using Seed = uint32_t; // XXX: maybe change to something different
+
+// COMBAK: think about the logic of saving/loading chunks
 
 /**
  * Represents the game world.
@@ -16,8 +19,11 @@ using WorldId = std::wstring;
 class World {
 public:
     World(std::wstring _name, WorldId _id, std::wstring _path);
+
     std::map <ChunkId, Chunk> getChunks(std::set <ChunkId> _chunks);
     std::map <ChunkId, Chunk> getChunksRange(GamePosition pos, double range);
+
+    void writeChunks(std::map <ChunkId, Chunk> _chunks); // XXX: not sure what should it do
 
     std::wstring getName();
     void setName(std::wstring newName);
@@ -30,9 +36,11 @@ public:
     void setPath(std::wstring newPath);
 
 protected:
+    Seed seed;
     std::wstring name;
     WorldId id;
     std::wstring path;
+    std::map <ChunkId, Chunk> chunks;
 };
 
 #endif /* end of include guard: WORLD_WORLD_HPP */

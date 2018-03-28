@@ -1,7 +1,10 @@
 #ifndef GAME_GAME_OBJECT_HPP
 #define GAME_GAME_OBJECT_HPP
 
+#include <string>
 #include <geometry/game_position.hpp>
+
+using GameObjectId = uint64_t;
 
 /**
  * An class which represents an abstract game object
@@ -18,6 +21,8 @@ public:
 
 protected:
     GamePosition position;
+    GameObjectId id;
+    ModuleId providingModule;
 };
 
 #endif /* end of include guard: GAME_GAME_OBJECT_HPP */
