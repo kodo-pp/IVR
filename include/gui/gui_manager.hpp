@@ -1,7 +1,7 @@
 #ifndef GUI_GUI_MANAGER_HPP
 #define GUI_GUI_MANAGER_HPP
 
-#include <vector>
+#include <set>
 #include <gui/gui.hpp>
 
 /**
@@ -11,8 +11,7 @@
  */
 class GuiManager {
 public:
-    // TODO: change std::vector to something like std::set
-    GuiManager(std::vector <GuiElement> _guiElements);
+    GuiManager(std::unordered_set <GuiElement> _guiElements);
     virtual ~GuiManager();
 
     void drawAll();
@@ -20,7 +19,7 @@ public:
     void removeGuiElement(GuiElement elem);
 
 protected:
-    vector <GuiElement> guiElements;
+    std::unordered_set <GuiElement> guiElements;
 };
 
 // The only instance of this class

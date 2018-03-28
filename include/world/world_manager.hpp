@@ -1,6 +1,7 @@
 #ifndef WORLD_WORLD_MANAGER_HPP
 #define WORLD_WORLD_MANAGER_HPP
 
+#include <map>
 #include <world/world.hpp>
 
 // WARNING: in UML class diagram this class is named WorldsManager (with 's')
@@ -14,18 +15,17 @@
  */
 class WorldManager {
 public:
-    // TODO: change std::vector to std::map <WorldId, World>
-    WorldManager(std::vector <World> _worlds);
+    WorldManager(std::unordered_map <WorldId, World> _worlds);
 
     WorldId getWorldId(std::wstring worldName);
-    std::vector <World> & getWorldList();
+    std::unordered_map <WorldId, World> & getWorldList();
     World& getWorld(WorldId id);
 
     void deleteWorld(WorldId id);
     void addWorld(WorldId world);
 
 protected:
-    std::vector <World> worlds;
+    std::unordered_map <WorldId, World> worlds;
 };
 
 extern WorldManager worldManager;

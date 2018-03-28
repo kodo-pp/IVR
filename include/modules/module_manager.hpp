@@ -2,7 +2,7 @@
 #define MODULES_MODULE_MANAGER_HPP
 
 #include <string>
-#include <vector>
+#include <map>
 #include <modules/module.hpp>
 
 // TEMP: maybe we should change it to something more complex
@@ -16,8 +16,7 @@ using ModuleMessage = std::wstring;
 
 class ModuleManager {
 public:
-    // TODO: change std::vector to std::map <ModuleId, Module>
-    ModuleManager(std::vector <Module> _modules);
+    ModuleManager(std::unordered_map <ModuleId, Module> _modules);
     void loadModule(ModuleId id);
     void unloadModule(ModuleId id);
     void deleteModule(ModuleId id);
@@ -26,7 +25,7 @@ public:
     ModuleMessage recieveModuleMessage(ModuleId moduleId, ModuleMessage message);
 
 protected:
-    std::vector <Module> modules;
+    std::unordered_map <ModuleId, Module> modules;
 };
 
 extern ModuleManager moduleManager;
