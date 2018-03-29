@@ -32,7 +32,7 @@ bool initializeGraphics(std::vector <std::string> * args) {
         return false;
     }
 
-    FuncProvider* prov = new FuncProvider("graphics.createObject", handlerGraphicsCreateObject);
+    FuncProvider* prov = new FuncProvider(L"graphics.createObject", handlerGraphicsCreateObject);
     registerFuncProvider(prov);
 
 
@@ -42,7 +42,7 @@ bool initializeGraphics(std::vector <std::string> * args) {
     // ***********************************************************************
     // Тест, потом убрать
 
-    FuncProvider* testProv = getFuncProvider("graphics.createObject");
+    FuncProvider* testProv = getFuncProvider(L"graphics.createObject");
     if (!testProv) {
         throw std::runtime_error("FuncProvider for graphics.createObject was not found");
     }

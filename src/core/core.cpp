@@ -7,11 +7,11 @@
 #include <misc/die.hpp>
 #include <iostream>
 
-std::map <std::string, FuncProvider*> funcProviderMap;
+std::map <std::wstring, FuncProvider*> funcProviderMap;
 
 // Реализация функций класса FuncProvider
 FuncProvider::FuncProvider() { }
-FuncProvider::FuncProvider(std::string _command, std::function <struct FuncResult * (
+FuncProvider::FuncProvider(std::wstring _command, std::function <struct FuncResult * (
                                const std::vector <void *> &) > _func) : command(_command), func(_func) { }
 FuncProvider::~FuncProvider() { }
 
@@ -19,13 +19,15 @@ struct FuncResult * FuncProvider::operator()(const std::vector <void *> & args) 
     return func(args);
 }
 
-std::string FuncProvider::getCommand() {
+std::wstring FuncProvider::getCommand() {
     return command;
 }
 
 // Функции инициализации
+// [no utf-8]
 static void initializeFuncProviderMap(std::vector <std::string> * args) { }
 
+// [no utf-8]
 bool initilaizeCore(std::vector <std::string> * args) {
     try {
         initializeFuncProviderMap(args);
@@ -40,7 +42,7 @@ bool registerFuncProvider(FuncProvider* prov) {
         return false;
     }
     try {
-        std::string command = prov->getCommand();
+        std::wstring command = prov->getCommand();
         if (funcProviderMap.count(command) > 0) {
             return false;
         }
@@ -54,7 +56,7 @@ bool registerFuncProvider(FuncProvider* prov) {
     }
 }
 
-FuncProvider* getFuncProvider(const std::string & command) {
+FuncProvider* getFuncProvider(const std::wstring & command) {
     if (funcProviderMap.count(command) == 0) {
         return nullptr;
     } else {

@@ -1,16 +1,16 @@
-#include <core/core.hpp>
-#include <graphics/graphics.hpp>
-#include <functional>
+#include <iostream>
 #include <vector>
 #include <string>
-#include <iostream>
+#include <functional>
 #include <cassert>
-#include <log/log.hpp>
-#include <core/memory_manager.hpp>
 #include <cstdlib>
 #include <unistd.h>
-#include <sys/types.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <core/core.hpp>
+#include <core/memory_manager.hpp>
+#include <graphics/graphics.hpp>
+#include <log/log.hpp>
 
 struct FuncResult * testFunc(const std::vector <void *> & args) {
     assert(args.size() >= 1);
@@ -21,20 +21,20 @@ int main(int argc, char** argv) {
     std::setlocale(LC_CTYPE, "");
     std::wcerr << std::boolalpha;
     std::wcout << std::boolalpha;
-    std::vector <std::string> * args = new std::vector< std::string > (argc);
+    // [no utf-8]
+    std::vector <std::string> * args = new std::vector <std::string> (argc);
     for (int i = 0; i < argc; ++i) {
         args->at(i) = argv[i];
     }
+
     getLogStream() << L"test 1" << lssNewline;
     sleep(2);
     getLogStream() << L"test 2\n";
     sleep(2);
-    getLogStream() << L"test finished" << lssNewline;
+    getLogStream() << lssBeginLine << L"test finished" << lssNewline;
 
+    log(L"ModBox version " << _PROJECT_VERSION);
 
-
-    //getLogStream() << "Тест менеджера памяти" << lssNewline;
-    //getLogStream() <<  << lssNewLine;
     log(L"Тест менеджера памяти");
     //log("a) ")
     void * p1 = malloc(100);
@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     log(memoryManager.isTracking(p1));
     log(memoryManager.freePtr(p1));
     log(memoryManager.isTracking(p1));
-    log(L"<Должен бqыть Segmentation Fault (Оказывается, не должен)> ");
+    log(L"<Должен быть Segmentation Fault (Оказывается, не должен)> ");
     int * ip1 = (int *)p1;
     int b = *ip1; // Должен быть Segfault (Оказывается, не должен)
     log(L"<Но будет>");
@@ -63,14 +63,14 @@ int main(int argc, char** argv) {
     initializeGraphics(args);
     delete args;
 
-    FuncProvider* prov = new FuncProvider("testCommand", testFunc);
+    FuncProvider* prov = new FuncProvider(L"testCommand", testFunc);
     bool success = registerFuncProvider(prov);
     if (!success) {
         return 1;
     }
     std::vector <void *> callArgs;
     callArgs.push_back((void *)1234567);
-    FuncProvider* remoteProv = getFuncProvider("testCommand");
+    FuncProvider* remoteProv = getFuncProvider(L"testCommand");
     assert(remoteProv != nullptr);
     struct FuncResult * retval = (*remoteProv)(callArgs);
     assert((void *)retval == (void *)1234567);
