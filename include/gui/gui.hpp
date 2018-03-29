@@ -66,4 +66,14 @@ protected:
     std::vector <std::wstring> buttons;
 };
 
+// WARNING: there is some difference to class diagram
+class GuiConfigWindow {
+public:
+    GuiConfigWindow(std::map <std::wstring, ConfigType> _config);
+
+    void draw() override;
+
+    std::map <std::wstring, std::wstring> getResult();
+};
+
 #endif /* end of include guard: GUI_GUI_HPP */

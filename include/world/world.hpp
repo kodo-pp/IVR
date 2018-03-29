@@ -18,7 +18,8 @@ using Seed = uint32_t; // XXX: maybe change to something different
 
 class World {
 public:
-    World(std::wstring _name, WorldId _id, std::wstring _path);
+    //World(std::wstring _name, WorldId _id, std::wstring _path, Seed seed);
+    World(std::map <std::wstring, std::wstring> config);
 
     std::map <ChunkId, Chunk> getChunks(std::set <ChunkId> _chunks);
     std::map <ChunkId, Chunk> getChunksRange(GamePosition pos, double range);
@@ -34,6 +35,8 @@ public:
 
     std::wstring getPath();
     void setPath(std::wstring newPath);
+
+    Seed getSeed();
 
 protected:
     Seed seed;
