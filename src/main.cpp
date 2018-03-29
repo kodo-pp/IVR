@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <core/core.hpp>
+#include <core/init.hpp>
 #include <core/memory_manager.hpp>
 #include <graphics/graphics.hpp>
 #include <log/log.hpp>
@@ -18,14 +19,13 @@ struct FuncResult * testFunc(const std::vector <void *> & args) {
 }
 
 int main(int argc, char** argv) {
-    std::setlocale(LC_CTYPE, "");
-    std::wcerr << std::boolalpha;
-    std::wcout << std::boolalpha;
     // [no utf-8]
     std::vector <std::string> * args = new std::vector <std::string> (argc);
     for (int i = 0; i < argc; ++i) {
         args->at(i) = argv[i];
     }
+    init(args);
+    delete args;
 
     getLogStream() << L"test 1" << lssNewline;
     sleep(2);
@@ -51,16 +51,13 @@ int main(int argc, char** argv) {
     log(memoryManager.isTracking(p1));
     log(memoryManager.freePtr(p1));
     log(memoryManager.isTracking(p1));
-    log(L"<Должен быть Segmentation Fault (Оказывается, не должен)> ");
-    int * ip1 = (int *)p1;
-    int b = *ip1; // Должен быть Segfault (Оказывается, не должен)
-    log(L"<Но будет>");
-    kill(getpid(), SIGSEGV);
+//    log(L"<Должен быть Segmentation Fault (Оказывается, не должен)> ");
+//    int * ip1 = (int *)p1;
+//    int b = *ip1; // Должен быть Segfault (Оказывается, не должен)
+//    log(L"<Но будет>");
+//    kill(getpid(), SIGSEGV);
     log(L"Тест завершён"); // Этого не должно случиться
 
-
-    initilaizeCore(args);
-    initializeGraphics(args);
     delete args;
 
     FuncProvider* prov = new FuncProvider(L"testCommand", testFunc);
