@@ -39,3 +39,4 @@ doxygen-out/
 IVR.log
 core.*
 build.log
+.build-cache

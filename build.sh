@@ -119,12 +119,27 @@ function build_file() {
         kill $$
     fi
 
+    if ! [ -d ".build-cache/$(dirname "$1")" ]; then
+        mkdir -p ".build-cache/$(dirname "$1")"
+    fi
+    if ! [ -d ".build-cache/$1" ]; then
+        touch ".build-cache/$1"
+    fi
+
     # Translate some_file_name.whatever -> some_file_name.o
     objname="$(echo "$i" | sed 's/[.][^.]*$/.o/g')"
 
     # It doesn't get printed but is appended to the 'objects' variable, see
     # this function invokation below
     echo "${objname}"
+
+    if (sha512sum "$1" | awk '{print $1}' | cmp - .build-cache/"$1" &>/dev/null) \
+            && [ ".${FORCE_REBUILD}" != ".yes" ] \
+            && [ -f "${objname}" ]; then
+        return 0
+    fi
+
+    sha512sum "$1" | awk '{print $1}' > .build-cache/"$1"
 
     # Determine which compiler should we use
     case $1 in
