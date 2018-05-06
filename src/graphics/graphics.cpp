@@ -3,11 +3,7 @@
 #include <irrlicht.h>
 #include <vector>
 #include <string>
-
 #include <unistd.h>
-
-using namespace irr;
-using namespace scene;
 
 /**
  * Глобальные переменные, хранящие необходимые объекты для работы с Irrlicht
@@ -39,7 +35,7 @@ bool initializeGraphics(std::vector <std::string> * args) {
     FuncProvider* prov = new FuncProvider(L"graphics.createObject", handlerGraphicsCreateObject);
     registerFuncProvider(prov);
 
-
+    /*
     // TODO: возможно, вынести код инициализации Irrlicht в отдельныю функцию
 
 
@@ -91,6 +87,7 @@ bool initializeGraphics(std::vector <std::string> * args) {
 
     // Конец теста
     // ***********************************************************************
+    */
     return true;
 }
 
@@ -129,7 +126,7 @@ static bool initializeIrrlicht(std::vector <std::string> * args) {
     return true;
 }
 
-ISceneNode* graphicsCreateObject(const std::string& meshFilename) {
+ISceneNode* graphicsCreateObject(const std::wstring& meshFilename) {
     // Load mesh from file
     scene::IAnimatedMesh* mesh = graphics::irrSceneManager->getMesh(meshFilename.c_str());
     if (!mesh) {
@@ -144,6 +141,22 @@ ISceneNode* graphicsCreateObject(const std::string& meshFilename) {
     }
 
     return node;
+}
+
+void graphicsDraw() {
+    graphics::irrVideoDriver->beginScene(true, // Неясно, что это
+                                         true, // Неясно, что это
+                                         irr::video::SColor(255, 100, 101, 140)); // Какой-то цвет, возможно, цвет фона (ARGB)
+
+    graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40), irr::core::vector3df(0,5,0));
+
+    graphics::irrGuiEnvironment->drawAll();
+    graphics::irrSceneManager->drawAll();
+    graphics::irrVideoDriver->endScene();
+}
+
+void graphicsMoveObject(ISceneNode* obj, double x, double y, double z) {
+    obj->setPosition(core::vector3df(x, y, z));
 }
 
 /**
@@ -174,7 +187,7 @@ struct FuncResult * handlerGraphicsCreateObject(const std::vector <void*> & args
         result->exitStatus = 1;
         return result;
     }
-    std::string *modelFileName = (std::string *)args.at(0);
+    std::wstring *modelFileName = (std::wstring *)args.at(0);
     if (!modelFileName) {
         result->data = nullptr;
         result->exitStatus = 1;
