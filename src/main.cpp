@@ -56,9 +56,9 @@ int main(int argc, char** argv) {
 //    int b = *ip1; // Должен быть Segfault (Оказывается, не должен)
 //    log(L"<Но будет>");
 //    kill(getpid(), SIGSEGV);
-    log(L"Тест завершён"); // Этого не должно случиться
+    log(L"Тест завершён");
 
-    delete args;
+    //delete args;
 
     FuncProvider* prov = new FuncProvider(L"testCommand", testFunc);
     bool success = registerFuncProvider(prov);
