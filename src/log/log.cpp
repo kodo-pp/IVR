@@ -1,4 +1,6 @@
 #include <log/log.hpp>
+#include <mutex>
+#include <atomic>
 #include <chrono>
 #include <ctime>
 #include <cstdio>
@@ -6,10 +8,24 @@
 #include <locale>
 #include <codecvt>
 
-static LogStream logStream([]() -> std::wstring {
+static std::mutex logMutex;
+static std::wstring cachedLineBegin;
+static std::atomic<time_t> prevTime(0);
 
+// OK, too lazy to cope with references, so let's pray and hope that compiler
+// will optimize it to move semantics
+static LogStream logStream([]() -> std::wstring {
     auto stl_now = std::chrono::system_clock::now();
     time_t c_now = std::chrono::system_clock::to_time_t(stl_now);
+
+    if (c_now == prevTime) {
+        logMutex.lock();
+        std::wstring copied = cachedLineBegin;
+        logMutex.unlock();
+        return copied;
+    }
+    prevTime = c_now;
+
     struct tm * tm_now = new struct tm;
     localtime_r(&c_now, tm_now);
     char* lineBegin;
@@ -38,10 +54,11 @@ static LogStream logStream([]() -> std::wstring {
         }
     }
 
-    //std::wstring_convert < std::codecvt_utf8_utf16 <wchar_t> > converter;
-    //stlLineBegin = converter.from_bytes(lineBegin);
-
     free(lineBegin);
+
+    logMutex.lock();
+    cachedLineBegin = stlLineBegin;
+    logMutex.unlock();
 
     delete tm_now;
     return stlLineBegin;
