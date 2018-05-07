@@ -7,13 +7,13 @@
 #include <unistd.h>
 
 void gameLoop() {
-    //ISceneNode* object = graphicsCreateObject(L"/home/kodopp/monkey.obj");
-    GameObject object(L"/home/kodopp/monkey.obj");
-    double elapsedTime = 0;
+    ISceneNode* object = graphicsCreateCube();
+    graphicsAddTexture(object, graphicsLoadTexture(L"/home/kodopp/a.png"));
+    double i = 0;
     while (true) {
-        object.setPosition(GamePosition(sin(elapsedTime) * 20, 0, 0));
+        graphicsMoveObject(object, sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20);
         graphicsDraw();
         usleep(10000);
-        elapsedTime += 0.01;
+        i += 0.01;
     }
 }

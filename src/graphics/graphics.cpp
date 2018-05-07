@@ -1,5 +1,7 @@
 #include <graphics/graphics.hpp>
 #include <core/core.hpp>
+#include <log/log.hpp>
+#include <iostream>
 #include <irrlicht.h>
 #include <vector>
 #include <string>
@@ -16,7 +18,6 @@ IrrlichtDevice * irrDevice = nullptr;
 video::IVideoDriver * irrVideoDriver = nullptr;
 scene::ISceneManager * irrSceneManager = nullptr;
 gui::IGUIEnvironment * irrGuiEnvironment = nullptr;
-std::vector < std::pair <scene::ISceneNode*, scene::IAnimatedMesh*> > graphicalObjects;
 
 }
 
@@ -136,9 +137,21 @@ ISceneNode* graphicsCreateObject(const std::wstring& meshFilename) {
     // Create a scene node with this mesh
     scene::ISceneNode* node = graphics::irrSceneManager->addAnimatedMeshSceneNode(mesh);
     if (!node) {
-        // TODO: maybe we need something like mesh->drop() ?
         return (ISceneNode*)nullptr;
     }
+
+    node->setMaterialFlag(EMF_LIGHTING, false);
+
+    return node;
+}
+
+ISceneNode* graphicsCreateCube() {
+    scene::ISceneNode* node = graphics::irrSceneManager->addCubeSceneNode();
+    if (!node) {
+        return (ISceneNode*)nullptr;
+    }
+
+    node->setMaterialFlag(EMF_LIGHTING, false);
 
     return node;
 }
@@ -156,13 +169,45 @@ void graphicsDraw() {
 }
 
 void graphicsMoveObject(ISceneNode* obj, double x, double y, double z) {
+    if (!obj) {
+        return;
+    }
     obj->setPosition(core::vector3df(x, y, z));
 }
 void graphicsMoveObject(ISceneNode* obj, core::vector3df pos) {
+    if (!obj) {
+        return;
+    }
     obj->setPosition(pos);
 }
 void graphicsMoveObject(ISceneNode* obj, GamePosition gp) {
+    if (!obj) {
+        return;
+    }
     obj->setPosition(gp.toIrrVector3df());
+}
+
+ITexture* graphicsLoadTexture(std::wstring textureFileName) {
+    log(L"loading texture: " << textureFileName);
+    ITexture* texture = graphics::irrVideoDriver->getTexture(textureFileName.c_str());
+    if (!texture) {
+        log(L"Loading texture failed");
+        return nullptr;
+    }
+    log(L"Texture loaded successfully");
+    return texture;
+}
+
+void graphicsAddTexture(ISceneNode* obj, ITexture* tex) {
+    log(L"Adding texture");
+    if (!obj || !tex) {
+        log(L"Adding texture failed");
+        return;
+    }
+    for (int i = 0; i < 1; ++i) {
+        obj->setMaterialTexture(i, tex);
+    }
+    log(L"Texture added successfully");
 }
 
 /**
