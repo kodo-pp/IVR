@@ -1,9 +1,13 @@
 #ifndef GAME_SOLID_OBJECT_HPP
 #define GAME_SOLID_OBJECT_HPP
 
+#include <game/game_object.hpp>
+#include <graphics/graphics.hpp>
+#include <vector>
+
 class SolidObjectPart : public GameObject {
 public:
-    SolidObjectPart() = delete;
+    SolidObjectPart();
 };
 
 // COMBAK: these properties should be statically linked to id, not to SolidObject
@@ -13,8 +17,7 @@ public:
 
 class SolidObject : public GameObject {
 public:
-    SolidObject() = delete;
-
+    SolidObject();
     bool isSeparable();
     std::vector <SolidObjectPart> & getParts();
 
@@ -22,7 +25,7 @@ protected:
     bool separable;
 
     // COMBAK [see above]: may cause performance issues and high RAM usage
-#warning possible performance issues here
+// #warning possible performance issues here
     std::vector <SolidObjectPart> parts;
 };
 

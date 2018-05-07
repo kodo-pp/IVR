@@ -6,6 +6,7 @@
 // enum is useless in this case as we should support any programming language,
 // which may be not listed in this enum
 using ModuleLanguage = std::wstring;
+using ModuleId = uint64_t;
 
 /**
  * Represents a module

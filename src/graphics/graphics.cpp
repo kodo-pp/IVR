@@ -158,6 +158,12 @@ void graphicsDraw() {
 void graphicsMoveObject(ISceneNode* obj, double x, double y, double z) {
     obj->setPosition(core::vector3df(x, y, z));
 }
+void graphicsMoveObject(ISceneNode* obj, core::vector3df pos) {
+    obj->setPosition(pos);
+}
+void graphicsMoveObject(ISceneNode* obj, GamePosition gp) {
+    obj->setPosition(gp.toIrrVector3df());
+}
 
 /**
  * Создаёт графический объект
