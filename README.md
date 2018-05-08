@@ -7,7 +7,7 @@
 ## Использованные библиотеки
 - Графический движок [Irlicht](https://irrlicht.sourceforge.net)
 
-- Библиотеки, использыемые Irrlicht (код Independent JPEG Group, libpng и zlib)
+- Библиотеки, использыемые Irrlicht (код Independent JPEG Group (jpeglib), libpng и zlib)
 
 ## Примечание по первому показу кода
 Всё в каталоге Project/, там же и файл 
