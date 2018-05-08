@@ -3,6 +3,9 @@
 
 #include <vector>
 #include <string>
+#include <atomic>
+
+extern std::atomic <bool> doWeNeedToShutDown;
 
 // [no utf-8]
 void init(std::vector <std::string> * args);

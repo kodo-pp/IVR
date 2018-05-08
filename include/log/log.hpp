@@ -5,7 +5,10 @@
 #include <string>
 #include <functional>
 #include <cassert>
+#include <mutex>
+#include <iostream>
 
+extern std::mutex logMutex;
 
 enum LogStreamSpecial {
     lssNewline,
@@ -13,7 +16,12 @@ enum LogStreamSpecial {
     lssBeginLine
 };
 
-#define log(data) getLogStream() << data << lssNewline
+#define log(data) \
+    do { \
+        logMutex.lock(); \
+        getLogStream() << data << lssNewline; \
+        logMutex.unlock(); \
+    } while (false)
 
 /**
  * Класс, представляющий поток для ведения логов

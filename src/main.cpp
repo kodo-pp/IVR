@@ -13,6 +13,8 @@
 #include <graphics/graphics.hpp>
 #include <log/log.hpp>
 #include <game/game_loop.hpp>
+#include <net/net.hpp>
+#include <core/destroy.hpp>
 
 struct FuncResult * testFunc(const std::vector <void *> & args) {
     assert(args.size() >= 1);
@@ -30,7 +32,11 @@ int main(int argc, char** argv) {
 
     log(L"ModBox version " << _PROJECT_VERSION);
 
+    createModuleListenerThread();
+
     gameLoop();
+
+    destroy();
 
     return 0;
 }

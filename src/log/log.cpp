@@ -8,7 +8,9 @@
 #include <locale>
 #include <codecvt>
 
-static std::mutex logMutex;
+static std::mutex lbfMutex;
+std::mutex logMutex;
+
 static std::wstring cachedLineBegin;
 static std::atomic<time_t> prevTime(0);
 
@@ -19,9 +21,9 @@ static LogStream logStream([]() -> std::wstring {
     time_t c_now = std::chrono::system_clock::to_time_t(stl_now);
 
     if (c_now == prevTime) {
-        logMutex.lock();
+        lbfMutex.lock();
         std::wstring copied = cachedLineBegin;
-        logMutex.unlock();
+        lbfMutex.unlock();
         return copied;
     }
     prevTime = c_now;
@@ -56,9 +58,9 @@ static LogStream logStream([]() -> std::wstring {
 
     free(lineBegin);
 
-    logMutex.lock();
+    lbfMutex.lock();
     cachedLineBegin = stlLineBegin;
-    logMutex.unlock();
+    lbfMutex.unlock();
 
     delete tm_now;
     return stlLineBegin;

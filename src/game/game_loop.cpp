@@ -1,6 +1,7 @@
 #include <game/game_loop.hpp>
 #include <game/solid_object.hpp>
 #include <graphics/graphics.hpp>
+#include <core/init.hpp>
 #include <log/log.hpp>
 #include <iostream>
 #include <string>
@@ -11,6 +12,9 @@ void gameLoop() {
     graphicsAddTexture(object, graphicsLoadTexture(L"/home/kodopp/a.png"));
     double i = 0;
     while (true) {
+        if (doWeNeedToShutDown) {
+            return;
+        }
         graphicsMoveObject(object, sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20);
         graphicsDraw();
         usleep(10000);

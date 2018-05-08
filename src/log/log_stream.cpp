@@ -1,27 +1,8 @@
 #include <log/log.hpp>
 #include <iostream>
 #include <fstream>
+#include <mutex>
 
-/*
-class LogStream {
-protected:
-    std::vector <std::wostream *> streamsVec;
-    std::function <std::wstring()> lineBeginnerFunc;
-public:
-    LogStream(const std::function <std::wstring()> &);
-    LogStream(const std::wostream *, const std::function <std::wstring()> &);
-    LogStream(const std::vector <std::wostream *> &, const std::function <std::wstring()> &);
-
-    virtual ~LogStream();
-
-    std::vector <std::wostream *> & getStreamsVec();
-
-    std::function <std::wstring()> getLineBeginnerFunc();
-    void setLineBeginnerFunc(const std::function <std::wstring()> &);
-
-    void flush();
-};
-*/
 
 LogStream::LogStream(const std::function <std::wstring()> & _lineBeginnerFunc) :
     lineBeginnerFunc(_lineBeginnerFunc),

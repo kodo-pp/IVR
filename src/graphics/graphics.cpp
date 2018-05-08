@@ -106,6 +106,7 @@ static bool initializeIrrlicht(std::vector <std::string> * args) {
         // TODO: добавить fallback-настройки
         return false;
     }
+    graphics::irrDevice->getLogger()->setLogLevel(irr::ELL_NONE);
 
     graphics::irrDevice->setWindowCaption(L"Test window"); // COMBAK
 
