@@ -37,3 +37,6 @@ main
 doxygen-out/
 *.swp
 IVR.log
+core.*
+build.log
+.build-cache

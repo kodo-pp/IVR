@@ -3,6 +3,9 @@
 
 #include <string>
 #include <geometry/game_position.hpp>
+#include <graphics/graphics.hpp>
+#include <modules/module.hpp>
+#include <string>
 
 using GameObjectId = uint64_t;
 
@@ -13,16 +16,21 @@ using GameObjectId = uint64_t;
  */
 class GameObject {
 public:
-    GameObject() = delete;
+    GameObject();
+    GameObject(std::wstring);
     virtual ~GameObject();
 
     GamePosition getPosition();
     void setPosition(GamePosition newPosition);
 
+    ISceneNode* sceneNode();
+
 protected:
     GamePosition position;
     GameObjectId id;
     ModuleId providingModule;
+
+    ISceneNode* _sceneNode;
 };
 
 #endif /* end of include guard: GAME_GAME_OBJECT_HPP */

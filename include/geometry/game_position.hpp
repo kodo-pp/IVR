@@ -7,29 +7,20 @@
  * The position is universal and can be used for player(s) or game objects.
  */
 
+#include <irrlicht.h>
+using namespace irr::core;
+
 class GamePosition {
 public:
-    GamePosition(double _x = 0.0, double _y = 0.0, double _z = 0.0):
-            x(_x), y(_y), z(_z) { }
+    GamePosition(double _x = 0.0, double _y = 0.0, double _z = 0.0);
     GamePosition(GamePosition& gamePosition); // copy c-tor
     GamePosition(GamePosition&& gamePosition); // move c-tor
 
-    // TODO: put this to game_position.cpp
-/*
-    bool operator ==(const GamePosition& other) {
-        return x == other.x && y == other.y && z == other.z;
-    }
-    bool operator ==(GamePosition&& other) {
-        return x == other.x && y == other.y && z == other.z;
-    }
+    vector3df toIrrVector3df();
 
-    bool operator !=(const GamePosition& other) {
-        return x != other.x || y != other.y || z != other.z;
-    }
-    bool operator !=(GamePosition&& other) {
-        return x != other.x || y != other.y || z != other.z;
-    }
-*/
+    GamePosition& operator=(const GamePosition& other);
+    GamePosition& operator=(GamePosition&& other);
+
     bool operator ==(const GamePosition& other);
     bool operator ==(GamePosition&& other);
 
