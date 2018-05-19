@@ -33,8 +33,8 @@ bool initializeGraphics(std::vector <std::string> * args) {
         return false;
     }
 
-    FuncProvider* prov = new FuncProvider(L"graphics.createObject", handlerGraphicsCreateObject);
-    registerFuncProvider(prov);
+    //FuncProvider* prov = new FuncProvider(L"graphics.createObject", handlerGraphicsCreateObject);
+    //registerFuncProvider(prov);
 
     /*
     // TODO: возможно, вынести код инициализации Irrlicht в отдельныю функцию

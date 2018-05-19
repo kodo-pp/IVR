@@ -7,11 +7,11 @@
 #include <misc/die.hpp>
 #include <iostream>
 
-std::map <std::wstring, FuncProvider*> funcProviderMap;
+std::map < std::string, std::pair <FuncProvider*, ArgsSpec> > funcProviderMap;
 
 // Реализация функций класса FuncProvider
 FuncProvider::FuncProvider() { }
-FuncProvider::FuncProvider(std::wstring _command, std::function <struct FuncResult * (
+FuncProvider::FuncProvider(std::string _command, std::function <struct FuncResult * (
                                const std::vector <void *> &) > _func) : command(_command), func(_func) { }
 FuncProvider::~FuncProvider() { }
 
@@ -19,7 +19,7 @@ struct FuncResult * FuncProvider::operator()(const std::vector <void *> & args) 
     return func(args);
 }
 
-std::wstring FuncProvider::getCommand() {
+std::string FuncProvider::getCommand() {
     return command;
 }
 
@@ -37,17 +37,17 @@ bool initilaizeCore(std::vector <std::string> * args) {
     return true;
 }
 
-bool registerFuncProvider(FuncProvider* prov) {
+bool registerFuncProvider(FuncProvider* prov, ArgsSpec spec) {
     if (prov == nullptr) {
         return false;
     }
     try {
-        std::wstring command = prov->getCommand();
+        std::string command = prov->getCommand();
         if (funcProviderMap.count(command) > 0) {
             return false;
         }
 
-        funcProviderMap.insert(make_pair(command, prov));
+        funcProviderMap.insert(std::make_pair(command, std::make_pair(prov, spec)));
         return true;
     } catch (std::runtime_error& e) {
         errdie("unable to register function provider", e.what());
@@ -56,10 +56,14 @@ bool registerFuncProvider(FuncProvider* prov) {
     }
 }
 
-FuncProvider* getFuncProvider(const std::wstring & command) {
+FuncProvider* getFuncProvider(const std::string & command) {
     if (funcProviderMap.count(command) == 0) {
         return nullptr;
     } else {
-        return funcProviderMap.at(command);
+        return funcProviderMap.at(command).first;
     }
+}
+
+ArgsSpec getArgsSpec(const std::string& command) {
+    return funcProviderMap.at(command).second;
 }

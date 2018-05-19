@@ -5,6 +5,8 @@
 #include <string>
 #include <functional>
 
+using ArgsSpec = std::string;
+
 struct FuncResult {
     void* data;
     int exitStatus;
@@ -13,19 +15,20 @@ struct FuncResult {
 class FuncProvider {
 public:
     FuncProvider();
-    FuncProvider(std::wstring, std::function <struct FuncResult * (const std::vector <void *> &)>);
-    std::wstring getCommand();
+    FuncProvider(std::string, std::function <struct FuncResult * (const std::vector <void *> &)>);
+    std::string getCommand();
     struct FuncResult * operator()(const std::vector <void *> &);
     ~FuncProvider();
 private:
-    std::wstring command;
+    std::string command;
     std::function <struct FuncResult * (const std::vector <void *> &)> func;
 };
 
 // [no utf-8]
 bool initilaizeCore(std::vector <std::string> *);
 
-bool registerFuncProvider(FuncProvider*);
-FuncProvider* getFuncProvider(const std::wstring&);
+bool registerFuncProvider(FuncProvider*, ArgsSpec);
+FuncProvider* getFuncProvider(const std::string&);
+ArgsSpec getArgsSpec(const std::string&);
 
 #endif /* end of include guard: CORE_CORE_HPP */
