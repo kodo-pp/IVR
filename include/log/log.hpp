@@ -63,6 +63,8 @@ LogStream & operator << (LogStream & logStream, T data) {
         if (logStream.getDoBeginLine()) {
             (*streamPtr) << logStream.getLineBeginnerFunc()();
         }
+    }
+    for (auto & streamPtr : streamsVec) {
         (*streamPtr) << data;
         logStream.beginLine(false);
     }
