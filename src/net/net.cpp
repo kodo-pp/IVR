@@ -117,9 +117,12 @@ static void moduleListenerThreadFunc() {
 static void moduleServerThreadFunc(int clientSocket) {
     log(L"Hi, I am thread with handle " << pthread_self());
     log(L"Let's say something to client!");
-    std::string message = "Hello world!\n";
-    send(clientSocket, message.c_str(), message.length(), 0);
+    std::string helloMessage = "Hello, our guest. You have 5 seconds to do nothing\n";
+    send(clientSocket, helloMessage.c_str(), helloMessage.length(), 0);
     log(L"Hello, our guest!");
+    sleep(5);
+    std::string goodbyeMessage = "Time is up. Goodbye\n";
+    send(clientSocket, goodbyeMessage.c_str(), goodbyeMessage.length(), 0);
     log(L"Bye-bye!");
     close(clientSocket);
     log(L"He's gone now...");
