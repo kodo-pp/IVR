@@ -1,5 +1,4 @@
-#ifndef MODULES_MODULE_MANAGER_HPP
-#define MODULES_MODULE_MANAGER_HPP
+#if false
 
 #include <string>
 #include <unordered_map>
@@ -31,17 +30,4 @@ protected:
     std::unordered_map <ModuleId, Module> modules;
 };
 
-class ModuleWorker {
-public:
-    ModuleWorker(int _sock);
-    ~ModuleWorker();
-
-    void work();
-    void please_work() noexcept;
-private:
-    int sock;
-};
-
-extern ModuleManager moduleManager;
-
-#endif /* end of include guard: MODULES_MODULE_MANAGER_HPP */
+#endif

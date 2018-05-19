@@ -1,5 +1,6 @@
 #include <net/net.hpp>
 #include <core/memory_manager.hpp>
+#include <modules/module_manager.hpp>
 #include <thread>
 #include <atomic>
 #include <stdexcept>
@@ -12,6 +13,7 @@
 #include <sys/signal.h>
 #include <log/log.hpp>
 #include <iostream>
+#include <util/util.hpp>
 
 // They are client threads, but we can call them server threads
 // Or maybe vice versa
@@ -115,15 +117,15 @@ static void moduleListenerThreadFunc() {
 }
 
 static void moduleServerThreadFunc(int clientSocket) {
-    log(L"Hi, I am thread with handle " << pthread_self());
-    log(L"Let's say something to client!");
-    std::string helloMessage = "Hello, our guest. You have 5 seconds to do nothing\n";
-    send(clientSocket, helloMessage.c_str(), helloMessage.length(), 0);
-    log(L"Hello, our guest!");
-    sleep(5);
-    std::string goodbyeMessage = "Time is up. Goodbye\n";
-    send(clientSocket, goodbyeMessage.c_str(), goodbyeMessage.length(), 0);
-    log(L"Bye-bye!");
+    ModuleWorker worker(clientSocket);
+    try {
+        worker.work();
+    } catch (std::exception e) {
+        log(L"module error: ModuleWorker threw exception: '" << wstring_cast(e.what()) << L"'");
+        return;
+    } catch (...) {
+        log(L"module error: ModuleWorker threw something which we don't care about");
+        return;
+    }
     close(clientSocket);
-    log(L"He's gone now...");
 }
