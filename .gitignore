@@ -40,3 +40,4 @@ IVR.log
 core.*
 build.log
 .build-cache
+*.log

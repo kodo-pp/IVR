@@ -11,7 +11,7 @@ LogStream::LogStream(const std::function <std::wstring()> & _lineBeginnerFunc) :
     //std::cout << "Constr 1" << std::endl;
     streamsVec.push_back(&std::wcerr);
 
-    const char logFileName[] = "IVR.log"; // COMBAK: Заменить на значение, заданное аргументами командной строки
+    const char logFileName[] = "modbox.log"; // COMBAK: Заменить на значение, заданное аргументами командной строки
     std::wostream * logFile = new std::wofstream(logFileName, std::ios::out); // COMBAK: добавить MemoryManager
     //assert(logFile->is_open()); // COMBAK: Бросать std::runtime_error или делать что-то подобное
     streamsVec.push_back(logFile);
