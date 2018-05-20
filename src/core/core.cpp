@@ -5,9 +5,10 @@
 #include <stdexcept>
 #include <core/core.hpp>
 #include <misc/die.hpp>
+#include <tuple>
 #include <iostream>
 
-std::map < std::string, std::pair <FuncProvider*, ArgsSpec> > funcProviderMap;
+std::map < std::string, std::tuple <FuncProvider*, ArgsSpec, ArgsSpec> > funcProviderMap;
 
 // Реализация функций класса FuncProvider
 FuncProvider::FuncProvider() { }
@@ -37,7 +38,7 @@ bool initilaizeCore(std::vector <std::string> * args) {
     return true;
 }
 
-bool registerFuncProvider(FuncProvider* prov, ArgsSpec spec) {
+bool registerFuncProvider(FuncProvider* prov, ArgsSpec argsSpec, ArgsSpec retSpec) {
     if (prov == nullptr) {
         return false;
     }
@@ -47,7 +48,8 @@ bool registerFuncProvider(FuncProvider* prov, ArgsSpec spec) {
             return false;
         }
 
-        funcProviderMap.insert(std::make_pair(command, std::make_pair(prov, spec)));
+        funcProviderMap.insert(std::make_pair(command, std::make_tuple(prov, argsSpec, retSpec)));
+        // STOPPED HERE
         return true;
     } catch (std::runtime_error& e) {
         errdie("unable to register function provider", e.what());
@@ -60,10 +62,13 @@ FuncProvider* getFuncProvider(const std::string & command) {
     if (funcProviderMap.count(command) == 0) {
         return nullptr;
     } else {
-        return funcProviderMap.at(command).first;
+        return std::get<0>(funcProviderMap.at(command));
     }
 }
 
 ArgsSpec getArgsSpec(const std::string& command) {
-    return funcProviderMap.at(command).second;
+    return std::get<1>(funcProviderMap.at(command));
+}
+ArgsSpec getRetSpec(const std::string& command) {
+    return std::get<2>(funcProviderMap.at(command));
 }

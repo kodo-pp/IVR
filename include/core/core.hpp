@@ -8,7 +8,7 @@
 using ArgsSpec = std::string;
 
 struct FuncResult {
-    void* data;
+    std::vector <void*> data;
     int exitStatus;
 };
 
@@ -27,8 +27,9 @@ private:
 // [no utf-8]
 bool initilaizeCore(std::vector <std::string> *);
 
-bool registerFuncProvider(FuncProvider*, ArgsSpec);
+bool registerFuncProvider(FuncProvider*, ArgsSpec, ArgsSpec);
 FuncProvider* getFuncProvider(const std::string&);
 ArgsSpec getArgsSpec(const std::string&);
+ArgsSpec getRetSpec(const std::string&);
 
 #endif /* end of include guard: CORE_CORE_HPP */

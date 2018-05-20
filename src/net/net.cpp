@@ -120,7 +120,7 @@ static void moduleServerThreadFunc(int clientSocket) {
     ModuleWorker worker(clientSocket);
     try {
         worker.work();
-    } catch (std::exception e) {
+    } catch (std::exception& e) {
         log(L"module error: ModuleWorker threw exception: '" << wstring_cast(e.what()) << L"'");
         return;
     } catch (...) {

@@ -55,7 +55,9 @@ std::string recvString(int sock) {
 }
 
 int sendString(int sock, const std::string& s) {
-    return sendBuf(sock, s.c_str(), s.length() * sizeof(char));
+    auto sent = sendBuf(sock, s.c_str(), s.length() * sizeof(char));
+    sendByte(sock, (uint8_t)0);
+    return sent + 1;
 }
 
 void sendByte(int sock, uint8_t byte) {

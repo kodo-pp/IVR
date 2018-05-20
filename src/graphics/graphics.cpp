@@ -235,13 +235,13 @@ struct FuncResult * handlerGraphicsCreateObject(const std::vector <void*> & args
 
     // Parse arguments
     if (args.size() != 1) {
-        result->data = nullptr;
+        //result->data = nullptr;
         result->exitStatus = 1;
         return result;
     }
     std::wstring *modelFileName = (std::wstring *)args.at(0);
     if (!modelFileName) {
-        result->data = nullptr;
+        //result->data = nullptr;
         result->exitStatus = 1;
         return result;
     }
@@ -251,12 +251,12 @@ struct FuncResult * handlerGraphicsCreateObject(const std::vector <void*> & args
     try {
         node = graphicsCreateObject(*modelFileName);
     } catch (std::bad_alloc& e) {
-        result->data = nullptr;
+        //result->data = nullptr;
         result->exitStatus = 2;
         return result;
     }
 
-    result->data = (void *)node;
+    result->data.push_back((void *)node);
     result->exitStatus = 0;
     return result;
 }
