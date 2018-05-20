@@ -32,4 +32,6 @@ FuncProvider* getFuncProvider(const std::string&);
 ArgsSpec getArgsSpec(const std::string&);
 ArgsSpec getRetSpec(const std::string&);
 
+void funcProvidersCleanup();
+
 #endif /* end of include guard: CORE_CORE_HPP */

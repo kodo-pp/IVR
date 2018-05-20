@@ -24,6 +24,10 @@ gui::IGUIEnvironment * irrGuiEnvironment = nullptr;
 static bool initializeIrrlicht(std::vector <std::string> * args);
 struct FuncResult * handlerGraphicsCreateObject(const std::vector <void *> &);
 
+void cleanupGraphics() {
+    graphics::irrDevice->drop();
+}
+
 bool initializeGraphics(std::vector <std::string> * args) {
     if (args == nullptr) {
         return false;

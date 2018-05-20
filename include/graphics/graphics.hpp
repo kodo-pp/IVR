@@ -11,6 +11,7 @@ using namespace scene;
 using namespace video;
 
 bool initializeGraphics(std::vector <std::string> *);
+void cleanupGraphics();
 
 ISceneNode* graphicsCreateObject(const std::wstring&);
 ISceneNode* graphicsCreateCube();

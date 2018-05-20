@@ -18,7 +18,7 @@
 // They are client threads, but we can call them server threads
 // Or maybe vice versa
 // I don't know, really
-static std::unordered_set <std::thread*> serverThreads;
+static std::unordered_set <pthread_t> serverThreads;
 
 static std::thread* moduleListenerThread;
 static std::mutex serverThreadMutex;
@@ -42,18 +42,20 @@ void joinModuleListenerThread() {
         pthread_cancel(moduleListenerThread->native_handle());
     }
     moduleListenerThread->join();
-    memoryManager.freePtr(moduleListenerThread);
+
+    memoryManager.forget(moduleListenerThread);
+    delete moduleListenerThread;
 
     serverThreadMutex.lock();
     for (const auto& thr : serverThreads) {
-        log(L"Killing thread " << thr->native_handle());
-        if (pthread_kill(thr->native_handle(), 0) != ESRCH) {
+        log(L"Killing thread " << thr);
+        if (pthread_kill(thr, 0) != ESRCH) {
             //pthread_kill(thr->native_handle(), SIGTERM);
-            pthread_cancel(thr->native_handle());
+            pthread_cancel(thr);
             //thr->join();
         }
-        thr->join();
-        memoryManager.freePtr(thr);
+        //thr->join(); // (It has been detached)
+        //memoryManager.freePtr(thr);
     }
     serverThreads.clear();
     serverThreadMutex.unlock();
@@ -69,7 +71,11 @@ void createModuleServerThread(int clientSocket) {
         return;
     }
     log(L"Registering thread");
-    serverThreads.insert(thr);
+    serverThreads.insert(thr->native_handle());
+    log(L"Detaching thread");
+    thr->detach();
+    log(L"Deleting thread object");
+    delete thr;
     log(L"Done");
     serverThreadMutex.unlock();
 }

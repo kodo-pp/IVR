@@ -77,3 +77,10 @@ ArgsSpec getArgsSpec(const std::string& command) {
 ArgsSpec getRetSpec(const std::string& command) {
     return std::get<2>(funcProviderMap.at(command));
 }
+
+void funcProvidersCleanup() {
+    for (auto& i : funcProviderMap) {
+        delete std::get<0>(i.second);
+    }
+    funcProviderMap.clear();
+}

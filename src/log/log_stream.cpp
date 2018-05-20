@@ -15,6 +15,7 @@ LogStream::LogStream(const std::function <std::wstring()> & _lineBeginnerFunc) :
     std::wostream * logFile = new std::wofstream(logFileName, std::ios::out); // COMBAK: добавить MemoryManager
     //assert(logFile->is_open()); // COMBAK: Бросать std::runtime_error или делать что-то подобное
     streamsVec.push_back(logFile);
+    allocatedVec.push_back(logFile);
 }
 
 LogStream::LogStream(std::wostream * stream, const std::function <std::wstring()> & _lineBeginnerFunc) :
@@ -34,7 +35,11 @@ LogStream::LogStream(const std::vector <std::wostream *> & _streamsVec,
     //std::cout << "Constr 3" << std::endl;
 }
 
-LogStream::~LogStream() {}
+LogStream::~LogStream() {
+    for (auto& i : allocatedVec) {
+        delete i;
+    }
+}
 
 std::vector <std::wostream *> & LogStream::getStreamsVec() {
     std::vector <std::wostream *> & streamsVecLink = streamsVec;

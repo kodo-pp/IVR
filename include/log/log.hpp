@@ -34,6 +34,7 @@ protected:
     std::function <std::wstring()> lineBeginnerFunc;
     bool doBeginLine;
     std::vector <std::wostream *> streamsVec;
+    std::vector <std::wostream *> allocatedVec;
 public:
     explicit LogStream(const std::function <std::wstring()> &);
     explicit LogStream(std::wostream *, const std::function <std::wstring()> &);

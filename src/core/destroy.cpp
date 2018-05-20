@@ -1,7 +1,9 @@
 #include <core/init.hpp>
 #include <core/memory_manager.hpp>
+#include <graphics/graphics.hpp>
 #include <log/log.hpp>
 #include <net/net.hpp>
+#include <core/core.hpp>
 #include <thread>
 
 std::atomic <bool> doWeNeedToShutDown(false);
@@ -9,6 +11,10 @@ std::atomic <bool> doWeNeedToShutDown(false);
 void destroy(void) {
     log(L"I will kill... client threads!");
     joinModuleListenerThread();
+    log(L"No more functions");
+    funcProvidersCleanup();
+    log(L"And graphics");
+    cleanupGraphics();
     log(L"I'll forget anything!");
     memoryManager.freeAll();
     log(L"I'm dying...");
