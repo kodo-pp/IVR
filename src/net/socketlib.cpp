@@ -46,10 +46,10 @@ std::string recvString(int sock) {
     // TODO: maybe add buffers
     while (true) {
         recvBuf(sock, &c, 1);
-        s += c;
         if (c == 0) {
             break;
         }
+        s += c;
     }
     return s;
 }
@@ -58,6 +58,9 @@ int sendString(int sock, const std::string& s) {
     auto sent = sendBuf(sock, s.c_str(), s.length() * sizeof(char));
     sendByte(sock, (uint8_t)0);
     return sent + 1;
+}
+int sendFixed(int sock, const std::string& s) {
+    return sendBuf(sock, s.c_str(), s.length() * sizeof(char));
 }
 
 void sendByte(int sock, uint8_t byte) {

@@ -8,6 +8,7 @@ int sendBuf(int sock, const char *buf, int length);
 int recvBuf(int sock, char *buf, int length);
 std::string recvString(int sock);
 int sendString(int sock, const std::string& s);
+int sendFixed(int sock, const std::string& s);
 
 void sendByte(int sock, uint8_t byte);
 uint8_t recvByte(int sock);

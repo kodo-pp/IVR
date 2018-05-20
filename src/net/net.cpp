@@ -118,14 +118,15 @@ static void moduleListenerThreadFunc() {
 
 static void moduleServerThreadFunc(int clientSocket) {
     ModuleWorker worker(clientSocket);
+    /*
     try {
         worker.work();
     } catch (std::exception& e) {
         log(L"module error: ModuleWorker threw exception: '" << wstring_cast(e.what()) << L"'");
-        return;
     } catch (...) {
         log(L"module error: ModuleWorker threw something which we don't care about");
-        return;
     }
+    */
+    worker.please_work();
     close(clientSocket);
 }

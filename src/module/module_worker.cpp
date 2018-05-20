@@ -163,7 +163,7 @@ void ModuleWorker::please_work() noexcept {
 
 void ModuleWorker::work() {
     std::string header("ModBox/M");
-    sendString(sock, header);
+    sendFixed(sock, header);
     readModuleHeader(sock);
     std::wstring name = readModuleName(sock);
     log(L"Module '" << name << L"' connected");
@@ -171,20 +171,30 @@ void ModuleWorker::work() {
     while (true) {
         // Receive command from module
         std::string cmd = recvString(sock);
+        if (cmd == "exit") {
+            break;
+        }
+        // Prepare to run it
+        FuncProvider* prov;
+        try {
+            prov = getFuncProvider(cmd);
+        } catch (...) {
+            throw std::runtime_error(std::string("Function '") + cmd + "' not found");
+        }
+        if (prov == nullptr) {
+            throw std::runtime_error(std::string("Function '") + cmd + "' not found");
+        }
         ArgsSpec argsSpec = getArgsSpec(cmd);
 
         // Read its arguments
         std::vector <void *> args;
         args.reserve(argsSpec.length());
         for (char i : argsSpec) {
+            log(L"Receiving arg: " << (wchar_t)i);
             args.push_back(recvArg(sock, i));
+            log(L"Received");
         }
 
-        // Prepare to run it
-        FuncProvider *prov = getFuncProvider(cmd);
-        if (prov == nullptr) {
-            throw std::runtime_error(std::string("Function '") + cmd + "' not found");
-        }
 
         // Run it
         struct FuncResult * result = (*prov)(args);
@@ -195,7 +205,9 @@ void ModuleWorker::work() {
         // Send result back
         ArgsSpec retSpec = getRetSpec(cmd);
         for (size_t i = 0; i < retSpec.length(); ++i) {
+            log(L"Sending ret <" << retSpec.at(i) << L">");
             sendArg(sock, result->data.at(i), retSpec.at(i));
+            log(L"Sent");
         }
 
         // Free memory allocated for arguments...
