@@ -1,4 +1,5 @@
 #include <graphics/graphics.hpp>
+#include <game/objects/objects.hpp>
 #include <core/core.hpp>
 #include <log/log.hpp>
 #include <iostream>
@@ -37,62 +38,6 @@ bool initializeGraphics(std::vector <std::string> * args) {
         return false;
     }
 
-    //FuncProvider* prov = new FuncProvider(L"graphics.createObject", handlerGraphicsCreateObject);
-    //registerFuncProvider(prov);
-
-    /*
-    // TODO: возможно, вынести код инициализации Irrlicht в отдельныю функцию
-
-
-    // ***********************************************************************
-    // Тест, потом убрать
-
-    FuncProvider* testProv = getFuncProvider(L"graphics.createObject");
-    if (!testProv) {
-        throw std::runtime_error("FuncProvider for graphics.createObject was not found");
-    }
-
-    std::vector <void *> callArgs;
-    std::string modelName = "/home/kodopp/monkey.obj";
-    callArgs.push_back(&modelName);
-    struct FuncResult * res = (*testProv)(callArgs); // COMBAK: добовить что-то вроде __attribute__((unused))
-    irr::scene::ISceneNode * objnode = (irr::scene::ISceneNode*)res->data;
-    objnode->setPosition(irr::core::vector3df(20, 0, 0));
-
-    graphics::irrGuiEnvironment->addStaticText(L"Hello world!", // Сам текст
-            irr::core::rect <irr::s32> (10, 10, 260, 260), // Положение текста на экране (прямоугольная область)
-            true); // Неясно, что это
-
-    graphics::irrVideoDriver->beginScene(true, // Неясно, что это
-                                         true, // Неясно, что это
-                                         irr::video::SColor(255, 100, 101, 140)); // Какой-то цвет, возможно, цвет фона (ARGB)
-
-    graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40), irr::core::vector3df(0,5,0));
-
-    graphics::irrGuiEnvironment->drawAll();
-    graphics::irrSceneManager->drawAll();
-    graphics::irrVideoDriver->endScene();
-    sleep(3);
-    int i = 0;
-    while (true) {
-        ++i;
-        graphics::irrVideoDriver->beginScene(true, // Неясно, что это
-                                             true, // Неясно, что это
-                                             irr::video::SColor(255, 100, 101, 140)); // Какой-то цвет, возможно, цвет фона (ARGB)
-
-        graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40), irr::core::vector3df(0,5,0));
-
-        graphics::irrGuiEnvironment->drawAll();
-        graphics::irrSceneManager->drawAll();
-        graphics::irrVideoDriver->endScene();
-        usleep(100000);
-    }
-    sleep(3);
-    graphics::irrDevice->drop();
-
-    // Конец теста
-    // ***********************************************************************
-    */
     return true;
 }
 
@@ -132,25 +77,7 @@ static bool initializeIrrlicht(std::vector <std::string> * args) {
     return true;
 }
 
-ISceneNode* graphicsCreateObject(const std::wstring& meshFilename) {
-    // Load mesh from file
-    scene::IAnimatedMesh* mesh = graphics::irrSceneManager->getMesh(meshFilename.c_str());
-    if (!mesh) {
-        return (ISceneNode*)nullptr;
-    }
-
-    // Create a scene node with this mesh
-    scene::ISceneNode* node = graphics::irrSceneManager->addAnimatedMeshSceneNode(mesh);
-    if (!node) {
-        return (ISceneNode*)nullptr;
-    }
-
-    node->setMaterialFlag(EMF_LIGHTING, false);
-
-    return node;
-}
-
-ISceneNode* graphicsCreateCube() {
+GameObjCube* graphicsCreateCube() {
     scene::ISceneNode* node = graphics::irrSceneManager->addCubeSceneNode();
     if (!node) {
         return (ISceneNode*)nullptr;
@@ -158,7 +85,7 @@ ISceneNode* graphicsCreateCube() {
 
     node->setMaterialFlag(EMF_LIGHTING, false);
 
-    return node;
+    return GameObjCube(node);
 }
 
 void graphicsDraw() {

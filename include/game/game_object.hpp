@@ -18,6 +18,7 @@ class GameObject {
 public:
     GameObject();
     GameObject(std::wstring);
+    GameObject(ISceneNode*);
     virtual ~GameObject();
 
     GamePosition getPosition();
@@ -32,5 +33,9 @@ protected:
 
     ISceneNode* _sceneNode;
 };
+
+uint64_t registerGameObject(GameObject* obj);
+GameObject* getGameObject(uint64_t idx);
+void unregisterGameObject(uint64_t idx);
 
 #endif /* end of include guard: GAME_GAME_OBJECT_HPP */
