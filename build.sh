@@ -16,12 +16,12 @@ LD="c++"    # Linker
 # Special for C compiler
 CFLAGS="-std=gnu99"
 # Special for C++ compiler
-CXXFLAGS="-std=gnu++11 -Wno-unused-parameter -Wno-unused-result"
+CXXFLAGS="-std=gnu++11"
 # Special for linker
 LDFLAGS=""
 
 # Flags for C and C++ compilers
-FLAGS="-Wall -Wextra -pedantic"
+FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -Wno-nested-anon-types"
 
 # Link path, e.g. "-L/usr/lib/mylib/"
 LINK_PATH=""
