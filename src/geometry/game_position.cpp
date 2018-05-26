@@ -4,7 +4,7 @@
 GamePosition::GamePosition(double _x, double _y, double _z):
         x(_x), y(_y), z(_z) { }
 
-GamePosition::GamePosition(GamePosition& other) {
+GamePosition::GamePosition(const GamePosition& other) {
     std::tie(x, y, z) = std::make_tuple(other.x, other.y, other.z);
 }
 GamePosition::GamePosition(GamePosition&& other) {

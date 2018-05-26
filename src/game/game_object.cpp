@@ -1,13 +1,13 @@
 #include <game/game_object.hpp>
 #include <graphics/graphics.hpp>
 #include <unordered_map>
-
+#include <log/log.hpp>
 std::unordered_map <uint64_t, GameObject*> gameObjects;
 
 uint64_t registerGameObject(GameObject* obj) {
     auto idx = static_cast <uint64_t> (gameObjects.size());
     gameObjects.insert(std::make_pair(idx, obj));
-    return obj;
+    return idx;
 }
 
 GameObject* getGameObject(uint64_t idx) {
@@ -19,16 +19,60 @@ void unregisterGameObject(uint64_t idx) {
 }
 
 GameObject::GameObject() { }
+
+// TODO: replace copy-paste driven programming with using copy-and-swap idiom
+
+GameObject::GameObject(const GameObject& other) {
+    log("GameObject: copy constructor");
+    _sceneNode = other.sceneNode();
+    position = other.getPosition();
+    providingModule = other.getProvidingModule();
+    id = other.getId();
+}
+
+GameObject::GameObject(GameObject&& other) {
+    log("GameObject: move constructor");
+    std::swap(_sceneNode, other._sceneNode);
+    std::swap(position, other.position);
+    std::swap(providingModule, other.providingModule);
+    std::swap(id, other.id);
+}
+
+GameObject& GameObject::operator =(const GameObject& other) {
+    log("GameObject: copy operator =");
+    _sceneNode = other.sceneNode();
+    position = other.getPosition();
+    providingModule = other.getProvidingModule();
+    id = other.getId();
+    return *this;
+}
+
+GameObject& GameObject::operator =(GameObject&& other) {
+    log("GameObject: move operator =");
+    std::swap(_sceneNode, other._sceneNode);
+    std::swap(position, other.position);
+    std::swap(providingModule, other.providingModule);
+    std::swap(id, other.id);
+    return *this;
+}
+/*
 GameObject::GameObject(std::wstring meshFilename) {
     _sceneNode = graphicsCreateObject(meshFilename);
 }
+*/
 
-GameObject::GameObject(ISceneNode* node) _sceneNode(node) { }
+GameObject::GameObject(ISceneNode* node): _sceneNode(node) { }
 
 GameObject::~GameObject() { }
 
-GamePosition GameObject::getPosition() {
+GamePosition GameObject::getPosition() const {
     return position;
+}
+GameObjectId GameObject::getId() const {
+    return id;
+}
+ModuleId GameObject::getProvidingModule() const {
+    return providingModule;
 }
 
 void GameObject::setPosition(GamePosition newPosition) {
@@ -36,6 +80,6 @@ void GameObject::setPosition(GamePosition newPosition) {
     graphicsMoveObject(_sceneNode, newPosition);
 }
 
-ISceneNode* GameObject::sceneNode() {
+ISceneNode* GameObject::sceneNode() const {
     return _sceneNode;
 }

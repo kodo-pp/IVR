@@ -13,7 +13,7 @@ using namespace irr::core;
 class GamePosition {
 public:
     GamePosition(double _x = 0.0, double _y = 0.0, double _z = 0.0);
-    GamePosition(GamePosition& gamePosition); // copy c-tor
+    GamePosition(const GamePosition& gamePosition); // copy c-tor
     GamePosition(GamePosition&& gamePosition); // move c-tor
 
     vector3df toIrrVector3df();

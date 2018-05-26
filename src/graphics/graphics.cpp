@@ -77,15 +77,16 @@ static bool initializeIrrlicht(std::vector <std::string> * args) {
     return true;
 }
 
-GameObjCube* graphicsCreateCube() {
+GameObjCube&& graphicsCreateCube() {
     scene::ISceneNode* node = graphics::irrSceneManager->addCubeSceneNode();
     if (!node) {
-        return (ISceneNode*)nullptr;
+        //return (ISceneNode*)nullptr;
+        throw std::runtime_error("failed to create a cube scene node");
     }
 
     node->setMaterialFlag(EMF_LIGHTING, false);
 
-    return GameObjCube(node);
+    return std::move(GameObjCube(node));
 }
 
 void graphicsDraw() {
@@ -130,14 +131,14 @@ ITexture* graphicsLoadTexture(std::wstring textureFileName) {
     return texture;
 }
 
-void graphicsAddTexture(ISceneNode* obj, ITexture* tex) {
+void graphicsAddTexture(const GameObject& obj, ITexture* tex) {
     log(L"Adding texture");
-    if (!obj || !tex) {
+    if (!obj.sceneNode() || !tex) {
         log(L"Adding texture failed");
         return;
     }
     for (int i = 0; i < 1; ++i) {
-        obj->setMaterialTexture(i, tex);
+        obj.sceneNode()->setMaterialTexture(i, tex);
     }
     log(L"Texture added successfully");
 }
@@ -157,6 +158,7 @@ void graphicsAddTexture(ISceneNode* obj, ITexture* tex) {
  * @return ->exitStatus: 0 при успехе, 1 при неверных аргументах, 2 при неудачном создании объекта
  */
 
+/*
 struct FuncResult * handlerGraphicsCreateObject(const std::vector <void*> & args) {
     // Create the structure which will be returned
     struct FuncResult * result = new struct FuncResult;
@@ -191,3 +193,4 @@ struct FuncResult * handlerGraphicsCreateObject(const std::vector <void*> & args
     result->exitStatus = 0;
     return result;
 }
+*/

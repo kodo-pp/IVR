@@ -8,7 +8,7 @@
 #include <mutex>
 #include <iostream>
 
-extern std::mutex logMutex;
+extern std::recursive_mutex logMutex;
 
 enum LogStreamSpecial {
     lssNewline,

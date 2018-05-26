@@ -8,8 +8,8 @@
 #include <locale>
 #include <codecvt>
 
-static std::mutex lbfMutex;
-std::mutex logMutex;
+static std::recursive_mutex lbfMutex;
+std::recursive_mutex logMutex;
 
 static std::wstring cachedLineBegin;
 static std::atomic<time_t> prevTime(0);

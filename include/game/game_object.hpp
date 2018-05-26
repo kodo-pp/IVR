@@ -3,9 +3,14 @@
 
 #include <string>
 #include <geometry/game_position.hpp>
-#include <graphics/graphics.hpp>
+
+// XXX: очередной костыль
+//#include <graphics/graphics.hpp>
+#include <irrlicht.h>
+
 #include <modules/module.hpp>
-#include <string>
+
+using irr::scene::ISceneNode;
 
 using GameObjectId = uint64_t;
 
@@ -17,14 +22,21 @@ using GameObjectId = uint64_t;
 class GameObject {
 public:
     GameObject();
+    GameObject(const GameObject&); // copy c-tor
+    GameObject(GameObject&&); // move c-tor
     GameObject(std::wstring);
     GameObject(ISceneNode*);
     virtual ~GameObject();
 
-    GamePosition getPosition();
+    GamePosition getPosition() const;
     void setPosition(GamePosition newPosition);
 
-    ISceneNode* sceneNode();
+    GameObject& operator =(const GameObject&);
+    GameObject& operator =(GameObject&&);
+
+    ISceneNode* sceneNode() const;
+    GameObjectId getId() const;
+    ModuleId getProvidingModule() const;
 
 protected:
     GamePosition position;
