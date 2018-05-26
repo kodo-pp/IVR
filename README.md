@@ -9,6 +9,8 @@
 
 - Библиотеки, использыемые Irrlicht (код Independent JPEG Group (jpeglib), libpng и zlib)
 
+- Для модуля использовал NetCat-класс [отсюда](https://gist.github.com/leonjza/f35a7252babdf77c8421), немного модифицировал его
+
 ## Примечание по первому показу кода
 Всё в каталоге Project/, там же и файл
 README.md, более подробно посвящённый
