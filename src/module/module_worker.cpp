@@ -22,6 +22,7 @@ void ModuleWorker::please_work() noexcept {
         return;
     } catch (...) {
         log(L"Module error: ModuleWorker::work() threw something we don't care about");
+        return;
     }
 }
 
@@ -54,9 +55,7 @@ void ModuleWorker::work() {
         std::vector <void *> args;
         args.reserve(argsSpec.length());
         for (char i : argsSpec) {
-            log(L"Receiving arg: " << (wchar_t)i);
             args.push_back(recvArg(sock, i));
-            log(L"Received");
         }
 
 
@@ -69,9 +68,7 @@ void ModuleWorker::work() {
         // Send result back
         ArgsSpec retSpec = getRetSpec(cmd);
         for (size_t i = 0; i < retSpec.length(); ++i) {
-            log(L"Sending ret <" << retSpec.at(i) << L">");
             sendArg(sock, result->data.at(i), retSpec.at(i));
-            log(L"Sent");
         }
 
         // Free memory allocated for arguments...

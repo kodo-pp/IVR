@@ -5,7 +5,11 @@
 std::unordered_map <uint64_t, GameObject*> gameObjects;
 
 uint64_t registerGameObject(GameObject* obj) {
-    auto idx = static_cast <uint64_t> (gameObjects.size());
+    //auto idx = static_cast <uint64_t> (gameObjects.size());
+    uint64_t idx = 0;
+    while (gameObjects.count(idx) != 0) {
+        ++idx;
+    }
     gameObjects.insert(std::make_pair(idx, obj));
     return idx;
 }

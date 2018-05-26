@@ -3,6 +3,8 @@
 
 import socket
 import base64
+import math
+import time
 
 # Netcat module taken from here: https://gist.github.com/leonjza/f35a7252babdf77c8421
 # and slightly modified
@@ -133,9 +135,18 @@ def main():
     s2 = 'est'
 
     c, s = nc.invoke('test', [a, b, s1, s2], 'iiss', 'ls')
-    nc.invoke('exit', [], '', '')
 
     print('c = {}, s = "{}", len(s) = {}'.format(c, s, len(s)))
 
+    cube = nc.invoke('graphics.createCube', [], '', 'L')[0]
+
+    i = 0
+    while True:
+        pos = math.cos(i) * 20
+        nc.invoke('graphics.moveObject', [cube, int(pos * 1e6), int(pos * 1e6), int(pos * 1e6)], 'Liii', '')
+        time.sleep(0.05)
+        i += 0.05
+
+    nc.invoke('exit', [], '', '')
 if __name__ == '__main__':
     main()

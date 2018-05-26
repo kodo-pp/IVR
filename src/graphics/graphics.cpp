@@ -23,7 +23,50 @@ gui::IGUIEnvironment * irrGuiEnvironment = nullptr;
 }
 
 static bool initializeIrrlicht(std::vector <std::string> * args);
-struct FuncResult * handlerGraphicsCreateObject(const std::vector <void *> &);
+//struct FuncResult * handlerGraphicsCreateObject(const std::vector <void *> &);
+
+struct FuncResult* handlerGraphicsCreateCube(const std::vector <void*> & args) {
+    auto ret = new struct FuncResult;
+    ret->data.resize(1);
+
+    GameObject* obj = new GameObject(graphicsCreateCube());
+    auto objectHandle = registerGameObject(obj);
+
+    log("Created a cube with handle " << objectHandle);
+
+    ret->data.at(0) = (void *)(new uint64_t(objectHandle));
+    ret->exitStatus = 0;
+    return ret;
+}
+
+struct FuncResult* handlerGraphicsMoveObject(const std::vector <void*> & args) {
+    if (args.size() != 4) {
+        throw std::logic_error("Wrong number of arguments for handlerGraphicsMoveObject()");
+    }
+    auto ret = new struct FuncResult;
+
+    uint64_t objectHandle = *(uint64_t*)(args.at(0));
+
+    // TODO: add floating-point values transportation over network
+    int32_t rawX = *(uint32_t*)(args.at(1));
+    int32_t rawY = *(uint32_t*)(args.at(2));
+    int32_t rawZ = *(uint32_t*)(args.at(3));
+
+    double x = static_cast <double> (rawX) / 1e+6;
+    double y = static_cast <double> (rawY) / 1e+6;
+    double z = static_cast <double> (rawZ) / 1e+6;
+
+    log("Moving object " << objectHandle << " to (" << x << ", " << y << ", " << z << ")");
+    graphicsMoveObject(getGameObject(objectHandle)->sceneNode(), GamePosition(x, y, z));
+
+    ret->exitStatus = 0;
+    return ret;
+}
+
+static inline void initializeGraphicsFuncProviders() {
+    registerFuncProvider(new FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
+    registerFuncProvider(new FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "Liii", "");
+}
 
 void cleanupGraphics() {
     graphics::irrDevice->drop();
@@ -37,6 +80,8 @@ bool initializeGraphics(std::vector <std::string> * args) {
     if (!initializeIrrlicht(args)) {
         return false;
     }
+
+    initializeGraphicsFuncProviders();
 
     return true;
 }
