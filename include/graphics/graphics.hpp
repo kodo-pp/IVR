@@ -15,7 +15,7 @@ bool initializeGraphics(std::vector <std::string> *);
 void cleanupGraphics();
 
 //ISceneNode* graphicsCreateObject(const std::wstring&);
-GameObjCube&& graphicsCreateCube();
+GameObjCube graphicsCreateCube();
 
 void graphicsMoveObject(ISceneNode*, double, double, double);
 void graphicsMoveObject(ISceneNode*, core::vector3df);

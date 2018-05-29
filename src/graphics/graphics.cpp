@@ -122,7 +122,7 @@ static bool initializeIrrlicht(std::vector <std::string> * args) {
     return true;
 }
 
-GameObjCube&& graphicsCreateCube() {
+GameObjCube graphicsCreateCube() {
     scene::ISceneNode* node = graphics::irrSceneManager->addCubeSceneNode();
     if (!node) {
         //return (ISceneNode*)nullptr;
@@ -131,7 +131,7 @@ GameObjCube&& graphicsCreateCube() {
 
     node->setMaterialFlag(EMF_LIGHTING, false);
 
-    return std::move(GameObjCube(node));
+    return GameObjCube(node);
 }
 
 void graphicsDraw() {
