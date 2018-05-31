@@ -9,19 +9,19 @@
 std::atomic <bool> doWeNeedToShutDown(false);
 
 void destroy(void) {
-    log(L"I will kill... client threads!");
+    LOG(L"I will kill... client threads!");
     joinModuleListenerThread();
-    log(L"No more functions");
+    LOG(L"No more functions");
     funcProvidersCleanup();
-    log(L"And graphics");
+    LOG(L"And graphics");
     cleanupGraphics();
-    log(L"I'll forget anything!");
+    LOG(L"I'll forget anything!");
     memoryManager.freeAll();
-    log(L"I'm dying...");
+    LOG(L"I'm dying...");
     exit(0);
 }
 
 void sigIntHandler(int signal) {
-    log(L"Wow, you interrupted me! How rude...");
+    LOG(L"Wow, you interrupted me! How rude...");
     doWeNeedToShutDown = true;
 }

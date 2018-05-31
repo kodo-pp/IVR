@@ -36,13 +36,13 @@ void gameLoop() {
         auto duration = std::chrono::duration_cast < std::chrono::duration<double> > (timeAfter - timeBefore);
         double timeToSleep = timeForFrame - duration.count();
         if (oneSecondCounter > 1.0) {
-            log("FPS: " << fpsCounter);
+            LOG("FPS: " << fpsCounter);
             fpsCounter = 0;
             oneSecondCounter = 0.0;
         }
         if (timeToSleep < 0.0) {
-            log("Warning: frame rendering took longer than 1 / " << desiredFps << " s");
-            log("Time to sleep is " << timeToSleep);
+            LOG("Warning: frame rendering took longer than 1 / " << desiredFps << " s");
+            LOG("Time to sleep is " << timeToSleep);
         } else {
             usleep(static_cast <int> (timeToSleep * 1e+6));
         }

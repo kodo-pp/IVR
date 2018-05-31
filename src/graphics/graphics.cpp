@@ -32,7 +32,7 @@ struct FuncResult* handlerGraphicsCreateCube(const std::vector <void*> & args) {
     GameObject* obj = new GameObject(graphicsCreateCube());
     auto objectHandle = registerGameObject(obj);
 
-    log("Created a cube with handle " << objectHandle);
+    LOG("Created a cube with handle " << objectHandle);
 
     ret->data.at(0) = (void *)(new uint64_t(objectHandle));
     ret->exitStatus = 0;
@@ -56,7 +56,7 @@ struct FuncResult* handlerGraphicsMoveObject(const std::vector <void*> & args) {
     double y = static_cast <double> (rawY) / 1e+6;
     double z = static_cast <double> (rawZ) / 1e+6;
 
-    log("Moving object " << objectHandle << " to (" << x << ", " << y << ", " << z << ")");
+    LOG("Moving object " << objectHandle << " to (" << x << ", " << y << ", " << z << ")");
     graphicsMoveObject(getGameObject(objectHandle)->sceneNode(), GamePosition(x, y, z));
 
     ret->exitStatus = 0;
@@ -166,26 +166,26 @@ void graphicsMoveObject(ISceneNode* obj, GamePosition gp) {
 }
 
 ITexture* graphicsLoadTexture(std::wstring textureFileName) {
-    log(L"loading texture: " << textureFileName);
+    LOG(L"loading texture: " << textureFileName);
     ITexture* texture = graphics::irrVideoDriver->getTexture(textureFileName.c_str());
     if (!texture) {
-        log(L"Loading texture failed");
+        LOG(L"Loading texture failed");
         return nullptr;
     }
-    log(L"Texture loaded successfully");
+    LOG(L"Texture loaded successfully");
     return texture;
 }
 
 void graphicsAddTexture(const GameObject& obj, ITexture* tex) {
-    log(L"Adding texture");
+    LOG(L"Adding texture");
     if (!obj.sceneNode() || !tex) {
-        log(L"Adding texture failed");
+        LOG(L"Adding texture failed");
         return;
     }
     for (int i = 0; i < 1; ++i) {
         obj.sceneNode()->setMaterialTexture(i, tex);
     }
-    log(L"Texture added successfully");
+    LOG(L"Texture added successfully");
 }
 
 /**

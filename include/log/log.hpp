@@ -16,7 +16,7 @@ enum LogStreamSpecial {
     lssBeginLine
 };
 
-#define log(data) \
+#define LOG(data) \
     do { \
         logMutex.lock(); \
         getLogStream() << data << lssNewline; \

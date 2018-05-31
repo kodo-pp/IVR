@@ -27,7 +27,7 @@ GameObject::GameObject() { }
 // TODO: replace copy-paste driven programming with using copy-and-swap idiom
 
 GameObject::GameObject(const GameObject& other) {
-    log("GameObject: copy constructor");
+    LOG("GameObject: copy constructor");
     _sceneNode = other.sceneNode();
     position = other.getPosition();
     providingModule = other.getProvidingModule();
@@ -35,7 +35,7 @@ GameObject::GameObject(const GameObject& other) {
 }
 
 GameObject::GameObject(GameObject&& other) {
-    log("GameObject: move constructor");
+    LOG("GameObject: move constructor");
     std::swap(_sceneNode, other._sceneNode);
     std::swap(position, other.position);
     std::swap(providingModule, other.providingModule);
@@ -43,7 +43,7 @@ GameObject::GameObject(GameObject&& other) {
 }
 
 GameObject& GameObject::operator =(const GameObject& other) {
-    log("GameObject: copy operator =");
+    LOG("GameObject: copy operator =");
     _sceneNode = other.sceneNode();
     position = other.getPosition();
     providingModule = other.getProvidingModule();
@@ -52,7 +52,7 @@ GameObject& GameObject::operator =(const GameObject& other) {
 }
 
 GameObject& GameObject::operator =(GameObject&& other) {
-    log("GameObject: move operator =");
+    LOG("GameObject: move operator =");
     std::swap(_sceneNode, other._sceneNode);
     std::swap(position, other.position);
     std::swap(providingModule, other.providingModule);

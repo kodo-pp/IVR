@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
     init(args);
     delete args;
 
-    log(L"ModBox version " << _PROJECT_VERSION);
+    LOG(L"ModBox version " << _PROJECT_VERSION);
 
     createModuleListenerThread();
 

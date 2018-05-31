@@ -18,10 +18,10 @@ void ModuleWorker::please_work() noexcept {
     try {
         work();
     } catch (std::exception& e) {
-        log(L"Module error: ModuleWorker::work() threw exception: '" << wstring_cast(e.what()) << L"'");
+        LOG(L"Module error: ModuleWorker::work() threw exception: '" << wstring_cast(e.what()) << L"'");
         return;
     } catch (...) {
-        log(L"Module error: ModuleWorker::work() threw something we don't care about");
+        LOG(L"Module error: ModuleWorker::work() threw something we don't care about");
         return;
     }
 }
@@ -31,7 +31,7 @@ void ModuleWorker::work() {
     sendFixed(sock, header);
     readModuleHeader(sock);
     std::wstring name = readModuleName(sock);
-    log(L"Module '" << name << L"' connected");
+    LOG(L"Module '" << name << L"' connected");
 
     while (true) {
         // Receive command from module
@@ -82,5 +82,5 @@ void ModuleWorker::work() {
         delete result;
     }
 
-    log(L"Exiting module worker");
+    LOG(L"Exiting module worker");
 }

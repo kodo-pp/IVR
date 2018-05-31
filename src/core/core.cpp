@@ -49,9 +49,9 @@ bool registerFuncProvider(FuncProvider* prov, ArgsSpec argsSpec, ArgsSpec retSpe
         if (funcProviderMap.count(command) > 0) {
             return false;
         }
-        log(L"Inserting '" << wstring_cast(command) << L"'");
+        LOG(L"Inserting '" << wstring_cast(command) << L"'");
         funcProviderMap.insert(std::make_pair(command, std::make_tuple(prov, argsSpec, retSpec)));
-        log(funcProviderMap.count(command));
+        LOG(funcProviderMap.count(command));
         // STOPPED HERE
         return true;
     } catch (std::runtime_error& e) {
@@ -62,8 +62,8 @@ bool registerFuncProvider(FuncProvider* prov, ArgsSpec argsSpec, ArgsSpec retSpe
 }
 
 FuncProvider* getFuncProvider(const std::string & command) {
-    log(funcProviderMap.count(command));
-    log(L"Looking for '" << wstring_cast(command) << L"' (" << command.length() << L")");
+    LOG(funcProviderMap.count(command));
+    LOG(L"Looking for '" << wstring_cast(command) << L"' (" << command.length() << L")");
     if (funcProviderMap.count(command) == 0) {
         return nullptr;
     } else {
