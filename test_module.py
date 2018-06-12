@@ -47,6 +47,14 @@ class Modcat(Netcat):
     def write_int(self, n, size=4, signed=False):
         self.write(n.to_bytes(size, 'little', signed=signed))
 
+    def read_float(self, bits):
+        assert bits in [32, 64]
+        return float(self.read_str())
+
+    def write_float(self, v, bits):
+        assert bits in [32, 64]
+        self.write_str(str(v))
+
     def recv_header(self):
         header = self.read(8).decode()
         if header != 'ModBox/M':
@@ -79,6 +87,10 @@ class Modcat(Netcat):
             self.write_int(arg, 4, signed=False)
         elif tp == 'L':
             self.write_int(arg, 8, signed=False)
+        elif tp == 'f':
+            self.write_float(arg, 32)
+        elif tp == 'F':
+            self.write_float(arg, 64)
         elif tp == 's':
             self.write_str(arg)
         elif tp == 'w':
@@ -105,6 +117,10 @@ class Modcat(Netcat):
             return self.read_int(4, signed=False)
         elif tp == 'L':
             return self.read_int(8, signed=False)
+        elif tp == 'f':
+            return self.read_float(32)
+        elif tp == 'F':
+            return self.read_float(64)
         elif tp == 's':
             return self.read_str()
         elif tp == 'w':
@@ -143,7 +159,7 @@ def main():
     i = 0
     while True:
         pos = math.cos(i) * 20
-        nc.invoke('graphics.moveObject', [cube, int(pos * 1e6), int(pos * 1e6), int(pos * 1e6)], 'Liii', '')
+        nc.invoke('graphics.moveObject', [cube, pos, pos, pos], 'LFFF', '')
         time.sleep(0.05)
         i += 0.05
 

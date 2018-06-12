@@ -3,6 +3,13 @@
 
 #include <string>
 #include <type_traits>
+
+#ifdef __GNUC__
+#define UNUSED __attribute__((unused))
+#define NORETURN __attribute__((noreturn))
+#define PACKED __attribute__((packed))
+#endif
+
 std::wstring wstring_cast(const std::string& s);
 
 std::string bytes_pack(const std::string& s);

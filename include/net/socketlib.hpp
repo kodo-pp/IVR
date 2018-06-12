@@ -33,4 +33,10 @@ void sendS16(int sock, int16_t v);
 void sendS32(int sock, int32_t v);
 void sendS64(int sock, int64_t v);
 
+void sendFloat32(int sock, float v);
+void sendFloat64(int sock, double v);
+
+float recvFloat32(int sock);
+double recvFloat64(int sock);
+
 #endif /* end of include guard: NET_SOCKET_LIB_HPP */

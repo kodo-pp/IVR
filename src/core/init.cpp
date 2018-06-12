@@ -33,10 +33,13 @@ void init(std::vector <std::string> * args) {
     std::wcerr << std::boolalpha;
     std::wcout << std::boolalpha;
 
+    std::setlocale(LC_NUMERIC, "C"); // Force std::to_string to use '.' as decimal point
+
     initilaizeCore(args);
     initializeGraphics(args);
 
     registerFuncProvider(new FuncProvider("test", handlerTest), "iiss", "ls");
 
     signal(SIGINT, sigIntHandler);
+
 }

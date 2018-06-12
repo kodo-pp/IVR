@@ -48,13 +48,17 @@ struct FuncResult* handlerGraphicsMoveObject(const std::vector <void*> & args) {
     uint64_t objectHandle = *(uint64_t*)(args.at(0));
 
     // TODO: add floating-point values transportation over network
-    int32_t rawX = *(uint32_t*)(args.at(1));
-    int32_t rawY = *(uint32_t*)(args.at(2));
-    int32_t rawZ = *(uint32_t*)(args.at(3));
+    // int32_t rawX = *(uint32_t*)(args.at(1));
+    // int32_t rawY = *(uint32_t*)(args.at(2));
+    // int32_t rawZ = *(uint32_t*)(args.at(3));
 
-    double x = static_cast <double> (rawX) / 1e+6;
-    double y = static_cast <double> (rawY) / 1e+6;
-    double z = static_cast <double> (rawZ) / 1e+6;
+    // double x = static_cast <double> (rawX) / 1e+6;
+    // double y = static_cast <double> (rawY) / 1e+6;
+    // double z = static_cast <double> (rawZ) / 1e+6;
+
+    double x = *(double*)(args.at(1));
+    double y = *(double*)(args.at(2));
+    double z = *(double*)(args.at(3));
 
     LOG("Moving object " << objectHandle << " to (" << x << ", " << y << ", " << z << ")");
     graphicsMoveObject(getGameObject(objectHandle)->sceneNode(), GamePosition(x, y, z));
@@ -65,7 +69,7 @@ struct FuncResult* handlerGraphicsMoveObject(const std::vector <void*> & args) {
 
 static inline void initializeGraphicsFuncProviders() {
     registerFuncProvider(new FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
-    registerFuncProvider(new FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "Liii", "");
+    registerFuncProvider(new FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "LFFF", "");
 }
 
 void cleanupGraphics() {

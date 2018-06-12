@@ -3,6 +3,7 @@
 #include <util/util.hpp>
 #include <string>
 #include <cstring>
+#include <stdexcept>
 
 bool readModuleHeader(int sock) {
     char buf[8];
@@ -41,6 +42,12 @@ void* recvArg(int sock, char spec) {
     case 'L': // unsigned longlong
         arg = (void*)(new uint64_t(recvU64(sock)));
         break;
+    case 'f': // float32
+        arg = (void*)(new float(recvFloat32(sock)));
+        break;
+    case 'F': // float64
+        arg = (void*)(new double(recvFloat64(sock)));
+        break;
     case 's': // string
         arg = (void*)(new std::string(recvString(sock)));
         break;
@@ -58,6 +65,8 @@ void* recvArg(int sock, char spec) {
             arg = (void*)bytes;
         }
         break;
+    default:
+        throw std::logic_error(std::string("recvArg: unknown type: ") + spec);
     }
     return arg;
 }
@@ -88,6 +97,12 @@ void sendArg(int sock, void* arg, char spec) {
     case 'L': // unsigned longlong
         sendU64(sock, *(uint64_t*)arg);
         break;
+    case 'f': // float32
+        sendFloat32(sock, *(float*)arg);
+        break;
+    case 'F': // float64
+        sendFloat64(sock, *(double*)arg);
+        break;
     case 's': // string
         sendString(sock, *(std::string*)arg);
         break;
@@ -100,6 +115,8 @@ void sendArg(int sock, void* arg, char spec) {
             sendBuf(sock, ((std::string*)arg)->c_str(), (int)((std::string*)arg)->length());
         }
         break;
+    default:
+        throw std::logic_error(std::string("sendArg: unknown type: ") + spec);
     }
 }
 
@@ -129,6 +146,12 @@ void freeArg(void* arg, char spec) {
     case 'L': // unsigned longlong
         delete (uint64_t*)arg;
         break;
+    case 'f': // float32
+        delete (float*)arg;
+        break;
+    case 'F': // float64
+        delete (double*)arg;
+        break;
     case 's': // string
         delete (std::string*)arg;
         break;
@@ -138,5 +161,7 @@ void freeArg(void* arg, char spec) {
     case 'o': // blob
         delete (std::string*)arg;
         break;
+    default:
+        throw std::logic_error(std::string("freeArg: unknown type: ") + spec);
     }
 }
