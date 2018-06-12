@@ -36,7 +36,6 @@ void gameLoop() {
         auto duration = std::chrono::duration_cast < std::chrono::duration<double> > (timeAfter - timeBefore);
         double timeToSleep = timeForFrame - duration.count();
         if (oneSecondCounter > 1.0) {
-            LOG("FPS: " << fpsCounter);
             fpsCounter = 0;
             oneSecondCounter = 0.0;
         }

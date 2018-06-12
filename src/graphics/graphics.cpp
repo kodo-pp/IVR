@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <unistd.h>
+#include <modules/module_io.hpp>
 
 /**
  * Глобальные переменные, хранящие необходимые объекты для работы с Irrlicht
@@ -34,7 +35,7 @@ struct FuncResult* handlerGraphicsCreateCube(const std::vector <void*> & args) {
 
     LOG("Created a cube with handle " << objectHandle);
 
-    ret->data.at(0) = (void *)(new uint64_t(objectHandle));
+    setReturn <uint64_t> (ret, 0, objectHandle);
     ret->exitStatus = 0;
     return ret;
 }
@@ -47,20 +48,10 @@ struct FuncResult* handlerGraphicsMoveObject(const std::vector <void*> & args) {
 
     uint64_t objectHandle = *(uint64_t*)(args.at(0));
 
-    // TODO: add floating-point values transportation over network
-    // int32_t rawX = *(uint32_t*)(args.at(1));
-    // int32_t rawY = *(uint32_t*)(args.at(2));
-    // int32_t rawZ = *(uint32_t*)(args.at(3));
+    double x = getArgument <double> (args, 1);
+    double y = getArgument <double> (args, 2);
+    double z = getArgument <double> (args, 3);
 
-    // double x = static_cast <double> (rawX) / 1e+6;
-    // double y = static_cast <double> (rawY) / 1e+6;
-    // double z = static_cast <double> (rawZ) / 1e+6;
-
-    double x = *(double*)(args.at(1));
-    double y = *(double*)(args.at(2));
-    double z = *(double*)(args.at(3));
-
-    LOG("Moving object " << objectHandle << " to (" << x << ", " << y << ", " << z << ")");
     graphicsMoveObject(getGameObject(objectHandle)->sceneNode(), GamePosition(x, y, z));
 
     ret->exitStatus = 0;

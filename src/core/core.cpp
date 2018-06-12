@@ -49,7 +49,7 @@ bool registerFuncProvider(FuncProvider* prov, ArgsSpec argsSpec, ArgsSpec retSpe
         if (funcProviderMap.count(command) > 0) {
             return false;
         }
-        LOG(L"Inserting '" << wstring_cast(command) << L"'");
+        LOG(L"Registering func provider for '" << wstring_cast(command) << L"'");
         funcProviderMap.insert(std::make_pair(command, std::make_tuple(prov, argsSpec, retSpec)));
         LOG(funcProviderMap.count(command));
         // STOPPED HERE
@@ -62,8 +62,6 @@ bool registerFuncProvider(FuncProvider* prov, ArgsSpec argsSpec, ArgsSpec retSpe
 }
 
 FuncProvider* getFuncProvider(const std::string & command) {
-    LOG(funcProviderMap.count(command));
-    LOG(L"Looking for '" << wstring_cast(command) << L"' (" << command.length() << L")");
     if (funcProviderMap.count(command) == 0) {
         return nullptr;
     } else {

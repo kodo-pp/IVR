@@ -21,7 +21,7 @@ CXXFLAGS="-std=gnu++11"
 LDFLAGS=""
 
 # Flags for C and C++ compilers
-FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -Wno-nested-anon-types"
+FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -Wno-nested-anon-types -DFORTIFY_SOURCE"
 
 # Link path, e.g. "-L/usr/lib/mylib/"
 LINK_PATH=""
