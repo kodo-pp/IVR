@@ -157,11 +157,13 @@ def main():
     cube = nc.invoke('graphics.createCube', [], '', 'L')[0]
 
     i = 0
-    while True:
+    while i < 10.0: # A couple of seconds
         pos = math.cos(i) * 20
         nc.invoke('graphics.moveObject', [cube, pos, pos, pos], 'LFFF', '')
         time.sleep(0.05)
         i += 0.05
+
+    nc.invoke('graphics.deleteObject', [cube], 'L', '')
 
     nc.invoke('exit', [], '', '')
 if __name__ == '__main__':

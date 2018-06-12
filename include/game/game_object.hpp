@@ -9,13 +9,16 @@
 #include <irrlicht.h>
 
 #include <modules/module.hpp>
+#include <mutex>
 
 using irr::scene::ISceneNode;
 
 using GameObjectId = uint64_t;
 
+extern std::recursive_mutex gameObjectMutex;
+
 /**
- * An class which represents an abstract game object
+ * A class which represents an abstract game object
  *
  * WARNING: instantiate not this class but its derived classes
  */

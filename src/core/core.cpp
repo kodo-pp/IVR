@@ -1,16 +1,18 @@
-#include <map>
-#include <string>
-#include <vector>
-#include <exception>
-#include <stdexcept>
+#include <util/util.hpp>
 #include <core/core.hpp>
-#include <iostream>
 #include <log/log.hpp>
 #include <misc/die.hpp>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <exception>
+#include <stdexcept>
 #include <tuple>
-#include <util/util.hpp>
+#include <mutex>
 
 std::map < std::string, std::tuple <FuncProvider*, ArgsSpec, ArgsSpec> > funcProviderMap;
+static std::recursive_mutex funcProviderMutex;
 
 // Реализация функций класса FuncProvider
 FuncProvider::FuncProvider() { }
@@ -41,6 +43,7 @@ bool initilaizeCore(std::vector <std::string> * args) {
 }
 
 bool registerFuncProvider(FuncProvider* prov, ArgsSpec argsSpec, ArgsSpec retSpec) {
+    std::lock_guard <std::recursive_mutex> lock(funcProviderMutex);
     if (prov == nullptr) {
         return false;
     }
@@ -52,7 +55,6 @@ bool registerFuncProvider(FuncProvider* prov, ArgsSpec argsSpec, ArgsSpec retSpe
         LOG(L"Registering func provider for '" << wstring_cast(command) << L"'");
         funcProviderMap.insert(std::make_pair(command, std::make_tuple(prov, argsSpec, retSpec)));
         LOG(funcProviderMap.count(command));
-        // STOPPED HERE
         return true;
     } catch (std::runtime_error& e) {
         errdie("unable to register function provider", e.what());
@@ -62,6 +64,7 @@ bool registerFuncProvider(FuncProvider* prov, ArgsSpec argsSpec, ArgsSpec retSpe
 }
 
 FuncProvider* getFuncProvider(const std::string & command) {
+    std::lock_guard <std::recursive_mutex> lock(funcProviderMutex);
     if (funcProviderMap.count(command) == 0) {
         return nullptr;
     } else {
@@ -70,13 +73,16 @@ FuncProvider* getFuncProvider(const std::string & command) {
 }
 
 ArgsSpec getArgsSpec(const std::string& command) {
+    std::lock_guard <std::recursive_mutex> lock(funcProviderMutex);
     return std::get<1>(funcProviderMap.at(command));
 }
 ArgsSpec getRetSpec(const std::string& command) {
+    std::lock_guard <std::recursive_mutex> lock(funcProviderMutex);
     return std::get<2>(funcProviderMap.at(command));
 }
 
 void funcProvidersCleanup() {
+    std::lock_guard <std::recursive_mutex> lock(funcProviderMutex);
     for (auto& i : funcProviderMap) {
         delete std::get<0>(i.second);
     }

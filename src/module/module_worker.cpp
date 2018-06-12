@@ -58,11 +58,10 @@ void ModuleWorker::work() {
             args.push_back(recvArg(sock, i));
         }
 
-
         // Run it
         struct FuncResult * result = (*prov)(args);
         if (result == nullptr) {
-            throw std::runtime_error("function provider error: reslut is nullptr");
+            throw std::runtime_error("function provider error: result is nullptr");
         }
 
         // Send result back

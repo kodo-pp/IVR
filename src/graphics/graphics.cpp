@@ -30,10 +30,10 @@ struct FuncResult* handlerGraphicsCreateCube(const std::vector <void*> & args) {
     auto ret = new struct FuncResult;
     ret->data.resize(1);
 
+    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
+
     GameObject* obj = new GameObject(graphicsCreateCube());
     auto objectHandle = registerGameObject(obj);
-
-    LOG("Created a cube with handle " << objectHandle);
 
     setReturn <uint64_t> (ret, 0, objectHandle);
     ret->exitStatus = 0;
@@ -46,7 +46,9 @@ struct FuncResult* handlerGraphicsMoveObject(const std::vector <void*> & args) {
     }
     auto ret = new struct FuncResult;
 
-    uint64_t objectHandle = *(uint64_t*)(args.at(0));
+    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
+
+    uint64_t objectHandle = getArgument <uint64_t> (args, 0);
 
     double x = getArgument <double> (args, 1);
     double y = getArgument <double> (args, 2);
@@ -58,9 +60,27 @@ struct FuncResult* handlerGraphicsMoveObject(const std::vector <void*> & args) {
     return ret;
 }
 
+struct FuncResult* handlerGraphicsDeleteObject(const std::vector <void*> & args) {
+    if (args.size() != 1) {
+        throw std::logic_error("Wrong number of arguments for handlerGraphicsDeleteObject()");
+    }
+    auto ret = new struct FuncResult;
+
+    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
+
+    uint64_t objectHandle = getArgument <uint64_t> (args, 0);
+
+    graphicsDeleteObject(getGameObject(objectHandle));
+    unregisterGameObject(objectHandle);
+
+    ret->exitStatus = 0;
+    return ret;
+}
+
 static inline void initializeGraphicsFuncProviders() {
     registerFuncProvider(new FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
     registerFuncProvider(new FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "LFFF", "");
+    registerFuncProvider(new FuncProvider("graphics.deleteObject", handlerGraphicsDeleteObject), "L", "");
 }
 
 void cleanupGraphics() {
@@ -118,6 +138,7 @@ static bool initializeIrrlicht(std::vector <std::string> * args) {
 }
 
 GameObjCube graphicsCreateCube() {
+    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
     scene::ISceneNode* node = graphics::irrSceneManager->addCubeSceneNode();
     if (!node) {
         //return (ISceneNode*)nullptr;
@@ -158,6 +179,11 @@ void graphicsMoveObject(ISceneNode* obj, GamePosition gp) {
         return;
     }
     obj->setPosition(gp.toIrrVector3df());
+}
+
+void graphicsDeleteObject(GameObject* obj) {
+    obj->sceneNode()->remove();
+    delete obj;
 }
 
 ITexture* graphicsLoadTexture(std::wstring textureFileName) {
