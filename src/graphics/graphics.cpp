@@ -86,7 +86,7 @@ struct FuncResult* handlerGraphicsRotateObject(const std::vector <void*> & args)
     std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
 
     uint64_t objectHandle = getArgument <uint64_t> (args, 0);
-    
+
     // TODO: make sure these thing are called this way
     double pitch = getArgument <double> (args, 1);
     double roll = getArgument <double> (args, 2);
@@ -126,13 +126,13 @@ bool initializeGraphics(std::vector <std::string> * args) {
 // Инициаллизация Irrlicht
 static bool initializeIrrlicht(std::vector <std::string> * args) {
     graphics::irrDevice = irr::createDevice(
-        irr::video::EDT_OPENGL, // Драйвер для рендеринга (здесь OpenGL) (см. http://irrlicht.sourceforge.net/docu/example001.html)
-        irr::core::dimension2d <irr::u32> (800, 600), // Размеры окна (не в полноэкранном режиме)
-        32, // Глубина цвета
-        false, // Полноэкранный режим
-        false, // stencil buffer (не очень понятно, что это. COMBAK)
-        false, // Вертикальная синхронизация
-        0); // Объект-обработчик событий (здесь его нет)
+                              irr::video::EDT_OPENGL, // Драйвер для рендеринга (здесь OpenGL) (см. http://irrlicht.sourceforge.net/docu/example001.html)
+                              irr::core::dimension2d <irr::u32> (800, 600), // Размеры окна (не в полноэкранном режиме)
+                              32, // Глубина цвета
+                              false, // Полноэкранный режим
+                              false, // stencil buffer (не очень понятно, что это. COMBAK)
+                              false, // Вертикальная синхронизация
+                              0); // Объект-обработчик событий (здесь его нет)
     if (!graphics::irrDevice) {
         // TODO: добавить fallback-настройки
         return false;

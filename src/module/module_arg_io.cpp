@@ -54,17 +54,16 @@ void* recvArg(int sock, char spec) {
     case 'w': // wstring
         arg = (void*)(new std::wstring(wstringUnpack(recvString(sock))));
         break;
-    case 'o': // blob
-        {
-            uint64_t size = recvU64(sock);
-            std::string* bytes = new std::string;
-            bytes->reserve(size);
-            for (size_t i = 0; i < size; ++i) {
-                bytes->push_back(static_cast <char> (recvByte(sock)));
-            }
-            arg = (void*)bytes;
+    case 'o': { // blob
+        uint64_t size = recvU64(sock);
+        std::string* bytes = new std::string;
+        bytes->reserve(size);
+        for (size_t i = 0; i < size; ++i) {
+            bytes->push_back(static_cast <char> (recvByte(sock)));
         }
-        break;
+        arg = (void*)bytes;
+    }
+    break;
     default:
         throw std::logic_error(std::string("recvArg: unknown type: ") + spec);
     }
@@ -109,12 +108,11 @@ void sendArg(int sock, void* arg, char spec) {
     case 'w': // wstring
         sendString(sock, bytes_pack(*(std::wstring*)arg));
         break;
-    case 'o': // blob
-        {
-            sendU64(sock, ((std::string*)arg)->length());
-            sendBuf(sock, ((std::string*)arg)->c_str(), (int)((std::string*)arg)->length());
-        }
-        break;
+    case 'o': { // blob
+        sendU64(sock, ((std::string*)arg)->length());
+        sendBuf(sock, ((std::string*)arg)->c_str(), (int)((std::string*)arg)->length());
+    }
+    break;
     default:
         throw std::logic_error(std::string("sendArg: unknown type: ") + spec);
     }

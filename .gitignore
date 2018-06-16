@@ -41,3 +41,5 @@ core.*
 build.log
 .build-cache
 *.log
+
+*.orig
