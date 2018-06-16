@@ -3,7 +3,7 @@
 # Executable file name
 exec_name="main"
 
-# Level of optimization, ignored when environment variable 'MODBOX_DEBUG' is set to 'yes'
+# Level of optimization, ignored when environment variable 'DEBUG' is set to 'yes'
 optimization_level=2
 
 # Compilers
@@ -36,7 +36,7 @@ INCLUDE_PATH="-Iinclude -I/usr/include/irrlicht"
 FLAGS="${FLAGS} ${INCLUDE_PATH}"
 
 # Dealing with debug mode
-if [ ".${MODBOX_DEBUG}" == '.yes' ]; then
+if [ ".${DEBUG}" == '.yes' ]; then
     # If we are debugging, set -g flag and disable optimizations
     FLAGS="${FLAGS} -g -O0"
     LDFLAGS="${LDFLAGS} -O0"
@@ -173,6 +173,6 @@ done
 run_command link "${LD}" ${objects} ${LDFLAGS} -o "${exec_name}"
 
 # Strip the resulting file if we don't want to debug it
-if [ ".$MODBOX_DEBUG" != ".yes" ]; then
+if [ ".$DEBUG" != ".yes" ]; then
     run_command strip strip --strip-all "${exec_name}"
 fi
