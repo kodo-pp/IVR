@@ -83,6 +83,10 @@ void GameObject::setPosition(GamePosition newPosition) {
     graphicsMoveObject(_sceneNode, newPosition);
 }
 
+void GameObject::setRotation(double pitch, double roll, double yaw) {
+    graphicsRotateObject(_sceneNode, irr::core::vector3df(pitch, roll, yaw));
+}
+
 ISceneNode* GameObject::sceneNode() const {
     return _sceneNode;
 }

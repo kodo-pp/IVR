@@ -33,6 +33,7 @@ public:
 
     GamePosition getPosition() const;
     void setPosition(GamePosition newPosition);
+    void setRotation(double, double, double);
 
     GameObject& operator =(const GameObject&);
     GameObject& operator =(GameObject&&);

@@ -77,6 +77,28 @@ struct FuncResult* handlerGraphicsDeleteObject(const std::vector <void*> & args)
     return ret;
 }
 
+struct FuncResult* handlerGraphicsRotateObject(const std::vector <void*> & args) {
+    if (args.size() != 4) {
+        throw std::logic_error("Wrong number of arguments for handlerGraphicsRotateObject()");
+    }
+
+    auto ret = new struct FuncResult;
+    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
+
+    uint64_t objectHandle = getArgument <uint64_t> (args, 0);
+    
+    // TODO: make sure these thing are called this way
+    double pitch = getArgument <double> (args, 1);
+    double roll = getArgument <double> (args, 2);
+    double yaw = getArgument <double> (args, 3);
+
+    graphicsRotateObject(getGameObject(objectHandle)->sceneNode(), core::vector3df(pitch, roll, yaw));
+
+    setReturn <uint64_t> (ret, 0, objectHandle);
+    ret->exitStatus = 0;
+    return ret;
+}
+
 static inline void initializeGraphicsFuncProviders() {
     registerFuncProvider(new FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
     registerFuncProvider(new FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "LFFF", "");
@@ -184,6 +206,13 @@ void graphicsMoveObject(ISceneNode* obj, GamePosition gp) {
 void graphicsDeleteObject(GameObject* obj) {
     obj->sceneNode()->remove();
     delete obj;
+}
+
+void graphicsRotateObject(ISceneNode* obj, core::vector3df rot) {
+    if (!obj) {
+        return;
+    }
+    obj->setRotation(rot);
 }
 
 ITexture* graphicsLoadTexture(std::wstring textureFileName) {

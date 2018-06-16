@@ -28,6 +28,7 @@ void gameLoop() {
         }
         //graphicsMoveObject(object, sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20);
         object.setPosition(GamePosition(sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20));
+        object.setRotation(i * 100, i * 50, i * 20);
 
         graphicsDraw();
         ++fpsCounter;

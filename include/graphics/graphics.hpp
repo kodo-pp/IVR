@@ -21,6 +21,8 @@ void graphicsMoveObject(ISceneNode*, double, double, double);
 void graphicsMoveObject(ISceneNode*, core::vector3df);
 void graphicsMoveObject(ISceneNode*, GamePosition);
 
+void graphicsRotateObject(ISceneNode* obj, core::vector3df rot);
+
 void graphicsDeleteObject(GameObject*);
 
 ITexture* graphicsLoadTexture(std::wstring);
