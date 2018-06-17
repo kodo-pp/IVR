@@ -99,6 +99,25 @@ struct FuncResult* handlerGraphicsRotateObject(const std::vector <void*> & args)
     return ret;
 }
 
+struct FuncResult* handlerGraphicsAddTextureFromFile(const std::vector <void*> & args) {
+    if (args.size() != 2) {
+        throw std::logic_error("Wrong number of arguments for handlerGraphicsDeleteObject()");
+    }
+    auto ret = new struct FuncResult;
+
+    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
+
+    uint64_t objectHandle = getArgument <uint64_t> (args, 0);
+    std::string filename = std::move(getArgument <std::string> (args, 1));
+    ITexture* texture = graphicsLoadTexture(filename)
+
+    graphicsDeleteObject(getGameObject(objectHandle));
+    unregisterGameObject(objectHandle);
+
+    ret->exitStatus = 0;
+    return ret;
+}
+
 static inline void initializeGraphicsFuncProviders() {
     registerFuncProvider(new FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
     registerFuncProvider(new FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "LFFF", "");
