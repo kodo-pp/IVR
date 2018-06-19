@@ -1,0 +1,22 @@
+language: cpp
+sudo: enabled
+matrix:
+  include:
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+            - libirrlicht-dev
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+before_install:
+    - eval "${MATRIX_EVAL}"
+    - sudo ln -s /usr/lib/x86_64-linux-gnu/libIrrlicht.so.1.8 /usr/lib
+    - sudo update-alternatives --set cc "$(which gcc-7)"
+    - sudo update-alternatives --set c++ "$(which g++-7)"
+script: FORCE_REBUILD=yes ./build.sh -f
