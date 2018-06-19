@@ -17,6 +17,8 @@ matrix:
 before_install:
     - eval "${MATRIX_EVAL}"
     - sudo ln -s /usr/lib/x86_64-linux-gnu/libIrrlicht.so.1.8 /usr/lib
-    - sudo update-alternatives --set cc "$(which gcc-7)"
-    - sudo update-alternatives --set c++ "$(which g++-7)"
+   # - sudo update-alternatives --set cc "$(which gcc-7)"
+   # - sudo update-alternatives --set c++ "$(which g++-7)"
+     - sudo ln -sf "$(which gcc-7)" /usr/bin/cc
+     - sudo ln -sf "$(which g++-7)" /usr/bin/c++
 script: FORCE_REBUILD=yes ./build.sh -f
