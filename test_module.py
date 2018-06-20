@@ -160,6 +160,7 @@ def main():
     while i < 10.0: # A couple of seconds
         pos = math.cos(i) * 20
         nc.invoke('graphics.moveObject', [cube, pos, pos, pos], 'LFFF', '')
+        nc.invoke('graphics.rotateObject', [cube, pos, pos, pos], 'LFFF', '')
         time.sleep(0.05)
         i += 0.05
 

@@ -94,7 +94,6 @@ struct FuncResult* handlerGraphicsRotateObject(const std::vector <void*> & args)
 
     graphicsRotateObject(getGameObject(objectHandle)->sceneNode(), core::vector3df(pitch, roll, yaw));
 
-    setReturn <uint64_t> (ret, 0, objectHandle);
     ret->exitStatus = 0;
     return ret;
 }
@@ -102,6 +101,7 @@ struct FuncResult* handlerGraphicsRotateObject(const std::vector <void*> & args)
 static inline void initializeGraphicsFuncProviders() {
     registerFuncProvider(new FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
     registerFuncProvider(new FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "LFFF", "");
+    registerFuncProvider(new FuncProvider("graphics.rotateObject", handlerGraphicsRotateObject), "LFFF", "");
     registerFuncProvider(new FuncProvider("graphics.deleteObject", handlerGraphicsDeleteObject), "L", "");
 }
 
