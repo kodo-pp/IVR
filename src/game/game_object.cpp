@@ -3,26 +3,22 @@
 #include <log/log.hpp>
 #include <unordered_map>
 #include <mutex>
+#include <util/handle_storage.hpp>
 
-std::unordered_map <uint64_t, GameObject*> gameObjects;
+HandleStorage <uint64_t, GameObject*> gameObjects;
 std::recursive_mutex gameObjectMutex;
 
 uint64_t registerGameObject(GameObject* obj) {
-    //auto idx = static_cast <uint64_t> (gameObjects.size());
-    uint64_t idx = 0;
-    while (gameObjects.count(idx) != 0) {
-        ++idx;
-    }
-    gameObjects.insert(std::make_pair(idx, obj));
-    return idx;
+    return gameObjects.insert(obj);
 }
 
 GameObject* getGameObject(uint64_t idx) {
-    return gameObjects.at(idx);
+    // TODO: may there be a situation in which we'd like to use mutableAccess?
+    return gameObjects.access(idx);
 }
 
 void unregisterGameObject(uint64_t idx) {
-    gameObjects.erase(gameObjects.find(idx));
+    gameObjects.remove(idx);
 }
 
 GameObject::GameObject() { }

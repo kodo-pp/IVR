@@ -2,6 +2,7 @@
 #define UTIL_HANDLE_STORAGE_HPP
 
 #include <map>
+#include <set>
 
 // Located in header file, because it is a template
 template <typename Handle, typename Value>
@@ -34,8 +35,8 @@ public:
     }
 
     void remove(Handle h) {
-        storageMap.erase(h);
         maybeAddFreeHandle(h);
+        storageMap.erase(h);
     }
 
     auto begin() {
