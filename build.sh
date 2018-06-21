@@ -16,7 +16,7 @@ LD="c++"    # Linker
 # Special for C compiler
 CFLAGS="-std=gnu99"
 # Special for C++ compiler
-CXXFLAGS="-std=gnu++11"
+CXXFLAGS="-std=gnu++14"
 # Special for linker
 LDFLAGS=""
 
@@ -38,7 +38,7 @@ FLAGS="${FLAGS} ${INCLUDE_PATH}"
 # Dealing with debug mode
 if [ ".${DEBUG}" == '.yes' ]; then
     # If we are debugging, set -g flag and disable optimizations
-    FLAGS="${FLAGS} -g -O0"
+    FLAGS="${FLAGS} -g -O0 -DDEBUG_MODE"
     LDFLAGS="${LDFLAGS} -O0"
 else
     # Othewise, optimizations are set to ${optimization_level}
