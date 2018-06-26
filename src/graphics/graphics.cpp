@@ -98,11 +98,41 @@ struct FuncResult* handlerGraphicsRotateObject(const std::vector <void*> & args)
     return ret;
 }
 
+/*
+struct FuncResult* handlerGraphicsLoadTexture(const std::vector <void*> & args) {
+    if (args.size() != 1) {
+        throw std::logic_error("Wrong number of arguments for handlerGraphicsRotateObject()");
+    }
+
+    auto ret = new struct FuncResult;
+    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
+
+    // TODO: replace with wstring
+    std::string filename = getArgument <std::string> (args, 0);
+    ITexture* texture = graphics::irrVideoDriver->getTexture(filename.c_str());
+
+    ret->data.resize(1);
+
+    if (texture == nullptr) {
+        ret->exitStatus = 1;
+        setReturn <uint64_t> (ret, 0, 0ULL);
+        return ret;
+    }
+
+    uint64_t handle = registerTexture(texture);
+
+    ret->exitStatus = 0;
+    setReturn <uint64_t> (ret, 0, handle);
+    return ret;
+}
+*/
+
 static inline void initializeGraphicsFuncProviders() {
     registerFuncProvider(new FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
     registerFuncProvider(new FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "LFFF", "");
     registerFuncProvider(new FuncProvider("graphics.rotateObject", handlerGraphicsRotateObject), "LFFF", "");
     registerFuncProvider(new FuncProvider("graphics.deleteObject", handlerGraphicsDeleteObject), "L", "");
+  //  registerFuncProvider(new FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture), "s", "L");
 }
 
 void cleanupGraphics() {

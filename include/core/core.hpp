@@ -5,12 +5,17 @@
 #include <string>
 #include <functional>
 
+// === Type definitions ===
+
 using ArgsSpec = std::string;
 
 struct FuncResult {
     std::vector <void*> data;
-    int exitStatus;
+    uint32_t exitStatus;
 };
+
+
+// === FuncProvider definition ===
 
 class FuncProvider {
 public:
@@ -24,14 +29,23 @@ private:
     std::function <struct FuncResult * (const std::vector <void *> &)> func;
 };
 
-// [no utf-8]
+
+// === Initialization function ===
+
 bool initilaizeCore(std::vector <std::string> *);
 
+
+// === Working with FuncProviders ===
+
 bool registerFuncProvider(FuncProvider*, ArgsSpec, ArgsSpec);
-FuncProvider* getFuncProvider(const std::string&);
-ArgsSpec getArgsSpec(const std::string&);
-ArgsSpec getRetSpec(const std::string&);
+
+uint64_t getFuncProviderHandle(std::string command);
+
+FuncProvider* getFuncProvider(uint64_t handle);
+ArgsSpec      getArgsSpec    (uint64_t handle);
+ArgsSpec      getRetSpec     (uint64_t handle);
 
 void funcProvidersCleanup();
+
 
 #endif /* end of include guard: CORE_CORE_HPP */

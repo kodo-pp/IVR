@@ -40,6 +40,10 @@ class Netcat:
         self.socket.close()
 
 class Modcat(Netcat):
+    def __init__(self, ip, port):
+        Netcat.__init__(self, ip, port)
+        self.command_handles = {}
+
     def read_int(self, size=4, signed=False):
         tmp = self.read(size)
         return int.from_bytes(tmp, 'little', signed=signed)
@@ -131,7 +135,13 @@ class Modcat(Netcat):
             raise Exception('Unknown type: "{}"'.format(tp))
 
     def invoke(self, func, ls, args, ret):
-        self.write_str(func)
+        if func not in self.command_handles:
+            self.write_int(0, size=8, signed=False)
+            self.write_str(func)
+            handle = self.read_int(size=8, signed=False)
+            self.command_handles[func] = handle
+
+        self.write_int(self.command_handles[func], size=8, signed=False)
         for arg, tp in zip(ls, args):
             self.send_arg(arg, tp)
         ret_ls = [self.recv_arg(tp) for tp in ret]

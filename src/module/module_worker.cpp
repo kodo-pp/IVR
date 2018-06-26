@@ -35,37 +35,47 @@ void ModuleWorker::work() {
 
     while (true) {
         // Receive command from module
-        std::string cmd = recvString(sock);
-        if (cmd == "exit") {
-            break;
+        uint64_t handle = recvU64(sock);
+
+        if (handle == 0) /* Null handle - intended to find handle for a command */ {
+            std::string cmd = recvString(sock);
+            try {
+                uint64_t responseHandle = getFuncProviderHandle(cmd);
+                sendU64(sock, responseHandle);
+            } catch (const std::out_of_range& e) {
+                sendU64(sock, 0);
+            }
+            continue;
         }
+
         // Prepare to run it
         FuncProvider* prov;
         try {
-            prov = getFuncProvider(cmd);
+            prov = getFuncProvider(handle);
         } catch (...) {
-            throw std::runtime_error(std::string("Function '") + cmd + "' not found");
+            throw std::runtime_error(std::string("Invalied handle: '") + std::to_string(handle));
         }
         if (prov == nullptr) {
-            throw std::runtime_error(std::string("Function '") + cmd + "' not found");
+            throw std::logic_error("getFuncProvider() returned nullptr");
         }
-        ArgsSpec argsSpec = getArgsSpec(cmd);
+        
+        ArgsSpec argsSpec = getArgsSpec(handle);
 
         // Read its arguments
-        std::vector <void *> args;
+        std::vector <void*> args;
         args.reserve(argsSpec.length());
         for (char i : argsSpec) {
             args.push_back(recvArg(sock, i));
         }
 
         // Run it
-        struct FuncResult * result = (*prov)(args);
+        struct FuncResult* result = prov->operator()(args);
         if (result == nullptr) {
             throw std::runtime_error("function provider error: result is nullptr");
         }
 
         // Send result back
-        ArgsSpec retSpec = getRetSpec(cmd);
+        ArgsSpec retSpec = getRetSpec(handle);
         for (size_t i = 0; i < retSpec.length(); ++i) {
             sendArg(sock, result->data.at(i), retSpec.at(i));
         }
