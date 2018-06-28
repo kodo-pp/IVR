@@ -8,6 +8,8 @@
 #include <string>
 #include <unistd.h>
 #include <modules/module_io.hpp>
+#include <graphics/texture.hpp>
+#include <util/util.hpp>
 
 /**
  * Глобальные переменные, хранящие необходимые объекты для работы с Irrlicht
@@ -98,20 +100,33 @@ struct FuncResult* handlerGraphicsRotateObject(const std::vector <void*> & args)
     return ret;
 }
 
-/*
+extern std::recursive_mutex irrlichtMutex;
+
 struct FuncResult* handlerGraphicsLoadTexture(const std::vector <void*> & args) {
+    std::lock_guard <std::recursive_mutex> irrlock(irrlichtMutex);
+    LOG("A");
     if (args.size() != 1) {
-        throw std::logic_error("Wrong number of arguments for handlerGraphicsRotateObject()");
+        throw std::logic_error("Wrong number of arguments for handlerGraphicsLoadTexture()");
     }
-
+    LOG("B");
     auto ret = new struct FuncResult;
-    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
-
+    LOG("C");
     // TODO: replace with wstring
     std::string filename = getArgument <std::string> (args, 0);
+
+    LOG("X");
+
+    LOG(filename.c_str());
+
+    LOG(graphics::irrVideoDriver);
+
     ITexture* texture = graphics::irrVideoDriver->getTexture(filename.c_str());
+    
+    LOG("D");
 
     ret->data.resize(1);
+
+    LOG("E");
 
     if (texture == nullptr) {
         ret->exitStatus = 1;
@@ -119,20 +134,47 @@ struct FuncResult* handlerGraphicsLoadTexture(const std::vector <void*> & args) 
         return ret;
     }
 
+    LOG("F");
+
     uint64_t handle = registerTexture(texture);
+
+    LOG("G");
+    LOG(L"Texture " << handle << L" loaded from file " << wstring_cast(filename));
 
     ret->exitStatus = 0;
     setReturn <uint64_t> (ret, 0, handle);
     return ret;
 }
-*/
+
+struct FuncResult* handlerGraphicsAddTexture(const std::vector <void*> & args) {
+    if (args.size() != 2) {
+        throw std::logic_error("Wrong number of arguments for handlerGraphicsAddTexture()");
+    }
+
+    auto ret = new struct FuncResult;
+    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
+
+    uint64_t objectHandle = getArgument <uint64_t> (args, 0);
+    uint64_t textureHandle = getArgument <uint64_t> (args, 1);
+
+    GameObject* obj = getGameObject(objectHandle);
+    ITexture* texture = accessTexture(textureHandle);
+
+    LOG(L"Adding texture " << textureHandle << L" to object " << objectHandle);
+
+    obj->sceneNode()->setMaterialTexture(0, texture);
+
+    ret->exitStatus = 0;
+    return ret;
+}
 
 static inline void initializeGraphicsFuncProviders() {
-    registerFuncProvider(new FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
-    registerFuncProvider(new FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "LFFF", "");
-    registerFuncProvider(new FuncProvider("graphics.rotateObject", handlerGraphicsRotateObject), "LFFF", "");
-    registerFuncProvider(new FuncProvider("graphics.deleteObject", handlerGraphicsDeleteObject), "L", "");
-  //  registerFuncProvider(new FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture), "s", "L");
+    registerFuncProvider(new FuncProvider("graphics.createCube",           handlerGraphicsCreateCube),   "",     "L");
+    registerFuncProvider(new FuncProvider("graphics.moveObject",           handlerGraphicsMoveObject),   "LFFF", "");
+    registerFuncProvider(new FuncProvider("graphics.rotateObject",         handlerGraphicsRotateObject), "LFFF", "");
+    registerFuncProvider(new FuncProvider("graphics.deleteObject",         handlerGraphicsDeleteObject), "L",    "");
+    registerFuncProvider(new FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture),  "s",    "L");
+    registerFuncProvider(new FuncProvider("graphics.texture.add",          handlerGraphicsAddTexture),   "LL",   "");
 }
 
 void cleanupGraphics() {

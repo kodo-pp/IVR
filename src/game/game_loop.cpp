@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <chrono>
 
+std::recursive_mutex irrlichtMutex;
+
 void gameLoop() {
     int fpsCounter = 0;
     double oneSecondCounter = 0.0;
@@ -27,7 +29,10 @@ void gameLoop() {
         object.setPosition(GamePosition(sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20));
         object.setRotation(i * 100, i * 50, i * 20);
 
-        graphicsDraw();
+        {
+            std::lock_guard <std::recursive_mutex> lock(irrlichtMutex);
+            graphicsDraw();
+        }
         ++fpsCounter;
 
         auto timeAfter = std::chrono::high_resolution_clock::now();

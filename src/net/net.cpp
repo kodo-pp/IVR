@@ -82,8 +82,8 @@ void createModuleServerThread(int clientSocket) {
 
 
 static void moduleListenerThreadFunc() {
-    LOG(moduleListenerThread->native_handle());
-    LOG(pthread_self());
+//    LOG(moduleListenerThread->native_handle());
+//    LOG(pthread_self());
     //kill(getpid(), SIGKILL);
     const uint16_t port = 44145; // int('MODBOX', 36) % 65536
     LOG(L"Creating a socket");

@@ -61,7 +61,7 @@ void ModuleWorker::work() {
         try {
             prov = getFuncProvider(handle);
         } catch (...) {
-            throw std::runtime_error(std::string("Invalied handle: '") + std::to_string(handle));
+            throw std::runtime_error(std::string("Invalid handle: '") + std::to_string(handle));
         }
         if (prov == nullptr) {
             throw std::logic_error("getFuncProvider() returned nullptr");

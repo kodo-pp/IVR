@@ -165,7 +165,9 @@ def main():
     module_name = 'Python test module'
     nc.write_str(module_name)
 
-    cube = nc.invoke('graphics.createCube', [], '', 'L')[0]
+    [cube] = nc.invoke('graphics.createCube', [], '', 'L')
+    [texture] = nc.invoke('graphics.texture.loadFromFile', ['textures/cube3.png'], 's', 'L')
+    nc.invoke('graphics.texture.add', [cube, texture], 'LL', '')
 
     i = 0
     while i < 10.0: # A couple of seconds
