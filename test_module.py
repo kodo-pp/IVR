@@ -39,10 +39,12 @@ class Netcat:
     def close(self):
         self.socket.close()
 
+
 class Modcat(Netcat):
     def __init__(self, ip, port):
         Netcat.__init__(self, ip, port)
         self.command_handles = {}
+        self.reserved_handle = 0xFFFFFFFF4E5E47ED
 
     def read_int(self, size=4, signed=False):
         tmp = self.read(size)
@@ -147,6 +149,14 @@ class Modcat(Netcat):
         ret_ls = [self.recv_arg(tp) for tp in ret]
         return ret_ls
 
+    def invoke_special(self, func, ls, args, ret):
+        self.write_int(self.reserved_handle, size=8, signed=False)
+        self.write_str(func)
+        for arg, tp in zip(ls, args):
+            self.send_arg(arg, tp)
+        ret_ls = [self.recv_arg(tp) for tp in ret]
+        return ret_ls
+
 def main():
     nc = Modcat('localhost', 44145)
     nc.recv_header()
@@ -154,15 +164,6 @@ def main():
 
     module_name = 'Python test module'
     nc.write_str(module_name)
-
-    a = 245
-    b = 3712
-    s1 = 'This is a t'
-    s2 = 'est'
-
-    c, s = nc.invoke('test', [a, b, s1, s2], 'iiss', 'ls')
-
-    print('c = {}, s = "{}", len(s) = {}'.format(c, s, len(s)))
 
     cube = nc.invoke('graphics.createCube', [], '', 'L')[0]
 
@@ -176,6 +177,10 @@ def main():
 
     nc.invoke('graphics.deleteObject', [cube], 'L', '')
 
-    nc.invoke('exit', [], '', '')
+    [status] = nc.invoke_special('exit', [], '', 's')
+    if status == 'exited':
+        print('Exited normally')
+    else:
+        raise Exception('Unknown exit status: "{}"'.format(status))
 if __name__ == '__main__':
     main()

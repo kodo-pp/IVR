@@ -47,5 +47,8 @@ ArgsSpec      getRetSpec     (uint64_t handle);
 
 void funcProvidersCleanup();
 
+// === Constants ===
+const uint64_t RESERVED_FP_HANDLE = 0xFFFF'FFFF'4E5E'47EDull;
+
 
 #endif /* end of include guard: CORE_CORE_HPP */

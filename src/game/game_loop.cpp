@@ -15,10 +15,8 @@ void gameLoop() {
     int desiredFps = 60; // Desired, but unreachable in practice
     double timeForFrame = 1.0 / desiredFps;
 
-    //ISceneNode* object = graphicsCreateCube();
-    //graphicsAddTexture(object, graphicsLoadTexture(L"/home/kodopp/a.png"));
     GameObjCube object = graphicsCreateCube();
-    graphicsAddTexture(object, graphicsLoadTexture(L"/home/kodopp/a.png"));
+    graphicsAddTexture(object, graphicsLoadTexture(L"textures/cube1.png"));
     double i = 0;
 
     while (true) {
@@ -26,7 +24,6 @@ void gameLoop() {
         if (doWeNeedToShutDown) {
             return;
         }
-        //graphicsMoveObject(object, sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20);
         object.setPosition(GamePosition(sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20));
         object.setRotation(i * 100, i * 50, i * 20);
 

@@ -46,6 +46,14 @@ void ModuleWorker::work() {
                 sendU64(sock, 0);
             }
             continue;
+        } else if (handle == RESERVED_FP_HANDLE) {
+            std::string internal_cmd = recvString(sock);
+            if (internal_cmd == "exit") {
+                sendString(sock, "exited");
+                return;
+            } else {
+                throw std::runtime_error(std::string("invalid internal command: ") + internal_cmd);
+            }
         }
 
         // Prepare to run it
