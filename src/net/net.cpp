@@ -14,6 +14,7 @@
 #include <log/log.hpp>
 #include <iostream>
 #include <util/util.hpp>
+#include <misc/die.hpp>
 
 // They are client threads, but we can call them server threads
 // Or maybe vice versa
@@ -85,40 +86,47 @@ static void moduleListenerThreadFunc() {
 //    LOG(moduleListenerThread->native_handle());
 //    LOG(pthread_self());
     //kill(getpid(), SIGKILL);
-    const uint16_t port = 44145; // int('MODBOX', 36) % 65536
-    LOG(L"Creating a socket");
-    int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (listenSocket < 0) {
-        throw std::runtime_error("unable to create listening socket");
-    }
-    LOG(L"Socket created");
 
-    union {
-        struct sockaddr_in sockAddrIn;
-        struct sockaddr sockAddr;
-    } socketAddress;
-
-    socketAddress.sockAddrIn.sin_family = AF_INET;
-    socketAddress.sockAddrIn.sin_port = htons(port);
-    socketAddress.sockAddrIn.sin_addr.s_addr = htonl(INADDR_ANY);
-
-    LOG(L"Trying to bind to 0.0.0.0:" << port);
-    if (bind(listenSocket, &socketAddress.sockAddr, sizeof(socketAddress.sockAddrIn)) < 0) {
-        throw std::runtime_error("unable to bind the socket");
-    }
-
-    listen(listenSocket, 1);
-    LOG(L"Listening on 0.0.0.0:" << port);
-
-    while (true) {
-        int clientSocket = accept(listenSocket, nullptr, nullptr);
-        LOG(L"Client connected");
-        if (clientSocket < 0) {
-            LOG(L"Unable to accept the connection from the client: accept() returned " << clientSocket);
-            continue;
+    try {
+        const uint16_t port = 44145; // int('MODBOX', 36) % 65536
+        LOG(L"Creating a socket");
+        int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
+        if (listenSocket < 0) {
+            throw std::runtime_error("unable to create listening socket");
         }
-        LOG(L"Spawning client thread");
-        createModuleServerThread(clientSocket);
+        LOG(L"Socket created");
+
+        union {
+            struct sockaddr_in sockAddrIn;
+            struct sockaddr sockAddr;
+        } socketAddress;
+
+        socketAddress.sockAddrIn.sin_family = AF_INET;
+        socketAddress.sockAddrIn.sin_port = htons(port);
+        socketAddress.sockAddrIn.sin_addr.s_addr = htonl(INADDR_ANY);
+
+        LOG(L"Trying to bind to 0.0.0.0:" << port);
+        if (bind(listenSocket, &socketAddress.sockAddr, sizeof(socketAddress.sockAddrIn)) < 0) {
+            throw std::runtime_error("unable to bind the socket");
+        }
+
+        listen(listenSocket, 1);
+        LOG(L"Listening on 0.0.0.0:" << port);
+
+        while (true) {
+            int clientSocket = accept(listenSocket, nullptr, nullptr);
+            LOG(L"Client connected");
+            if (clientSocket < 0) {
+                LOG(L"Unable to accept the connection from the client: accept() returned " << clientSocket);
+                continue;
+            }
+            LOG(L"Spawning client thread");
+            createModuleServerThread(clientSocket);
+        }
+    } catch (std::exception& e) {
+        LOG(L"FATAL error (at " __FILE__ "): " << wstring_cast(e.what()));
+        LOG(L"Exiting");
+        exit(1);
     }
 }
 

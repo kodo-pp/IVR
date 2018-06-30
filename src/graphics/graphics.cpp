@@ -198,7 +198,7 @@ bool initializeGraphics(std::vector <std::string> * args) {
 // Инициаллизация Irrlicht
 static bool initializeIrrlicht(std::vector <std::string> * args) {
     graphics::irrDevice = irr::createDevice(
-                              irr::video::EDT_OPENGL, // Драйвер для рендеринга (здесь OpenGL) (см. http://irrlicht.sourceforge.net/docu/example001.html)
+                              irr::video::EDT_BURNINGSVIDEO, // Драйвер для рендеринга (здесь OpenGL) (см. http://irrlicht.sourceforge.net/docu/example001.html)
                               irr::core::dimension2d <irr::u32> (800, 600), // Размеры окна (не в полноэкранном режиме)
                               32, // Глубина цвета
                               false, // Полноэкранный режим

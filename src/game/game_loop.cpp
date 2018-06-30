@@ -14,7 +14,7 @@ void gameLoop() {
     int fpsCounter = 0;
     double oneSecondCounter = 0.0;
 
-    int desiredFps = 60; // Desired, but unreachable in practice
+    int desiredFps = 30; // Desired, but unreachable in practice
     double timeForFrame = 1.0 / desiredFps;
 
     GameObjCube object = graphicsCreateCube();
