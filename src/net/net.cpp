@@ -36,30 +36,25 @@ void createModuleListenerThread() {
 }
 
 void joinModuleListenerThread() {
-    LOG(L"Killing thread " << moduleListenerThread->native_handle());
-    //pthread_kill(moduleListenerThread->native_handle(), SIGTERM);
-    //moduleListenerThread->join();
-    if (pthread_kill(moduleListenerThread->native_handle(), 0) != ESRCH) {
-        pthread_cancel(moduleListenerThread->native_handle());
-    }
-    moduleListenerThread->join();
+    // Actually we just don't need to kill those threads, they are killed at exit
+    // (at least on my Linux). After a 'return' from main() there is a exit_group
+    // syscall (see man 2 exit_group), which terminates all process group (including
+    // detached threads). However I have just created a big problem for myself when
+    // I would port ModBox on Windows... At least I hope MinGW/Cygwin has done most
+    // of this work already.
+
+    // Join is a better solution, but it is hharder to implement as we need
+    // to signal the thread to terminate. Now we just detach it and then it
+    // is killed by exit_group(2).
+    moduleListenerThread->detach();
 
     memoryManager.forget(moduleListenerThread);
     delete moduleListenerThread;
 
     serverThreadMutex.lock();
-    for (const auto& thr : serverThreads) {
-        LOG(L"Killing thread " << thr);
-        if (pthread_kill(thr, 0) != ESRCH) {
-            //pthread_kill(thr->native_handle(), SIGTERM);
-            pthread_cancel(thr);
-            //thr->join();
-        }
-        //thr->join(); // (It has been detached)
-        //memoryManager.freePtr(thr);
-    }
     serverThreads.clear();
     serverThreadMutex.unlock();
+
     LOG(L"All them are dead");
 }
 

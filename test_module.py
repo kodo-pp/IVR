@@ -5,6 +5,7 @@ import socket
 import base64
 import math
 import time
+from os import _exit as exit
 
 # Netcat module taken from here: https://gist.github.com/leonjza/f35a7252babdf77c8421
 # and slightly modified
@@ -158,7 +159,12 @@ class Modcat(Netcat):
         return ret_ls
 
 def main():
-    nc = Modcat('localhost', 44145)
+    nc = None
+    try:
+        nc = Modcat('localhost', 44145)
+    except ConnectionRefusedError as e:
+        print('Unable to connect to host: {}'.format(e))
+        exit(1)
     nc.recv_header()
     nc.send_header()
 
