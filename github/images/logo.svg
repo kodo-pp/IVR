@@ -34,8 +34,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1"
-     inkscape:cx="328.62455"
-     inkscape:cy="508.48376"
+     inkscape:cx="275.48594"
+     inkscape:cy="480.77188"
      inkscape:document-units="mm"
      inkscape:current-layer="g5018"
      showgrid="false"
@@ -72,30 +72,27 @@
      inkscape:groupmode="layer"
      id="layer7"
      inkscape:label="Box back"
-     style="display:inline;opacity:1"
-     sodipodi:insensitive="true">
+     style="display:inline;opacity:1">
     <g
        style="display:inline;opacity:1"
        inkscape:label="Box back-left wall"
        id="g5022"
-       inkscape:groupmode="layer"
-       sodipodi:insensitive="true">
+       inkscape:groupmode="layer">
       <path
          inkscape:connector-curvature="0"
          id="path5020"
-         d="m 125.65288,89.51657 v 90.71398 l 75.46796,44.97583 v -90.71397 z"
-         style="fill:#ffffff;fill-opacity:1;stroke:#898989;stroke-width:6.41741753;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal" />
+         d="m 113.84682,124.97553 v 48.80473 l 40.60226,24.19729 v -48.80472 z"
+         style="fill:#ffffff;fill-opacity:1;stroke:#898989;stroke-width:3.45261312;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal" />
     </g>
     <g
        inkscape:groupmode="layer"
        id="g5026"
        inkscape:label="Box back-right wall"
-       style="display:inline;opacity:1"
-       sodipodi:insensitive="true">
+       style="display:inline;opacity:1">
       <path
          sodipodi:nodetypes="ccccc"
-         style="fill:#ffffff;fill-opacity:1;stroke:#898989;stroke-width:6.41741753;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
-         d="m 125.27175,89.51657 v 90.71398 L 19.692862,240.45243 v -90.71398 z"
+         style="fill:#ffffff;fill-opacity:1;stroke:#898989;stroke-width:3.45261312;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+         d="m 113.64177,124.97553 v 48.80473 L 56.839627,206.18003 V 157.3753 Z"
          id="path5024"
          inkscape:connector-curvature="0" />
     </g>
@@ -104,11 +101,10 @@
      inkscape:groupmode="layer"
      id="layer6"
      inkscape:label="Gears"
-     style="display:inline;opacity:1"
-     sodipodi:insensitive="true">
+     style="display:inline;opacity:1">
     <g
        id="g5071"
-       transform="matrix(0.71304641,0,0,0.71304641,-194.89522,49.924978)">
+       transform="matrix(0.38362367,0,0,0.38362367,-58.610179,103.675)">
       <g
          transform="rotate(-19.719917,857.35922,-509.98197)"
          id="g4834-1"
@@ -295,17 +291,15 @@
      inkscape:groupmode="layer"
      id="layer9"
      inkscape:label="Box front"
-     style="display:inline;opacity:1"
-     sodipodi:insensitive="true">
+     style="display:inline;opacity:1">
     <g
        inkscape:groupmode="layer"
        id="layer8"
        inkscape:label="Box front-left wall"
-       style="display:inline;opacity:1"
-       sodipodi:insensitive="true">
+       style="display:inline;opacity:1">
       <path
-         style="fill:#ffffff;fill-opacity:1;stroke:#898989;stroke-width:6.41741753;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
-         d="m 19.692862,150.50075 v 90.71398 l 75.46794,44.97584 v -90.71398 z"
+         style="fill:#ffffff;fill-opacity:1;stroke:#898989;stroke-width:3.45261312;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+         d="m 56.839627,157.78542 v 48.80473 l 40.60225,24.1973 v -48.80473 z"
          id="path5014"
          inkscape:connector-curvature="0" />
     </g>
@@ -313,13 +307,12 @@
        style="display:inline;opacity:1"
        inkscape:label="Box front-right wall"
        id="g5018"
-       inkscape:groupmode="layer"
-       sodipodi:insensitive="true">
+       inkscape:groupmode="layer">
       <path
          inkscape:connector-curvature="0"
          id="path5016"
-         d="m 201.12082,135.25471 v 90.71398 L 95.54194,286.19057 v -90.71398 z"
-         style="fill:#ffffff;fill-opacity:1;stroke:#898989;stroke-width:6.41741753;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+         d="m 154.44907,149.58296 v 48.80472 l -56.802139,32.39977 v -48.80473 z"
+         style="fill:#ffffff;fill-opacity:1;stroke:#898989;stroke-width:3.45261312;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
          sodipodi:nodetypes="ccccc" />
     </g>
   </g>
