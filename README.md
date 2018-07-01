@@ -1,6 +1,8 @@
 # ModBox
 Моя ИВР
 
+![ModBox](/github/images/logo.png)
+
 [![Build Status](https://travis-ci.com/kodo-pp/ModBox.svg?branch=master)](https://travis-ci.com/kodo-pp/ModBox)
 
 ## Примечание по объектным и классовым диаграммам
