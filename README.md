@@ -1,9 +1,8 @@
-# ModBox
+# ModBox [![Build Status](https://travis-ci.com/kodo-pp/ModBox.svg?branch=master)](https://travis-ci.com/kodo-pp/ModBox)
+
 Моя ИВР
 
 ![ModBox](/github/images/logo.png)
-
-[![Build Status](https://travis-ci.com/kodo-pp/ModBox.svg?branch=master)](https://travis-ci.com/kodo-pp/ModBox)
 
 ## Примечание по объектным и классовым диаграммам
 Эти диаграммы хранятся в каталоге `diagrams.dir`. Файл `Корзун_диаграммы.zip` содержит те же самые файлы, но запакованные в ZIP-архив. Эти диаграммы также собраны в файл `Корзун_диаграммы.pdf`.
