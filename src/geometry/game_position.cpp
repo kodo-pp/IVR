@@ -10,6 +10,9 @@ GamePosition::GamePosition(const GamePosition& other) {
 GamePosition::GamePosition(GamePosition&& other) {
     std::tie(x, y, z) = std::make_tuple(other.x, other.y, other.z);
 }
+GamePosition::GamePosition(const vector3df& irrvec) {
+    std::tie(x, y, z) = std::make_tuple(irrvec.X, irrvec.Y, irrvec.Z);
+}
 
 vector3df GamePosition::toIrrVector3df() {
     return vector3df(x, y, z);
@@ -36,4 +39,19 @@ bool GamePosition::operator !=(const GamePosition& other) {
 }
 bool GamePosition::operator !=(GamePosition&& other) {
     return x != other.x || y != other.y || z != other.z;
+}
+
+GamePosition GamePosition::operator+(const GamePosition& other) {
+    return GamePosition(x + other.x, y + other.y, z + other.z);
+}
+GamePosition& GamePosition::operator+=(const GamePosition& other) {
+    x += other.x;
+    y += other.y;
+    z += other.z;
+    return *this;
+}
+
+std::wostream& operator<<(std::wostream& out, const GamePosition& pos) {
+    out << L"GamePosition(" << pos.x << L", " << pos.y << L", " << pos.z << L")";
+    return out;
 }

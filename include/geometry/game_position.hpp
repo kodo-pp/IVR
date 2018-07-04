@@ -7,6 +7,7 @@
  * The position is universal and can be used for player(s) or game objects.
  */
 
+#include <iostream>
 #include <irrlicht.h>
 using namespace irr::core;
 
@@ -15,11 +16,15 @@ public:
     GamePosition(double _x = 0.0, double _y = 0.0, double _z = 0.0);
     GamePosition(const GamePosition& gamePosition); // copy c-tor
     GamePosition(GamePosition&& gamePosition); // move c-tor
+    explicit GamePosition(const vector3df& irrvec);
 
     vector3df toIrrVector3df();
 
     GamePosition& operator=(const GamePosition& other);
     GamePosition& operator=(GamePosition&& other);
+
+    GamePosition operator+(const GamePosition& other);
+    GamePosition& operator+=(const GamePosition& other);
 
     bool operator ==(const GamePosition& other);
     bool operator ==(GamePosition&& other);
@@ -33,5 +38,7 @@ public:
     double y;
     double z;
 };
+
+std::wostream& operator<<(std::wostream& out, const GamePosition& pos);
 
 #endif /* end of include guard: GEOMETRY_GAME_POSITION_HPP */

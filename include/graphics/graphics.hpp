@@ -30,4 +30,11 @@ void graphicsAddTexture(const GameObject&, ITexture*);
 
 void graphicsDraw();
 
+void graphicsMoveCameraTo(const GamePosition& newPos);
+void graphicsMoveCameraDelta(const GamePosition& delta);
+void graphicsMoveCameraTo(const core::vector3df& newPos);
+void graphicsMoveCameraDelta(const core::vector3df& delta);
+void graphicsMoveCameraTo(double x, double y, double z);
+void graphicsMoveCameraDelta(double dx, double dy, double dz);
+
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */

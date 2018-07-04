@@ -10,6 +10,46 @@
 #include <modules/module_io.hpp>
 #include <graphics/texture.hpp>
 #include <util/util.hpp>
+#include <unordered_set>
+
+// Irrlicht has terrible method and object member naming style
+// But I actually have no choice... But wait, I have an idea
+#define onEvent     OnEvent
+#define keyInput    KeyInput
+#define key         Key
+#define pressedDown PressedDown
+#define eventType   EventType
+// Yeah, now it's much better
+class IrrKeyboardEventReceiver : public irr::IEventReceiver {
+public:
+    IrrKeyboardEventReceiver() = default;
+    virtual ~IrrKeyboardEventReceiver() = default;
+
+    virtual bool onEvent(const irr::SEvent& event) override {
+        if (event.eventType == irr::EET_KEY_INPUT_EVENT) {
+            if (event.keyInput.pressedDown) {
+                pressedKeys.insert(event.keyInput.key);
+            } else {
+                if (pressedKeys.count(event.keyInput.key)) {
+                    pressedKeys.erase(event.keyInput.key);
+                }
+            }
+        }
+        return false;
+    }
+
+    virtual bool isKeyPressed(irr::EKEY_CODE key) {
+        return pressedKeys.count(key) > 0;
+    }
+
+    std::unordered_set <irr::EKEY_CODE> pressedKeys;
+};
+// And... Clean up
+#undef onEvent
+#undef keyInput
+#undef key
+#undef pressedDown
+#undef eventType
 
 /**
  * Глобальные переменные, хранящие необходимые объекты для работы с Irrlicht
@@ -22,6 +62,10 @@ IrrlichtDevice * irrDevice = nullptr;
 video::IVideoDriver * irrVideoDriver = nullptr;
 scene::ISceneManager * irrSceneManager = nullptr;
 gui::IGUIEnvironment * irrGuiEnvironment = nullptr;
+IrrKeyboardEventReceiver irrEventReceiver;
+scene::ICameraSceneNode* camera = nullptr;
+
+GamePosition cameraPosition(0, 0, 0);
 
 }
 
@@ -198,13 +242,14 @@ bool initializeGraphics(std::vector <std::string> * args) {
 // Инициаллизация Irrlicht
 static bool initializeIrrlicht(std::vector <std::string> * args) {
     graphics::irrDevice = irr::createDevice(
-                              irr::video::EDT_BURNINGSVIDEO, // Драйвер для рендеринга (здесь OpenGL) (см. http://irrlicht.sourceforge.net/docu/example001.html)
+                              irr::video::EDT_BURNINGSVIDEO, // Драйвер для рендеринга (здесь OpenGL, но пока программный)
+                                                             // (см. http://irrlicht.sourceforge.net/docu/example001.html)
                               irr::core::dimension2d <irr::u32> (800, 600), // Размеры окна (не в полноэкранном режиме)
                               32, // Глубина цвета
                               false, // Полноэкранный режим
                               false, // stencil buffer (не очень понятно, что это. COMBAK)
                               false, // Вертикальная синхронизация
-                              0); // Объект-обработчик событий (здесь его нет)
+                              &graphics::irrEventReceiver); // Объект-обработчик событий
     if (!graphics::irrDevice) {
         // TODO: добавить fallback-настройки
         return false;
@@ -228,6 +273,12 @@ static bool initializeIrrlicht(std::vector <std::string> * args) {
     if (!graphics::irrSceneManager) {
         return false;
     }
+
+    graphics::camera = graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40), irr::core::vector3df(0,5,0));
+    graphics::cameraPosition = GamePosition(0, 30, -40);
+    if (graphics::camera == nullptr) {
+        return false;
+    }
     return true;
 }
 
@@ -249,7 +300,7 @@ void graphicsDraw() {
                                          true, // Неясно, что это
                                          irr::video::SColor(255, 100, 101, 140)); // Какой-то цвет, возможно, цвет фона (ARGB)
 
-    graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40), irr::core::vector3df(0,5,0));
+//    graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40), irr::core::vector3df(0,5,0));
 
     graphics::irrGuiEnvironment->drawAll();
     graphics::irrSceneManager->drawAll();
@@ -304,9 +355,8 @@ void graphicsAddTexture(const GameObject& obj, ITexture* tex) {
         LOG(L"Adding texture failed");
         return;
     }
-    for (int i = 0; i < 1; ++i) {
-        obj.sceneNode()->setMaterialTexture(i, tex);
-    }
+
+    obj.sceneNode()->setMaterialTexture(0, tex);
     LOG(L"Texture added successfully");
 }
 
@@ -361,3 +411,36 @@ struct FuncResult * handlerGraphicsCreateObject(const std::vector <void*> & args
     return result;
 }
 */
+
+static void updateIrrlichtCamera() {
+    graphics::camera->setPosition(graphics::cameraPosition.toIrrVector3df());
+    graphics::camera->setRotation(irr::core::vector3df(0,5,0));
+}
+
+void graphicsMoveCameraTo(const GamePosition& newPos) {
+    graphics::cameraPosition = newPos;
+    updateIrrlichtCamera();
+}
+void graphicsMoveCameraDelta(const GamePosition& delta) {
+    graphics::cameraPosition += delta;
+    updateIrrlichtCamera();
+}
+void graphicsMoveCameraTo(const core::vector3df& newPos) {
+    graphics::cameraPosition = GamePosition(newPos);
+    updateIrrlichtCamera();
+}
+void graphicsMoveCameraDelta(const core::vector3df& delta) {
+    graphics::cameraPosition += GamePosition(delta);
+    updateIrrlichtCamera();
+}
+void graphicsMoveCameraTo(double x, double y, double z) {
+    graphics::cameraPosition = GamePosition(x, y, z);
+    updateIrrlichtCamera();
+}
+void graphicsMoveCameraDelta(double dx, double dy, double dz) {
+    graphics::cameraPosition += GamePosition(dx, dy, dz);
+    //LOG("Camera position: " << graphics::cameraPosition);
+    //LOG("Active camera: " << graphics::irrSceneManager->getActiveCamera());
+    updateIrrlichtCamera();
+}
+
