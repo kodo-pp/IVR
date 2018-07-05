@@ -8,7 +8,7 @@
 Эти диаграммы хранятся в каталоге `diagrams.dir`. Файл `Корзун_диаграммы.zip` содержит те же самые файлы, но запакованные в ZIP-архив. Эти диаграммы также собраны в файл `Корзун_диаграммы.pdf`.
 
 ## Использованные библиотеки
-- Графический движок [Irrlicht](https://irrlicht.sourceforge.net)
+- Графический движок [Irrlicht](https://sourceforge.net/projects/irrlicht)
 
 - Библиотеки, использыемые Irrlicht (код Independent JPEG Group (jpeglib), libpng и zlib)
 
