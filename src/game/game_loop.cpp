@@ -9,6 +9,8 @@
 #include <chrono>
 #include <irrlicht.h>
 #include <unordered_set>
+#include <memory>
+#include <vector>
 
 std::recursive_mutex irrlichtMutex;
 
@@ -20,13 +22,27 @@ void gameLoop() {
     double timeForFrame = 1.0 / desiredFps;
 
     GameObjCube object = graphicsCreateCube();
-    GameObjCube staticCube = graphicsCreateCube();
+
+    std::vector <GameObjCube> staticCubes;
+
+    for (int i = 0; i < 10; ++i) {
+        for (int j = 0; j < 10; ++j) {
+            staticCubes.push_back(graphicsCreateCube());
+            staticCubes.back().setPosition(GamePosition(i * 20, j * 20, 0));
+        }
+    }
     graphicsAddTexture(object, graphicsLoadTexture(L"textures/cube1.png"));
-    graphicsAddTexture(staticCube, graphicsLoadTexture(L"textures/cube2.png"));
+    
+    auto tex2 = graphicsLoadTexture(L"textures/cube2.png");
+    for (auto& cube : staticCubes) {
+        graphicsAddTexture(cube, tex2);
+    }
+
     double i = 0;
 
     while (true) {
         graphicsMoveCameraDelta(0.1, 0, 0);
+        graphicsRotateCameraDelta(0, 1, 0);
         auto timeBefore = std::chrono::high_resolution_clock::now();
         if (doWeNeedToShutDown) {
             return;

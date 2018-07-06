@@ -37,4 +37,9 @@ void graphicsMoveCameraDelta(const core::vector3df& delta);
 void graphicsMoveCameraTo(double x, double y, double z);
 void graphicsMoveCameraDelta(double dx, double dy, double dz);
 
+void graphicsRotateCamera(const core::vector3df& newRot);
+void graphicsRotateCameraDelta(const core::vector3df& delta);
+void graphicsRotateCamera(double, double, double z);
+void graphicsRotateCameraDelta(double dx, double dy, double dz);
+
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */

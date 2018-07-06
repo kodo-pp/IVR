@@ -66,6 +66,7 @@ IrrKeyboardEventReceiver irrEventReceiver;
 scene::ICameraSceneNode* camera = nullptr;
 
 GamePosition cameraPosition(0, 0, 0);
+core::vector3df cameraRotation(0, 0, 0);
 
 }
 
@@ -274,8 +275,9 @@ static bool initializeIrrlicht(std::vector <std::string> * args) {
         return false;
     }
 
-    graphics::camera = graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40), irr::core::vector3df(0,5,0));
+    graphics::camera = graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40));
     graphics::cameraPosition = GamePosition(0, 30, -40);
+    graphics::camera->bindTargetAndRotation(true);
     if (graphics::camera == nullptr) {
         return false;
     }
@@ -414,7 +416,7 @@ struct FuncResult * handlerGraphicsCreateObject(const std::vector <void*> & args
 
 static void updateIrrlichtCamera() {
     graphics::camera->setPosition(graphics::cameraPosition.toIrrVector3df());
-    graphics::camera->setRotation(irr::core::vector3df(0,5,0));
+    graphics::camera->setRotation(graphics::cameraRotation);
 }
 
 void graphicsMoveCameraTo(const GamePosition& newPos) {
@@ -444,3 +446,20 @@ void graphicsMoveCameraDelta(double dx, double dy, double dz) {
     updateIrrlichtCamera();
 }
 
+void graphicsRotateCamera(const core::vector3df& newRot) {
+    graphics::cameraRotation = newRot;
+    updateIrrlichtCamera();
+}
+void graphicsRotateCameraDelta(const core::vector3df& delta) {
+    graphics::cameraRotation += delta;
+    updateIrrlichtCamera();
+}
+void graphicsRotateCamera(double pitch, double roll, double yaw) {
+    graphics::cameraRotation = core::vector3df(pitch, roll, yaw);
+    updateIrrlichtCamera();
+}
+void graphicsRotateCameraDelta(double pitch, double roll, double yaw) {
+    graphics::cameraRotation += core::vector3df(pitch, roll, yaw);
+    //LOG("graphics::cameraRotation == vector3df(" << graphics::cameraRotation.X << ", " << graphics::cameraRotation.Y << ", " << graphics::cameraRotation.Z << ")");
+    updateIrrlichtCamera();
+}
