@@ -14,6 +14,53 @@
 
 std::recursive_mutex irrlichtMutex;
 
+static void processKeys() {
+    // XXX: This is stub, camera movement and rotation should be done by class like Player
+    const IrrKeyboardEventReceiver& receiver = getKeyboardEventReceiver();
+
+    // Camera movement
+    {
+        int dx = 0, dz = 0;
+        if (receiver.isKeyPressed(irr::KEY_KEY_W)) {
+            ++dz;
+        }
+        if (receiver.isKeyPressed(irr::KEY_KEY_D)) {
+            ++dx;
+        }
+        if (receiver.isKeyPressed(irr::KEY_KEY_S)) {
+            --dz;
+        }
+        if (receiver.isKeyPressed(irr::KEY_KEY_A)) {
+            --dx;
+        }
+
+        const double speed = 0.7;
+        irr::core::vector3df delta(speed * dx, 0, speed * dz);
+        graphicsMoveCameraDelta(delta);
+    }
+
+    // Camera rotation
+    {
+        int dx = 0, dy = 0;
+        if (receiver.isKeyPressed(irr::KEY_UP)) {
+            --dx;
+        }
+        if (receiver.isKeyPressed(irr::KEY_RIGHT)) {
+            ++dy;
+        }
+        if (receiver.isKeyPressed(irr::KEY_DOWN)) {
+            ++dx;
+        }
+        if (receiver.isKeyPressed(irr::KEY_LEFT)) {
+            --dy;
+        }
+
+        const double speed = 0.7;
+        irr::core::vector3df delta(speed * dx, speed * dy, 0);
+        graphicsRotateCameraDelta(delta);
+    }
+}
+
 void gameLoop() {
     int fpsCounter = 0;
     double oneSecondCounter = 0.0;
@@ -40,9 +87,10 @@ void gameLoop() {
 
     double i = 0;
 
-    while (true) {
-        graphicsMoveCameraDelta(0.1, 0, 0);
-        graphicsRotateCameraDelta(0, 1, 0);
+    while (irrDeviceRun()) {
+        processKeys();
+        //graphicsMoveCameraDelta(0.1, 0, 0);
+        //graphicsRotateCameraDelta(0, 1, 0);
         auto timeBefore = std::chrono::high_resolution_clock::now();
         if (doWeNeedToShutDown) {
             return;

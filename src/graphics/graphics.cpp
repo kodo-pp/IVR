@@ -12,45 +12,22 @@
 #include <util/util.hpp>
 #include <unordered_set>
 
-// Irrlicht has terrible method and object member naming style
-// But I actually have no choice... But wait, I have an idea
-#define onEvent     OnEvent
-#define keyInput    KeyInput
-#define key         Key
-#define pressedDown PressedDown
-#define eventType   EventType
-// Yeah, now it's much better
-class IrrKeyboardEventReceiver : public irr::IEventReceiver {
-public:
-    IrrKeyboardEventReceiver() = default;
-    virtual ~IrrKeyboardEventReceiver() = default;
-
-    virtual bool onEvent(const irr::SEvent& event) override {
-        if (event.eventType == irr::EET_KEY_INPUT_EVENT) {
-            if (event.keyInput.pressedDown) {
-                pressedKeys.insert(event.keyInput.key);
-            } else {
-                if (pressedKeys.count(event.keyInput.key)) {
-                    pressedKeys.erase(event.keyInput.key);
-                }
+bool IrrKeyboardEventReceiver::OnEvent(const irr::SEvent& event) {
+    if (event.EventType == irr::EET_KEY_INPUT_EVENT) {
+        if (event.KeyInput.PressedDown) {
+            pressedKeys.insert(event.KeyInput.Key);
+        } else {
+            if (pressedKeys.count(event.KeyInput.Key)) {
+                pressedKeys.erase(event.KeyInput.Key);
             }
         }
-        return false;
     }
+    return false;
+}
 
-    virtual bool isKeyPressed(irr::EKEY_CODE key) {
-        return pressedKeys.count(key) > 0;
-    }
-
-    std::unordered_set <irr::EKEY_CODE> pressedKeys;
-};
-// And... Clean up
-#undef onEvent
-#undef keyInput
-#undef key
-#undef pressedDown
-#undef eventType
-
+bool IrrKeyboardEventReceiver::isKeyPressed(irr::EKEY_CODE key) const {
+    return pressedKeys.count(key) > 0;
+}
 /**
  * Глобальные переменные, хранящие необходимые объекты для работы с Irrlicht
  *
@@ -416,7 +393,10 @@ struct FuncResult * handlerGraphicsCreateObject(const std::vector <void*> & args
 
 static void updateIrrlichtCamera() {
     graphics::camera->setPosition(graphics::cameraPosition.toIrrVector3df());
+    graphics::camera->updateAbsolutePosition();
     graphics::camera->setRotation(graphics::cameraRotation);
+    //LOG("cameraPosition = (" << graphics::cameraPosition.x << ", " << graphics::cameraPosition.y << ", " << graphics::cameraPosition.z << ")");
+    //LOG("cameraPosition = (" << graphics::cameraRotation.X << ", " << graphics::cameraRotation.Y << ", " << graphics::cameraRotation.Z << ")");
 }
 
 void graphicsMoveCameraTo(const GamePosition& newPos) {
@@ -462,4 +442,12 @@ void graphicsRotateCameraDelta(double pitch, double roll, double yaw) {
     graphics::cameraRotation += core::vector3df(pitch, roll, yaw);
     //LOG("graphics::cameraRotation == vector3df(" << graphics::cameraRotation.X << ", " << graphics::cameraRotation.Y << ", " << graphics::cameraRotation.Z << ")");
     updateIrrlichtCamera();
+}
+
+bool irrDeviceRun() {
+    return graphics::irrDevice->run();
+}
+
+const IrrKeyboardEventReceiver& getKeyboardEventReceiver() {
+    return graphics::irrEventReceiver;
 }
