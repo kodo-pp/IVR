@@ -8,9 +8,11 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-5.0
           packages:
             - g++-7
             - libirrlicht-dev
+            - clang-5.0
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
@@ -19,4 +21,19 @@ before_install:
     - sudo ln -s /usr/lib/x86_64-linux-gnu/libIrrlicht.so.1.8 /usr/lib
     - sudo ln -sf "$(which gcc-7)" /usr/bin/cc
     - sudo ln -sf "$(which g++-7)" /usr/bin/c++
-script: FORCE_REBUILD=yes ./build.sh -f
+script:
+    - echo 'Testing that it just builds'
+    - FORCE_REBUILD=yes ./build.sh
+    - for debug in 'yes' 'no'; do
+          for toolchain in 'gcc' 'generic' 'clang'; do
+              echo "Testing toolchain '${toolchain}', debug=${debug}"
+              if ! CC_TOOLCHAIN="${toolchain}" DEBUG="${debug}" FORCE_REBUILD=yes ./build.sh; then
+                  echo "Failed"
+                  exit 1
+              else
+          done
+      done
+    - echo "Testing custom toolchain"
+    - CUSTOM_CC='/usr/bin/cc' CUSTOM_CXX='/usr/bin/c++' CUSTOM_LD='c++' CC_TOOLCHAIN='custom' FORCE_REBUILD='yes' DEBUG='yes' ./build.sh
+    - CUSTOM_CC='/usr/bin/cc' CUSTOM_CXX='/usr/bin/c++' CUSTOM_LD='c++' CC_TOOLCHAIN='custom' FORCE_REBUILD='yes' DEBUG='no' ./build.sh
+
