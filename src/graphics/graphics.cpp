@@ -11,6 +11,9 @@
 #include <graphics/texture.hpp>
 #include <util/util.hpp>
 #include <unordered_set>
+#include <misc/irrvec.hpp>
+#include <geometry/geometry.hpp>
+#include <tuple>
 
 bool IrrKeyboardEventReceiver::OnEvent(const irr::SEvent& event) {
     if (event.EventType == irr::EET_KEY_INPUT_EVENT) {
@@ -339,64 +342,10 @@ void graphicsAddTexture(const GameObject& obj, ITexture* tex) {
     LOG(L"Texture added successfully");
 }
 
-/**
- * Создаёт графический объект
- *
- * Создаёт графический объект: фактически, узел сцены Irrlicht с определёнными
- * параметрами
- *
- * Является функцией для объекта FuncProvider
- * @param args: параметры функции для FuncProvider
- * @param args[0]: Указатель на std::string, содержащий имя файла с 3d-моделью
- *  NOT YET @param args[1]: Указатель на std::string, содержащий имя файла с текстурой
- * @return struct FuncResult *: возвращаемая структура для FuncProvider
- * @return ->data: nullptr при неудаче, индекс графического объекта при успехе
- * @return ->exitStatus: 0 при успехе, 1 при неверных аргументах, 2 при неудачном создании объекта
- */
-
-/*
-struct FuncResult * handlerGraphicsCreateObject(const std::vector <void*> & args) {
-    // Create the structure which will be returned
-    struct FuncResult * result = new struct FuncResult;
-    if (!result) {
-        throw std::bad_alloc();
-    }
-
-    // Parse arguments
-    if (args.size() != 1) {
-        //result->data = nullptr;
-        result->exitStatus = 1;
-        return result;
-    }
-    std::wstring *modelFileName = (std::wstring *)args.at(0);
-    if (!modelFileName) {
-        //result->data = nullptr;
-        result->exitStatus = 1;
-        return result;
-    }
-
-    ISceneNode *node;
-
-    try {
-        node = graphicsCreateObject(*modelFileName);
-    } catch (std::bad_alloc& e) {
-        //result->data = nullptr;
-        result->exitStatus = 2;
-        return result;
-    }
-
-    result->data.push_back((void *)node);
-    result->exitStatus = 0;
-    return result;
-}
-*/
-
 static void updateIrrlichtCamera() {
     graphics::camera->setPosition(graphics::cameraPosition.toIrrVector3df());
     graphics::camera->updateAbsolutePosition();
     graphics::camera->setRotation(graphics::cameraRotation);
-    //LOG("cameraPosition = (" << graphics::cameraPosition.x << ", " << graphics::cameraPosition.y << ", " << graphics::cameraPosition.z << ")");
-    //LOG("cameraPosition = (" << graphics::cameraRotation.X << ", " << graphics::cameraRotation.Y << ", " << graphics::cameraRotation.Z << ")");
 }
 
 void graphicsMoveCameraTo(const GamePosition& newPos) {
@@ -421,9 +370,18 @@ void graphicsMoveCameraTo(double x, double y, double z) {
 }
 void graphicsMoveCameraDelta(double dx, double dy, double dz) {
     graphics::cameraPosition += GamePosition(dx, dy, dz);
-    //LOG("Camera position: " << graphics::cameraPosition);
-    //LOG("Active camera: " << graphics::irrSceneManager->getActiveCamera());
     updateIrrlichtCamera();
+}
+
+void graphicsMoveCameraForward(double delta, double directionOffset) {
+    // XXX: For now, vertical camera angle is ignored. Maybe it should be so,
+    // maybe it should not
+    double x, y, z;
+    std::tie(x, y, z) = irrvec_extract(graphics::camera->getRotation());
+    double azimuth = getAzimuth(x, y, z) + directionOffset;
+    double deltaX = delta * sin(azimuth);
+    double deltaZ = delta * cos(azimuth);
+    graphicsMoveCameraDelta(deltaX, 0.0, deltaZ);
 }
 
 void graphicsRotateCamera(const core::vector3df& newRot) {

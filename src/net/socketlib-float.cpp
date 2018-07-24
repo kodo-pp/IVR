@@ -44,22 +44,22 @@ UNUSED static double recvIeeeFloat64(int sock) {
 // performance issues)
 
 static void sendStringFloat32(int sock, float v) {
-    std::string str = std::move(std::to_string(v));
+    std::string str = std::to_string(v);
     sendString(sock, std::move(str));
 }
 
 static void sendStringFloat64(int sock, double v) {
-    std::string str = std::move(std::to_string(v));
+    std::string str = std::to_string(v);
     sendString(sock, std::move(str));
 }
 
 static float recvStringFloat32(int sock) {
-    std::string str = std::move(recvString(sock));
+    std::string str = recvString(sock);
     return std::stof(std::move(str));
 }
 
 static double recvStringFloat64(int sock) {
-    std::string str = std::move(recvString(sock));
+    std::string str = recvString(sock);
     return std::stod(std::move(str));
 }
 

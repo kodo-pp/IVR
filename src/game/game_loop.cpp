@@ -11,6 +11,7 @@
 #include <unordered_set>
 #include <memory>
 #include <vector>
+#include <cmath>
 
 std::recursive_mutex irrlichtMutex;
 
@@ -34,9 +35,40 @@ static void processKeys() {
             --dx;
         }
 
-        const double speed = 0.7;
-        irr::core::vector3df delta(speed * dx, 0, speed * dz);
-        graphicsMoveCameraDelta(delta);
+        double directionOffset = 0;
+        double speed = 3.0;
+        switch (dx * 10 + dz) {
+        case -10 + -1: // back, left
+            directionOffset = -0.75 * M_PI;
+            break;
+        case -10 + 0: // left
+            directionOffset = -0.5 * M_PI;
+            break;
+        case -10 + 1: // forward, left
+            directionOffset = -0.25 * M_PI;
+            break;
+        case 0 + -1: // back
+            directionOffset = M_PI;
+            break;
+        case 0 + 0: // no movement
+            directionOffset = 0;
+            speed = 0;
+            break;
+        case 0 + 1: // forward
+            directionOffset = 0;
+            break;
+        case 10 + -1: // back, right
+            directionOffset = 0.75 * M_PI;
+            break;
+        case 10 + 0: // right
+            directionOffset = 0.5 * M_PI;
+            break;
+        case 10 + 1: // forward, right
+            directionOffset = 0.25 * M_PI;
+            break;
+        }
+
+        graphicsMoveCameraForward(speed, directionOffset);
     }
 
     // Camera rotation
@@ -55,7 +87,7 @@ static void processKeys() {
             --dy;
         }
 
-        const double speed = 0.7;
+        const double speed = 2.0;
         irr::core::vector3df delta(speed * dx, speed * dy, 0);
         graphicsRotateCameraDelta(delta);
     }

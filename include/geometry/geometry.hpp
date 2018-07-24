@@ -1,16 +1,16 @@
 #ifndef GEOMETRY_GEOMETRY_HPP
 #define GEOMETRY_GEOMETRY_HPP
 
+#include <algorithm>
+#include <utility>
+#include <stdexcept>
+
 /**
  * Represents a rectangle defined by two 2D points
  *
  * Top left is a (min, min) point, bottom right is a (max, max) point
  * It is guaranted that left <= right and top <= bottom
  */
-
-#include <algorithm>
-#include <utility>
-#include <stdexcept>
 
 template <typename T>
 class Rectangle {
@@ -108,5 +108,8 @@ protected:
     T right;
     T bottom;
 };
+
+/// Get (horizontal only) azimuth by rotation tuple (x, y, z)
+double getAzimuth(double x, double y, double z);
 
 #endif /* end of include guard: GEOMETRY_GEOMETRY_HPP */
