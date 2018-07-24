@@ -25,21 +25,22 @@ before_install:
     - sudo mv /usr/bin/g++ /usr/bin/g++.old
     - sudo ln -sf "$(which gcc-7)" /usr/bin/gcc
     - sudo ln -sf "$(which g++-7)" /usr/bin/g++
-    - find /usr -name 'LLVMgold.so' 2>/dev/null
-#    - sudo ln -sf /usr/local/clang-5.0.0/lib/LLVMgold.so /usr/local/LLVMgold.so: cannot open shared object file: No such file or directory
 script:
-    - echo 'Testing that it just builds'
     - FORCE_REBUILD=yes ./build.sh
     - for debug in 'yes' 'no'; do
           for toolchain in 'gcc' 'generic' 'clang'; do
               echo "Testing toolchain '${toolchain}', debug=${debug}";
+              if [[ "$toolchain" == "clang" ]]; then
+                  export USE_LTO="no";
+              else
+                  export USE_LTO="yes";
+              fi;
               if ! CC_TOOLCHAIN="${toolchain}" DEBUG="${debug}" FORCE_REBUILD=yes ./build.sh; then
                   echo "Failed";
                   exit 1;
               fi;
           done;
       done
-    - echo "Testing custom toolchain"
     - CUSTOM_CC='/usr/bin/cc' CUSTOM_CXX='/usr/bin/c++' CUSTOM_LD='c++' CC_TOOLCHAIN='custom' FORCE_REBUILD='yes' DEBUG='yes' ./build.sh
     - CUSTOM_CC='/usr/bin/cc' CUSTOM_CXX='/usr/bin/c++' CUSTOM_LD='c++' CC_TOOLCHAIN='custom' FORCE_REBUILD='yes' DEBUG='no' ./build.sh
 

@@ -14,11 +14,13 @@ if [[ "$1" == "--help" ]]; then
     echo -e "      CUSTOM_CC                - C compiler"
     echo -e "      CUSTOM_CXX               - C++ compiler"
     echo -e "      CUSTOM_LD                - Linker, usually the same as CUSTOM_CXX"
+    echo -e "  USE_LTO=[yes/no]             - enable link time optimization (ignored when DEBUG=yes)"
     echo -e ""
     echo -e "Default settings are:"
     echo -e "  DEBUG=no"
     echo -e "  FORCE_REBUILD=no"
     echo -e "  CC_TOOLCHAIN=generic"
+    echo -e "  LTO=yes"
     echo -e ""
     echo -e "Exact commands executed are written to build.log"
     exit 1
@@ -31,7 +33,10 @@ exec_name="main"
 optimization_level=2
 
 # Optimization flags (used only when DEBUG=no)
-OPT_FLAGS="-O${optimization_level} -flto -ftree-vectorize"
+OPT_FLAGS="-O${optimization_level} -ftree-vectorize"
+if [[ "${USE_LTO}" == "yes" ]]; then
+    OPT_FLAGS="${OPT_FLAGS} -flto"
+fi
 
 # Compilers - default values
 CC="cc"     # C compiler
