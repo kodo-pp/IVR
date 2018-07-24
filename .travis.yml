@@ -21,6 +21,10 @@ before_install:
     - sudo ln -s /usr/lib/x86_64-linux-gnu/libIrrlicht.so.1.8 /usr/lib
     - sudo ln -sf "$(which gcc-7)" /usr/bin/cc
     - sudo ln -sf "$(which g++-7)" /usr/bin/c++
+    - sudo mv /usr/bin/gcc /usr/bin/gcc.old
+    - sudo mv /usr/bin/g++ /usr/bin/g++.old
+    - sudo ln -sf "$(which gcc-7)" /usr/bin/gcc
+    - sudo ln -sf "$(which g++-7)" /usr/bin/g++
 script:
     - echo 'Testing that it just builds'
     - FORCE_REBUILD=yes ./build.sh
