@@ -1,7 +1,7 @@
+#include <log/log.hpp>
 #include <graphics/graphics.hpp>
 #include <game/objects/objects.hpp>
 #include <core/core.hpp>
-#include <log/log.hpp>
 #include <iostream>
 #include <irrlicht.h>
 #include <vector>
@@ -45,13 +45,15 @@ gui::IGUIEnvironment * irrGuiEnvironment = nullptr;
 IrrKeyboardEventReceiver irrEventReceiver;
 scene::ICameraSceneNode* camera = nullptr;
 
-GamePosition cameraPosition(0, 0, 0);
+//GamePosition cameraPosition(5400, 510, 5200);
+GamePosition cameraPosition(0, 30, -40);
 core::vector3df cameraRotation(0, 0, 0);
+
+scene::ITerrainSceneNode* terrain = nullptr;
 
 }
 
 static bool initializeIrrlicht(std::vector <std::string> * args);
-//struct FuncResult * handlerGraphicsCreateObject(const std::vector <void *> &);
 
 struct FuncResult* handlerGraphicsCreateCube(const std::vector <void*> & args) {
     auto ret = new struct FuncResult;
@@ -129,29 +131,15 @@ extern std::recursive_mutex irrlichtMutex;
 
 struct FuncResult* handlerGraphicsLoadTexture(const std::vector <void*> & args) {
     std::lock_guard <std::recursive_mutex> irrlock(irrlichtMutex);
-    LOG("A");
     if (args.size() != 1) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsLoadTexture()");
     }
-    LOG("B");
     auto ret = new struct FuncResult;
-    LOG("C");
     // TODO: replace with wstring
+
     std::string filename = getArgument <std::string> (args, 0);
-
-    LOG("X");
-
-    LOG(filename.c_str());
-
-    LOG(graphics::irrVideoDriver);
-
     ITexture* texture = graphics::irrVideoDriver->getTexture(filename.c_str());
-    
-    LOG("D");
-
     ret->data.resize(1);
-
-    LOG("E");
 
     if (texture == nullptr) {
         ret->exitStatus = 1;
@@ -159,12 +147,7 @@ struct FuncResult* handlerGraphicsLoadTexture(const std::vector <void*> & args) 
         return ret;
     }
 
-    LOG("F");
-
     uint64_t handle = registerTexture(texture);
-
-    LOG("G");
-    LOG(L"Texture " << handle << L" loaded from file " << wstring_cast(filename));
 
     ret->exitStatus = 0;
     setReturn <uint64_t> (ret, 0, handle);
@@ -255,8 +238,7 @@ static bool initializeIrrlicht(std::vector <std::string> * args) {
         return false;
     }
 
-    graphics::camera = graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40));
-    graphics::cameraPosition = GamePosition(0, 30, -40);
+    graphics::camera = graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0, 30, -40));
     graphics::camera->bindTargetAndRotation(true);
     if (graphics::camera == nullptr) {
         return false;
@@ -398,8 +380,29 @@ void graphicsRotateCamera(double pitch, double roll, double yaw) {
 }
 void graphicsRotateCameraDelta(double pitch, double roll, double yaw) {
     graphics::cameraRotation += core::vector3df(pitch, roll, yaw);
-    //LOG("graphics::cameraRotation == vector3df(" << graphics::cameraRotation.X << ", " << graphics::cameraRotation.Y << ", " << graphics::cameraRotation.Z << ")");
     updateIrrlichtCamera();
+}
+
+// COMBAK: Stub, maybe customize arguments like node position and scale
+// Code taken from http://irrlicht.sourceforge.net/docu/example012.html
+void graphicsLoadTerrain(const std::string& heightmap) {
+    scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
+        heightmap.c_str(),                      // heightmap filename
+        nullptr,                                // parent node
+        -1,                                     // node id
+        // core::vector3df(-5000.0f, -1000.0f, -5000.0f),         // position
+        core::vector3df(-500.0f, -300.0f, -500.0f),         // position
+        core::vector3df(0.0f, 0.0f, 0.0f),         // rotation
+        core::vector3df(1.0f, 1.0f, 1.0f),      // scale
+        video::SColor(255, 255, 255, 255),      // vertexColor
+        5,                                      // maxLOD
+        scene::ETPS_17,                         // patchSize
+        4                                       // smoothFactor
+    );
+    terrain->setMaterialFlag(irr::video::EMF_LIGHTING, false);
+    terrain->setMaterialTexture(0, graphicsLoadTexture(L"textures/texture4.png"));
+    terrain->scaleTexture(1.0f, 20.0f);
+    graphics::terrain = terrain;
 }
 
 bool irrDeviceRun() {

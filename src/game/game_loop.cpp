@@ -19,7 +19,7 @@ static void processKeys() {
     // XXX: This is stub, camera movement and rotation should be done by class like Player
     const IrrKeyboardEventReceiver& receiver = getKeyboardEventReceiver();
 
-    // Camera movement
+    // Camera movement (horizontal)
     {
         int dx = 0, dz = 0;
         if (receiver.isKeyPressed(irr::KEY_KEY_W)) {
@@ -28,11 +28,11 @@ static void processKeys() {
         if (receiver.isKeyPressed(irr::KEY_KEY_D)) {
             ++dx;
         }
-        if (receiver.isKeyPressed(irr::KEY_KEY_S)) {
-            --dz;
-        }
         if (receiver.isKeyPressed(irr::KEY_KEY_A)) {
             --dx;
+        }
+        if (receiver.isKeyPressed(irr::KEY_KEY_S)) {
+            --dz;
         }
 
         double directionOffset = 0;
@@ -71,6 +71,18 @@ static void processKeys() {
         graphicsMoveCameraForward(speed, directionOffset);
     }
 
+    // Camera movement (vertical)
+    {
+        int dy = 0;
+        if (receiver.isKeyPressed(irr::KEY_SPACE)) {
+            ++dy;
+        }
+        if (receiver.isKeyPressed(irr::KEY_LSHIFT)) {
+            --dy;
+        }
+        graphicsMoveCameraDelta(0, 2.0 * dy, 0);
+    }
+
     // Camera rotation
     {
         int dx = 0, dy = 0;
@@ -94,6 +106,7 @@ static void processKeys() {
 }
 
 void gameLoop() {
+    graphicsLoadTerrain("textures/heightmap.png");
     int fpsCounter = 0;
     double oneSecondCounter = 0.0;
 
@@ -111,7 +124,7 @@ void gameLoop() {
         }
     }
     graphicsAddTexture(object, graphicsLoadTexture(L"textures/cube1.png"));
-    
+
     auto tex2 = graphicsLoadTexture(L"textures/cube2.png");
     for (auto& cube : staticCubes) {
         graphicsAddTexture(cube, tex2);

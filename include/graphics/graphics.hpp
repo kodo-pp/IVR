@@ -77,6 +77,12 @@ void graphicsRotateCamera(double x, double y, double z);
 void graphicsRotateCameraDelta(double dx, double dy, double dz);
 
 
+// ===== Managing terrain =====
+
+/// Create a terrain scene node
+/// STUB
+void graphicsLoadTerrain(const std::string& heightmap);
+
 // ===== Utility functions =====
 
 /// Poll for Ittlicht events related to window and similar stuff
@@ -91,7 +97,6 @@ bool irrDeviceRun();
 #define pressedDown PressedDown
 #define eventType   EventType
 // Yeah, now it's much better
-
 /// Event receiver for keyboard events
 class IrrKeyboardEventReceiver : public irr::IEventReceiver {
 public:
