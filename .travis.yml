@@ -29,16 +29,18 @@ script:
     - FORCE_REBUILD=yes ./build.sh
     - for debug in 'yes' 'no'; do
           for toolchain in 'gcc' 'generic' 'clang'; do
-              echo "Testing toolchain '${toolchain}', debug=${debug}";
-              if [[ "$toolchain" == "clang" ]]; then
-                  export USE_LTO="no";
-              else
-                  export USE_LTO="yes";
-              fi;
-              if ! CC_TOOLCHAIN="${toolchain}" DEBUG="${debug}" FORCE_REBUILD=yes ./build.sh; then
-                  echo "Failed";
-                  exit 1;
-              fi;
+              for nproc in '1' '4'; do
+                  echo "Testing toolchain '${toolchain}', debug=${debug}, proc_count=${nproc}";
+                  if [[ "$toolchain" == "clang" ]]; then
+                      export USE_LTO="no";
+                  else
+                      export USE_LTO="yes";
+                  fi;
+                  if ! CC_TOOLCHAIN="${toolchain}" DEBUG="${debug}" PROC_COUNT="${nproc}" FORCE_REBUILD=yes ./build.sh; then
+                      echo "Failed";
+                      exit 1;
+                  fi;
+              done;
           done;
       done
     - CUSTOM_CC='/usr/bin/cc' CUSTOM_CXX='/usr/bin/c++' CUSTOM_LD='c++' CC_TOOLCHAIN='custom' FORCE_REBUILD='yes' DEBUG='yes' ./build.sh

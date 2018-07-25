@@ -15,12 +15,14 @@ if [[ "$1" == "--help" ]]; then
     echo -e "      CUSTOM_CXX               - C++ compiler"
     echo -e "      CUSTOM_LD                - Linker, usually the same as CUSTOM_CXX"
     echo -e "  USE_LTO=[yes/no]             - enable link time optimization (ignored when DEBUG=yes)"
+    echo -e "  PROC_COUNT=<num>             - spawn up to <num> parallel processes, set to 1 to disable parallel build"
     echo -e ""
     echo -e "Default settings are:"
     echo -e "  DEBUG=no"
     echo -e "  FORCE_REBUILD=no"
     echo -e "  CC_TOOLCHAIN=generic"
     echo -e "  LTO=yes"
+    echo -e "  PROC_COUNT=4"
     echo -e ""
     echo -e "Exact commands executed are written to build.log"
     exit 1
@@ -168,6 +170,12 @@ function dump_command() {
     echo "$@" >> build.log
 }
 
+
+# Translate some_file_name.whatever -> some_file_name.o
+function object_file() {
+   echo "$1" | sed 's/[.][^.]*$/.o/g'
+}
+
 # Compiles file. Calls the compiler appropriate to the file extension
 function build_file() {
     # Check if the source file exists
@@ -183,12 +191,7 @@ function build_file() {
         touch ".build-cache/$1"
     fi
 
-    # Translate some_file_name.whatever -> some_file_name.o
-    objname="$(echo "$i" | sed 's/[.][^.]*$/.o/g')"
-
-    # It doesn't get printed but is appended to the 'objects' variable, see
-    # this function invokation below
-    echo "${objname}"
+    local objname=$(object_file "$1")
 
     if (sha512sum "$1" | awk '{print $1}' | cmp - .build-cache/"$1" &>/dev/null) \
             && [ ".${FORCE_REBUILD}" != ".yes" ] \
@@ -201,10 +204,10 @@ function build_file() {
     # Determine which compiler should we use
     case $1 in
     *.c)
-        run_command cc "${CC}" ${CFLAGS} -c -o "${objname}" "$1" >&2
+        run_command cc "${CC}" ${CFLAGS} -c -o "${objname}" "$1" >&2 &
         ;;
     *.C|*.cpp|*.c++)
-        run_command cxx "${CXX}" ${CXXFLAGS} -c -o "${objname}" "$1" >&2
+        run_command cxx "${CXX}" ${CXXFLAGS} -c -o "${objname}" "$1" >&2 &
         ;;
     *)
         echo -e "\e[1;31mError: unable to build file '$1': cannot determine the compiler\e[0m" >&2
@@ -213,18 +216,36 @@ function build_file() {
     esac
 }
 
+# Builds specified files in parallel
+# $1 is process count, $2 - ... are files
+function thread_pool_run() {
+    proc_count="$1"
+    shift
+    for src in "$@"; do
+        if [[ $(jobs -p | wc -l) -ge "${proc_count}" ]]; then
+            wait -n
+        fi
+        build_file "${src}"
+    done
+    wait
+}
+
 # OK, begin the build process
 echo -e '\e[1mBuilding...\e[0m' >&2
 truncate -s 0 build.log
 
-# The list of object files, filled in while building
-objects=''
-
 # Find all source files and build them. We assume that file names doesn't contain
 # spaces or similar stuff (because I'm too lazy to handle them correctly).
-for i in $(find src/ -regex '.*[.]\(c\|C\|cpp\|c++\)' -type f); do
-    objects="${objects} $(build_file "$i")"
+sources="$(find src/ -regex '.*[.]\(c\|C\|cpp\|c++\)' -type f)"
+
+# The list of object files, filled in while building
+objects=''
+for i in ${sources}; do
+    objects="${objects} $(object_file "$i")"
 done
+
+# Then we add all files to the build queue and build them
+thread_pool_run ${PROC_COUNT:-4} ${sources}
 
 # And finally link all our object files to one big executable file
 run_command link "${LD}" ${objects} ${LDFLAGS} -o "${exec_name}"
