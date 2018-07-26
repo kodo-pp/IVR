@@ -1,24 +1,22 @@
+#include <chrono>
+#include <cmath>
+#include <core/init.hpp>
 #include <game/game_loop.hpp>
+#include <game/player.hpp>
 #include <game/solid_object.hpp>
 #include <graphics/graphics.hpp>
-#include <core/init.hpp>
-#include <log/log.hpp>
 #include <iostream>
+#include <irrlicht.h>
+#include <log/log.hpp>
+#include <memory>
 #include <string>
 #include <unistd.h>
-#include <chrono>
-#include <irrlicht.h>
 #include <unordered_set>
-#include <memory>
 #include <vector>
-#include <cmath>
 
 std::recursive_mutex irrlichtMutex;
 
-static void gameTick() {
-}
-
-static void processKeys() {
+static void processKeys(Player& player) {
     // XXX: This is stub, camera movement and rotation should be done by class like Player
     const IrrKeyboardEventReceiver& receiver = getKeyboardEventReceiver();
 
@@ -71,19 +69,15 @@ static void processKeys() {
             break;
         }
 
-        graphicsMoveCameraForward(speed, directionOffset);
+        player.moveForward(speed, directionOffset);
     }
 
     // Camera movement (vertical)
     {
-        int dy = 0;
         if (receiver.isKeyPressed(irr::KEY_SPACE)) {
-            ++dy;
+            const double jumpHeight = 5.0;
+            player.jump(jumpHeight);
         }
-        if (receiver.isKeyPressed(irr::KEY_LSHIFT)) {
-            --dy;
-        }
-        graphicsMoveCameraDelta(0, 2.0 * dy, 0);
     }
 
     // Camera rotation
@@ -103,12 +97,12 @@ static void processKeys() {
         }
 
         const double speed = 2.0;
-        irr::core::vector3df delta(speed * dx, speed * dy, 0);
-        graphicsRotateCameraDelta(delta);
+        player.turn(speed * dx, speed * dy);
     }
 }
 
 void gameLoop() {
+    Player player(graphicsGetCamera());
     graphicsLoadTerrain("textures/heightmap.png");
     int fpsCounter = 0;
     double oneSecondCounter = 0.0;
@@ -118,7 +112,7 @@ void gameLoop() {
 
     GameObjCube object = graphicsCreateCube();
 
-    std::vector <GameObjCube> staticCubes;
+    std::vector<GameObjCube> staticCubes;
 
     for (int i = 0; i < 10; ++i) {
         for (int j = 0; j < 10; ++j) {
@@ -136,8 +130,7 @@ void gameLoop() {
     double i = 0;
 
     while (irrDeviceRun()) {
-        processKeys();
-        gameTick();
+        processKeys(player);
         auto timeBefore = std::chrono::high_resolution_clock::now();
         if (doWeNeedToShutDown) {
             return;
@@ -146,13 +139,14 @@ void gameLoop() {
         object.setRotation(i * 100, i * 50, i * 20);
 
         {
-            std::lock_guard <std::recursive_mutex> lock(irrlichtMutex);
+            std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
             graphicsDraw();
         }
         ++fpsCounter;
 
         auto timeAfter = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast < std::chrono::duration<double> > (timeAfter - timeBefore);
+        auto duration =
+                std::chrono::duration_cast<std::chrono::duration<double>>(timeAfter - timeBefore);
         double timeToSleep = timeForFrame - duration.count();
         if (oneSecondCounter > 1.0) {
             fpsCounter = 0;
@@ -162,11 +156,12 @@ void gameLoop() {
             LOG("Warning: frame rendering took longer than 1 / " << desiredFps << " s");
             LOG("Time to sleep is " << timeToSleep);
         } else {
-            usleep(static_cast <int> (timeToSleep * 1e+6));
+            usleep(static_cast<int>(timeToSleep * 1e+6));
         }
 
         auto timeAfterSleep = std::chrono::high_resolution_clock::now();
-        auto fullDuration = std::chrono::duration_cast < std::chrono::duration<double> > (timeAfterSleep - timeBefore);
+        auto fullDuration = std::chrono::duration_cast<std::chrono::duration<double>>(
+                timeAfterSleep - timeBefore);
         oneSecondCounter += fullDuration.count();
 
         i += timeForFrame;

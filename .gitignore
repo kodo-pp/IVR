@@ -44,4 +44,3 @@ build.log
 
 *.orig
 vgcore.*
-.clang_complete

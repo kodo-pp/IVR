@@ -1,19 +1,19 @@
-#include <log/log.hpp>
-#include <graphics/graphics.hpp>
-#include <game/objects/objects.hpp>
 #include <core/core.hpp>
+#include <game/objects/objects.hpp>
+#include <geometry/geometry.hpp>
+#include <graphics/graphics.hpp>
+#include <graphics/texture.hpp>
 #include <iostream>
 #include <irrlicht.h>
-#include <vector>
-#include <string>
-#include <unistd.h>
-#include <modules/module_io.hpp>
-#include <graphics/texture.hpp>
-#include <util/util.hpp>
-#include <unordered_set>
+#include <log/log.hpp>
 #include <misc/irrvec.hpp>
-#include <geometry/geometry.hpp>
+#include <modules/module_io.hpp>
+#include <string>
 #include <tuple>
+#include <unistd.h>
+#include <unordered_set>
+#include <util/util.hpp>
+#include <vector>
 
 bool IrrKeyboardEventReceiver::OnEvent(const irr::SEvent& event) {
     if (event.EventType == irr::EET_KEY_INPUT_EVENT) {
@@ -38,50 +38,49 @@ bool IrrKeyboardEventReceiver::isKeyPressed(irr::EKEY_CODE key) const {
  */
 namespace graphics {
 
-IrrlichtDevice * irrDevice = nullptr;
-video::IVideoDriver * irrVideoDriver = nullptr;
-scene::ISceneManager * irrSceneManager = nullptr;
-gui::IGUIEnvironment * irrGuiEnvironment = nullptr;
+IrrlichtDevice* irrDevice = nullptr;
+video::IVideoDriver* irrVideoDriver = nullptr;
+scene::ISceneManager* irrSceneManager = nullptr;
+gui::IGUIEnvironment* irrGuiEnvironment = nullptr;
 IrrKeyboardEventReceiver irrEventReceiver;
 scene::ICameraSceneNode* camera = nullptr;
 
-//GamePosition cameraPosition(5400, 510, 5200);
-GamePosition cameraPosition(0, 30, -40);
-core::vector3df cameraRotation(0, 0, 0);
+scene::ISceneNodeAnimator* cameraCollisionAnimator = nullptr;
+scene::ITriangleSelector* triangleSelector = nullptr;
 
 scene::ITerrainSceneNode* terrain = nullptr;
 
-}
+} // namespace graphics
 
-static bool initializeIrrlicht(std::vector <std::string> * args);
+static bool initializeIrrlicht(std::vector<std::string>* args);
 
-struct FuncResult* handlerGraphicsCreateCube(const std::vector <void*> & args) {
+struct FuncResult* handlerGraphicsCreateCube(UNUSED const std::vector<void*>& args) {
     auto ret = new struct FuncResult;
     ret->data.resize(1);
 
-    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
+    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
 
     GameObject* obj = new GameObject(graphicsCreateCube());
     auto objectHandle = registerGameObject(obj);
 
-    setReturn <uint64_t> (ret, 0, objectHandle);
+    setReturn<uint64_t>(ret, 0, objectHandle);
     ret->exitStatus = 0;
     return ret;
 }
 
-struct FuncResult* handlerGraphicsMoveObject(const std::vector <void*> & args) {
+struct FuncResult* handlerGraphicsMoveObject(const std::vector<void*>& args) {
     if (args.size() != 4) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsMoveObject()");
     }
     auto ret = new struct FuncResult;
 
-    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
+    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
 
-    uint64_t objectHandle = getArgument <uint64_t> (args, 0);
+    uint64_t objectHandle = getArgument<uint64_t>(args, 0);
 
-    double x = getArgument <double> (args, 1);
-    double y = getArgument <double> (args, 2);
-    double z = getArgument <double> (args, 3);
+    double x = getArgument<double>(args, 1);
+    double y = getArgument<double>(args, 2);
+    double z = getArgument<double>(args, 3);
 
     graphicsMoveObject(getGameObject(objectHandle)->sceneNode(), GamePosition(x, y, z));
 
@@ -89,15 +88,15 @@ struct FuncResult* handlerGraphicsMoveObject(const std::vector <void*> & args) {
     return ret;
 }
 
-struct FuncResult* handlerGraphicsDeleteObject(const std::vector <void*> & args) {
+struct FuncResult* handlerGraphicsDeleteObject(const std::vector<void*>& args) {
     if (args.size() != 1) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsDeleteObject()");
     }
     auto ret = new struct FuncResult;
 
-    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
+    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
 
-    uint64_t objectHandle = getArgument <uint64_t> (args, 0);
+    uint64_t objectHandle = getArgument<uint64_t>(args, 0);
 
     graphicsDeleteObject(getGameObject(objectHandle));
     unregisterGameObject(objectHandle);
@@ -106,22 +105,23 @@ struct FuncResult* handlerGraphicsDeleteObject(const std::vector <void*> & args)
     return ret;
 }
 
-struct FuncResult* handlerGraphicsRotateObject(const std::vector <void*> & args) {
+struct FuncResult* handlerGraphicsRotateObject(const std::vector<void*>& args) {
     if (args.size() != 4) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsRotateObject()");
     }
 
     auto ret = new struct FuncResult;
-    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
+    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
 
-    uint64_t objectHandle = getArgument <uint64_t> (args, 0);
+    uint64_t objectHandle = getArgument<uint64_t>(args, 0);
 
     // TODO: make sure these thing are called this way
-    double pitch = getArgument <double> (args, 1);
-    double roll = getArgument <double> (args, 2);
-    double yaw = getArgument <double> (args, 3);
+    double pitch = getArgument<double>(args, 1);
+    double roll = getArgument<double>(args, 2);
+    double yaw = getArgument<double>(args, 3);
 
-    graphicsRotateObject(getGameObject(objectHandle)->sceneNode(), core::vector3df(pitch, roll, yaw));
+    graphicsRotateObject(getGameObject(objectHandle)->sceneNode(),
+                         core::vector3df(pitch, roll, yaw));
 
     ret->exitStatus = 0;
     return ret;
@@ -129,41 +129,41 @@ struct FuncResult* handlerGraphicsRotateObject(const std::vector <void*> & args)
 
 extern std::recursive_mutex irrlichtMutex;
 
-struct FuncResult* handlerGraphicsLoadTexture(const std::vector <void*> & args) {
-    std::lock_guard <std::recursive_mutex> irrlock(irrlichtMutex);
+FuncResult* handlerGraphicsLoadTexture(const std::vector<void*>& args) {
+    std::lock_guard<std::recursive_mutex> irrlock(irrlichtMutex);
     if (args.size() != 1) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsLoadTexture()");
     }
     auto ret = new struct FuncResult;
     // TODO: replace with wstring
 
-    std::string filename = getArgument <std::string> (args, 0);
+    std::string filename = getArgument<std::string>(args, 0);
     ITexture* texture = graphics::irrVideoDriver->getTexture(filename.c_str());
     ret->data.resize(1);
 
     if (texture == nullptr) {
         ret->exitStatus = 1;
-        setReturn <uint64_t> (ret, 0, 0ULL);
+        setReturn<uint64_t>(ret, 0, 0ULL);
         return ret;
     }
 
     uint64_t handle = registerTexture(texture);
 
     ret->exitStatus = 0;
-    setReturn <uint64_t> (ret, 0, handle);
+    setReturn<uint64_t>(ret, 0, handle);
     return ret;
 }
 
-struct FuncResult* handlerGraphicsAddTexture(const std::vector <void*> & args) {
+struct FuncResult* handlerGraphicsAddTexture(const std::vector<void*>& args) {
     if (args.size() != 2) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsAddTexture()");
     }
 
     auto ret = new struct FuncResult;
-    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
+    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
 
-    uint64_t objectHandle = getArgument <uint64_t> (args, 0);
-    uint64_t textureHandle = getArgument <uint64_t> (args, 1);
+    uint64_t objectHandle = getArgument<uint64_t>(args, 0);
+    uint64_t textureHandle = getArgument<uint64_t>(args, 1);
 
     GameObject* obj = getGameObject(objectHandle);
     ITexture* texture = accessTexture(textureHandle);
@@ -177,19 +177,24 @@ struct FuncResult* handlerGraphicsAddTexture(const std::vector <void*> & args) {
 }
 
 static inline void initializeGraphicsFuncProviders() {
-    registerFuncProvider(new FuncProvider("graphics.createCube",           handlerGraphicsCreateCube),   "",     "L");
-    registerFuncProvider(new FuncProvider("graphics.moveObject",           handlerGraphicsMoveObject),   "LFFF", "");
-    registerFuncProvider(new FuncProvider("graphics.rotateObject",         handlerGraphicsRotateObject), "LFFF", "");
-    registerFuncProvider(new FuncProvider("graphics.deleteObject",         handlerGraphicsDeleteObject), "L",    "");
-    registerFuncProvider(new FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture),  "s",    "L");
-    registerFuncProvider(new FuncProvider("graphics.texture.add",          handlerGraphicsAddTexture),   "LL",   "");
+    registerFuncProvider(new FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "",
+                         "L");
+    registerFuncProvider(new FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "LFFF",
+                         "");
+    registerFuncProvider(new FuncProvider("graphics.rotateObject", handlerGraphicsRotateObject),
+                         "LFFF", "");
+    registerFuncProvider(new FuncProvider("graphics.deleteObject", handlerGraphicsDeleteObject),
+                         "L", "");
+    registerFuncProvider(
+            new FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture), "s",
+            "L");
+    registerFuncProvider(new FuncProvider("graphics.texture.add", handlerGraphicsAddTexture), "LL",
+                         "");
 }
 
-void cleanupGraphics() {
-    graphics::irrDevice->drop();
-}
+void cleanupGraphics() { graphics::irrDevice->drop(); }
 
-bool initializeGraphics(std::vector <std::string> * args) {
+bool initializeGraphics(std::vector<std::string>* args) {
     if (args == nullptr) {
         return false;
     }
@@ -204,16 +209,18 @@ bool initializeGraphics(std::vector <std::string> * args) {
 }
 
 // Инициаллизация Irrlicht
-static bool initializeIrrlicht(std::vector <std::string> * args) {
+static bool initializeIrrlicht(UNUSED std::vector<std::string>* args) {
     graphics::irrDevice = irr::createDevice(
-                              irr::video::EDT_BURNINGSVIDEO, // Драйвер для рендеринга (здесь OpenGL, но пока программный)
-                                                             // (см. http://irrlicht.sourceforge.net/docu/example001.html)
-                              irr::core::dimension2d <irr::u32> (800, 600), // Размеры окна (не в полноэкранном режиме)
-                              32, // Глубина цвета
-                              false, // Полноэкранный режим
-                              false, // stencil buffer (не очень понятно, что это. COMBAK)
-                              false, // Вертикальная синхронизация
-                              &graphics::irrEventReceiver); // Объект-обработчик событий
+            irr::video::EDT_BURNINGSVIDEO, // Драйвер для рендеринга (здесь OpenGL, но пока
+                                           // программный)
+            // (см. http://irrlicht.sourceforge.net/docu/example001.html)
+            irr::core::dimension2d<irr::u32>(800,
+                                             600), // Размеры окна (не в полноэкранном режиме)
+            32,                                    // Глубина цвета
+            false,                                 // Полноэкранный режим
+            false, // stencil buffer (не очень понятно, что это. COMBAK)
+            false, // Вертикальная синхронизация
+            &graphics::irrEventReceiver); // Объект-обработчик событий
     if (!graphics::irrDevice) {
         // TODO: добавить fallback-настройки
         return false;
@@ -238,19 +245,20 @@ static bool initializeIrrlicht(std::vector <std::string> * args) {
         return false;
     }
 
-    graphics::camera = graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0, 30, -40));
-    graphics::camera->bindTargetAndRotation(true);
+    graphics::camera =
+            graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0, 30, -40));
     if (graphics::camera == nullptr) {
         return false;
     }
+    graphics::camera->bindTargetAndRotation(true);
     return true;
 }
 
 GameObjCube graphicsCreateCube() {
-    std::lock_guard <std::recursive_mutex> lock(gameObjectMutex);
+    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
     scene::ISceneNode* node = graphics::irrSceneManager->addCubeSceneNode();
     if (!node) {
-        //return (ISceneNode*)nullptr;
+        // return (ISceneNode*)nullptr;
         throw std::runtime_error("failed to create a cube scene node");
     }
 
@@ -260,11 +268,14 @@ GameObjCube graphicsCreateCube() {
 }
 
 void graphicsDraw() {
-    graphics::irrVideoDriver->beginScene(true, // Неясно, что это
-                                         true, // Неясно, что это
-                                         irr::video::SColor(255, 100, 101, 140)); // Какой-то цвет, возможно, цвет фона (ARGB)
+    graphics::irrVideoDriver->beginScene(
+            true, // Неясно, что это
+            true, // Неясно, что это
+            irr::video::SColor(255, 100, 101,
+                               140)); // Какой-то цвет, возможно, цвет фона (ARGB)
 
-//    graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40), irr::core::vector3df(0,5,0));
+    //    graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40),
+    //    irr::core::vector3df(0,5,0));
 
     graphics::irrGuiEnvironment->drawAll();
     graphics::irrSceneManager->drawAll();
@@ -324,111 +335,52 @@ void graphicsAddTexture(const GameObject& obj, ITexture* tex) {
     LOG(L"Texture added successfully");
 }
 
-static bool checkCameraVerticalOverrotation(const irr::core::vector3df& newRot) {
-    LOG(newRot.X << ", " << graphics::cameraRotation.X);
-    // Bottom overrotation
-    if ((newRot.X + 90) * (graphics::cameraRotation.X + 90) <= 0) {
-        return false;
-    }
-    // Top overrotation
-    if ((newRot.X - 90) * (graphics::cameraRotation.X - 90) <= 0) {
-        return false;
-    }
-
-    return true;
-}
-
-static void updateIrrlichtCamera() {
-    graphics::camera->setPosition(graphics::cameraPosition.toIrrVector3df());
-    graphics::camera->updateAbsolutePosition();
-    graphics::camera->setRotation(graphics::cameraRotation);
-}
-
-void graphicsMoveCameraTo(const GamePosition& newPos) {
-    graphics::cameraPosition = newPos;
-    updateIrrlichtCamera();
-}
-void graphicsMoveCameraDelta(const GamePosition& delta) {
-    graphics::cameraPosition += delta;
-    updateIrrlichtCamera();
-}
-void graphicsMoveCameraTo(const core::vector3df& newPos) {
-    graphics::cameraPosition = GamePosition(newPos);
-    updateIrrlichtCamera();
-}
-void graphicsMoveCameraDelta(const core::vector3df& delta) {
-    graphics::cameraPosition += GamePosition(delta);
-    updateIrrlichtCamera();
-}
-void graphicsMoveCameraTo(double x, double y, double z) {
-    graphics::cameraPosition = GamePosition(x, y, z);
-    updateIrrlichtCamera();
-}
-void graphicsMoveCameraDelta(double dx, double dy, double dz) {
-    graphics::cameraPosition += GamePosition(dx, dy, dz);
-    updateIrrlichtCamera();
-}
-
-void graphicsMoveCameraForward(double delta, double directionOffset) {
-    // XXX: For now, vertical camera angle is ignored. Maybe it should be so,
-    // maybe it should not
-    double x, y, z;
-    std::tie(x, y, z) = irrvec_extract(graphics::camera->getRotation());
-    double azimuth = getAzimuth(x, y, z) + directionOffset;
-    double deltaX = delta * sin(azimuth);
-    double deltaZ = delta * cos(azimuth);
-    graphicsMoveCameraDelta(deltaX, 0.0, deltaZ);
-}
-
-void graphicsRotateCamera(const core::vector3df& newRot) {
-    graphics::cameraRotation = newRot;
-    updateIrrlichtCamera();
-}
-void graphicsRotateCameraDelta(const core::vector3df& delta) {
-    if (!checkCameraVerticalOverrotation(graphics::cameraRotation + delta)) {
-        return;
-    }
-    graphics::cameraRotation += delta;
-    updateIrrlichtCamera();
-}
-void graphicsRotateCamera(double pitch, double roll, double yaw) {
-    graphics::cameraRotation = core::vector3df(pitch, roll, yaw);
-    updateIrrlichtCamera();
-}
-void graphicsRotateCameraDelta(double pitch, double roll, double yaw) {
-    if (!checkCameraVerticalOverrotation(graphics::cameraRotation + irr::core::vector3df(pitch, roll, yaw))) {
-        return;
-    }
-    graphics::cameraRotation += core::vector3df(pitch, roll, yaw);
-    updateIrrlichtCamera();
-}
-
 // COMBAK: Stub, maybe customize arguments like node position and scale
 // Code taken from http://irrlicht.sourceforge.net/docu/example012.html
 void graphicsLoadTerrain(const std::string& heightmap) {
     scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
-        heightmap.c_str(),                      // heightmap filename
-        nullptr,                                // parent node
-        -1,                                     // node id
-        // core::vector3df(-5000.0f, -1000.0f, -5000.0f),         // position
-        core::vector3df(-500.0f, -300.0f, -500.0f),         // position
-        core::vector3df(0.0f, 0.0f, 0.0f),         // rotation
-        core::vector3df(1.0f, 1.0f, 1.0f),      // scale
-        video::SColor(255, 255, 255, 255),      // vertexColor
-        5,                                      // maxLOD
-        scene::ETPS_17,                         // patchSize
-        4                                       // smoothFactor
+            heightmap.c_str(), // heightmap filename
+            nullptr,           // parent node
+            -1,                // node id
+            // core::vector3df(-5000.0f, -1000.0f, -5000.0f),         // position
+            core::vector3df(-500.0f, -300.0f, -500.0f), // position
+            core::vector3df(0.0f, 0.0f, 0.0f),          // rotation
+            core::vector3df(1.0f, 1.0f, 1.0f),          // scale
+            video::SColor(255, 255, 255, 255),          // vertexColor
+            5,                                          // maxLOD
+            scene::ETPS_17,                             // patchSize
+            4                                           // smoothFactor
     );
     terrain->setMaterialFlag(irr::video::EMF_LIGHTING, false);
     terrain->setMaterialTexture(0, graphicsLoadTexture(L"textures/texture4.png"));
     terrain->scaleTexture(1.0f, 20.0f);
     graphics::terrain = terrain;
+
+    graphics::triangleSelector =
+            graphics::irrSceneManager->createTerrainTriangleSelector(graphics::terrain);
+    if (graphics::triangleSelector == nullptr) {
+        throw std::runtime_error("Unable to create triangle selector on terrain scene node");
+    }
+    graphics::cameraCollisionAnimator = graphics::irrSceneManager->createCollisionResponseAnimator(
+            graphics::triangleSelector,    // Triangle selector
+            graphics::camera,              // Affected scene node
+            core::vector3df(30, 60, 30),   // Collision radius
+            core::vector3df(0, -10.0f, 0), // Gravity vector
+            core::vector3df(0, 30, 0),     // Ellipsoid translation
+            0.000f                         // Sliding value
+    );
+    if (graphics::cameraCollisionAnimator == nullptr) {
+        throw std::runtime_error(
+                "Unable to create camera collision animator for terrain scene node");
+    }
+
+    graphics::camera->addAnimator(graphics::cameraCollisionAnimator);
+    graphics::triangleSelector->drop();
+    graphics::cameraCollisionAnimator->drop();
 }
 
-bool irrDeviceRun() {
-    return graphics::irrDevice->run();
-}
+irr::scene::ICameraSceneNode* graphicsGetCamera() { return graphics::camera; }
 
-const IrrKeyboardEventReceiver& getKeyboardEventReceiver() {
-    return graphics::irrEventReceiver;
-}
+bool irrDeviceRun() { return graphics::irrDevice->run(); }
+
+const IrrKeyboardEventReceiver& getKeyboardEventReceiver() { return graphics::irrEventReceiver; }
