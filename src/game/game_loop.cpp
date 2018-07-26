@@ -15,6 +15,9 @@
 
 std::recursive_mutex irrlichtMutex;
 
+static void gameTick() {
+}
+
 static void processKeys() {
     // XXX: This is stub, camera movement and rotation should be done by class like Player
     const IrrKeyboardEventReceiver& receiver = getKeyboardEventReceiver();
@@ -134,8 +137,7 @@ void gameLoop() {
 
     while (irrDeviceRun()) {
         processKeys();
-        //graphicsMoveCameraDelta(0.1, 0, 0);
-        //graphicsRotateCameraDelta(0, 1, 0);
+        gameTick();
         auto timeBefore = std::chrono::high_resolution_clock::now();
         if (doWeNeedToShutDown) {
             return;

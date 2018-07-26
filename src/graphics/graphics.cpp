@@ -324,6 +324,20 @@ void graphicsAddTexture(const GameObject& obj, ITexture* tex) {
     LOG(L"Texture added successfully");
 }
 
+static bool checkCameraVerticalOverrotation(const irr::core::vector3df& newRot) {
+    LOG(newRot.X << ", " << graphics::cameraRotation.X);
+    // Bottom overrotation
+    if ((newRot.X + 90) * (graphics::cameraRotation.X + 90) <= 0) {
+        return false;
+    }
+    // Top overrotation
+    if ((newRot.X - 90) * (graphics::cameraRotation.X - 90) <= 0) {
+        return false;
+    }
+
+    return true;
+}
+
 static void updateIrrlichtCamera() {
     graphics::camera->setPosition(graphics::cameraPosition.toIrrVector3df());
     graphics::camera->updateAbsolutePosition();
@@ -371,6 +385,9 @@ void graphicsRotateCamera(const core::vector3df& newRot) {
     updateIrrlichtCamera();
 }
 void graphicsRotateCameraDelta(const core::vector3df& delta) {
+    if (!checkCameraVerticalOverrotation(graphics::cameraRotation + delta)) {
+        return;
+    }
     graphics::cameraRotation += delta;
     updateIrrlichtCamera();
 }
@@ -379,6 +396,9 @@ void graphicsRotateCamera(double pitch, double roll, double yaw) {
     updateIrrlichtCamera();
 }
 void graphicsRotateCameraDelta(double pitch, double roll, double yaw) {
+    if (!checkCameraVerticalOverrotation(graphics::cameraRotation + irr::core::vector3df(pitch, roll, yaw))) {
+        return;
+    }
     graphics::cameraRotation += core::vector3df(pitch, roll, yaw);
     updateIrrlichtCamera();
 }
