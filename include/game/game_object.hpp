@@ -1,8 +1,8 @@
 #ifndef GAME_GAME_OBJECT_HPP
 #define GAME_GAME_OBJECT_HPP
 
-#include <string>
 #include <geometry/game_position.hpp>
+#include <string>
 
 // XXX: очередной костыль
 //#include <graphics/graphics.hpp>
@@ -26,7 +26,7 @@ class GameObject {
 public:
     GameObject();
     GameObject(const GameObject&); // copy c-tor
-    GameObject(GameObject&&); // move c-tor
+    GameObject(GameObject&&);      // move c-tor
     GameObject(std::wstring);
     GameObject(ISceneNode*);
     virtual ~GameObject();
@@ -35,8 +35,8 @@ public:
     void setPosition(GamePosition newPosition);
     void setRotation(double, double, double);
 
-    GameObject& operator =(const GameObject&);
-    GameObject& operator =(GameObject&&);
+    GameObject& operator=(const GameObject&);
+    GameObject& operator=(GameObject&&);
 
     ISceneNode* sceneNode() const;
     GameObjectId getId() const;

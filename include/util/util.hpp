@@ -17,8 +17,7 @@ std::string bytes_pack(const std::wstring& ws);
 
 std::wstring wstringUnpack(const std::string& bytes);
 
-template <typename T>
-T intFlipEndian(T n) {
+template <typename T> T intFlipEndian(T n) {
     static_assert(std::is_integral<T>::value, "intFlipEndian: argument is not integer");
     T tmp = 0;
     for (size_t i = 0; i < sizeof(n); ++i) {

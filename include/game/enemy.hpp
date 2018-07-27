@@ -1,6 +1,8 @@
 #ifndef GAME_ENEMY_HPP
 #define GAME_ENEMY_HPP
 
+#include <geometry/game_position.hpp>
+
 // XXX: maybe rename to Mob
 
 /**

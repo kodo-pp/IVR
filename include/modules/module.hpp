@@ -25,6 +25,7 @@ public:
 
     std::wstring getExecutableFileName();
     void setExecutableFileName(std::wstring newExecFileName);
+
 protected:
     ModuleId id;
     std::wstring name;
@@ -32,6 +33,5 @@ protected:
     ModuleLanguage language; // Programming language, not sure how it'll be used,
                              // maybe in automatic setup of necessary tools
 };
-
 
 #endif /* end of include guard: MODULES_MODULE_HPP */

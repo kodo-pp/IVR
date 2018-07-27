@@ -1,8 +1,9 @@
 #ifndef GRAPHICS_TEXTURE_HPP
 #define GRAPHICS_TEXTURE_HPP
 
-#include <irrlicht.h>
+#include <cstdint>
 #include <cstdlib>
+#include <irrlicht.h>
 
 using irr::video::ITexture;
 

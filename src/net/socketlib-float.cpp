@@ -1,7 +1,7 @@
-#include <net/socketlib.hpp>
 #include <cstring>
-#include <type_traits>
 #include <misc/type_assertions.hpp>
+#include <net/socketlib.hpp>
+#include <type_traits>
 #include <util/util.hpp>
 
 // Floats are guaranted to be 4-bytes long, and doubles are 8-bytes, thanks to
@@ -67,18 +67,10 @@ static double recvStringFloat64(int sock) {
 // number (depending on support for features like IEEE 754 by module)
 // TODO: add optional IEEE 754 floating-point number support
 
-void sendFloat32(int sock, float v) {
-    sendStringFloat32(sock, v);
-}
+void sendFloat32(int sock, float v) { sendStringFloat32(sock, v); }
 
-void sendFloat64(int sock, double v) {
-    sendStringFloat64(sock, v);
-}
+void sendFloat64(int sock, double v) { sendStringFloat64(sock, v); }
 
-float recvFloat32(int sock) {
-    return recvStringFloat32(sock);
-}
+float recvFloat32(int sock) { return recvStringFloat32(sock); }
 
-double recvFloat64(int sock) {
-    return recvStringFloat64(sock);
-}
+double recvFloat64(int sock) { return recvStringFloat64(sock); }

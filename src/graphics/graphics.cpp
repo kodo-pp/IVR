@@ -6,6 +6,7 @@
 #include <iostream>
 #include <irrlicht.h>
 #include <log/log.hpp>
+#include <map>
 #include <misc/irrvec.hpp>
 #include <modules/module_io.hpp>
 #include <string>
@@ -49,6 +50,7 @@ scene::ISceneNodeAnimator* cameraCollisionAnimator = nullptr;
 scene::ITriangleSelector* triangleSelector = nullptr;
 
 scene::ITerrainSceneNode* terrain = nullptr;
+std::map<std::pair<int64_t, int64_t>, scene::ITerrainSceneNode*> terrainChunks;
 
 } // namespace graphics
 
@@ -335,9 +337,10 @@ void graphicsAddTexture(const GameObject& obj, ITexture* tex) {
     LOG(L"Texture added successfully");
 }
 
+#error TODO
 // COMBAK: Stub, maybe customize arguments like node position and scale
 // Code taken from http://irrlicht.sourceforge.net/docu/example012.html
-void graphicsLoadTerrain(const std::string& heightmap) {
+void graphicsLoadTerrain(const std::string& heightmap, int64_t off_x, int64_t off_y) {
     scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
             heightmap.c_str(), // heightmap filename
             nullptr,           // parent node
@@ -354,7 +357,7 @@ void graphicsLoadTerrain(const std::string& heightmap) {
     terrain->setMaterialFlag(irr::video::EMF_LIGHTING, false);
     terrain->setMaterialTexture(0, graphicsLoadTexture(L"textures/texture4.png"));
     terrain->scaleTexture(1.0f, 20.0f);
-    graphics::terrain = terrain;
+    graphicsPushTerrain(terrain, off_x, off_y);
 
     graphics::triangleSelector =
             graphics::irrSceneManager->createTerrainTriangleSelector(graphics::terrain);

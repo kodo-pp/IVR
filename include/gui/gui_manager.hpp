@@ -1,8 +1,8 @@
 #ifndef GUI_GUI_MANAGER_HPP
 #define GUI_GUI_MANAGER_HPP
 
-#include <set>
 #include <gui/gui.hpp>
+#include <unordered_set>
 
 /**
  * Manages GUI elements
@@ -11,7 +11,7 @@
  */
 class GuiManager {
 public:
-    GuiManager(std::unordered_set <GuiElement> _guiElements);
+    GuiManager(std::unordered_set<GuiElement> _guiElements);
     virtual ~GuiManager();
 
     void drawAll();
@@ -19,7 +19,7 @@ public:
     void removeGuiElement(GuiElement elem);
 
 protected:
-    std::unordered_set <GuiElement> guiElements;
+    std::unordered_set<GuiElement> guiElements;
 };
 
 // The only instance of this class

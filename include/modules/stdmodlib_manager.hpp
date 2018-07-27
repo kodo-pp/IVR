@@ -2,6 +2,7 @@
 #define MODULES_STDMODLIB_MANAGER_HPP
 
 #include <modules/stdmodlib.hpp>
+#include <string>
 
 class StdModLibManager {
 public:

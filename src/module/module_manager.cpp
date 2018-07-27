@@ -1,8 +1,8 @@
 #if false
 
+#include <modules/module.hpp>
 #include <string>
 #include <unordered_map>
-#include <modules/module.hpp>
 
 // TEMP: maybe we should change it to something more complex
 using ModuleMessage = std::wstring;

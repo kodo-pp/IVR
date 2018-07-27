@@ -1,9 +1,9 @@
+#include <cstring>
 #include <modules/module_io.hpp>
 #include <net/socketlib.hpp>
-#include <util/util.hpp>
-#include <string>
-#include <cstring>
 #include <stdexcept>
+#include <string>
+#include <util/util.hpp>
 
 bool readModuleHeader(int sock) {
     char buf[8];
@@ -11,9 +11,7 @@ bool readModuleHeader(int sock) {
     return memcmp(buf, "ModBox/m", 8ull) == 0;
 }
 
-std::wstring readModuleName(int sock) {
-    return wstring_cast(recvString(sock));
-}
+std::wstring readModuleName(int sock) { return wstring_cast(recvString(sock)); }
 
 void* recvArg(int sock, char spec) {
     void* arg = nullptr;
@@ -59,11 +57,10 @@ void* recvArg(int sock, char spec) {
         std::string* bytes = new std::string;
         bytes->reserve(size);
         for (size_t i = 0; i < size; ++i) {
-            bytes->push_back(static_cast <char> (recvByte(sock)));
+            bytes->push_back(static_cast<char>(recvByte(sock)));
         }
         arg = (void*)bytes;
-    }
-    break;
+    } break;
     default:
         throw std::logic_error(std::string("recvArg: unknown type: ") + spec);
     }
@@ -111,8 +108,7 @@ void sendArg(int sock, void* arg, char spec) {
     case 'o': { // blob
         sendU64(sock, ((std::string*)arg)->length());
         sendBuf(sock, ((std::string*)arg)->c_str(), (int)((std::string*)arg)->length());
-    }
-    break;
+    } break;
     default:
         throw std::logic_error(std::string("sendArg: unknown type: ") + spec);
     }

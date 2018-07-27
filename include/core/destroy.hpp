@@ -3,7 +3,7 @@
 
 #include <atomic>
 
-extern std::atomic <bool> doWeNeedToShutDown;
+extern std::atomic<bool> doWeNeedToShutDown;
 
 void destroy(void);
 void sigIntHandler(int);

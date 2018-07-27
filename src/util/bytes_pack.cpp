@@ -1,9 +1,7 @@
-#include <util/util.hpp>
 #include <string>
+#include <util/util.hpp>
 
-std::string bytes_pack(const std::string& s) {
-    return s;
-}
+std::string bytes_pack(const std::string& s) { return s; }
 
 // TODO: add utf-8 support
 std::string bytes_pack(const std::wstring& ws) {

@@ -19,14 +19,14 @@ class SolidObject : public GameObject {
 public:
     SolidObject();
     bool isSeparable();
-    std::vector <SolidObjectPart> & getParts();
+    std::vector<SolidObjectPart>& getParts();
 
 protected:
     bool separable;
 
     // COMBAK [see above]: may cause performance issues and high RAM usage
-// #warning possible performance issues here
-    std::vector <SolidObjectPart> parts;
+    // #warning possible performance issues here
+    std::vector<SolidObjectPart> parts;
 };
 
 #endif /* end of include guard: GAME_SOLID_OBJECT_HPP */

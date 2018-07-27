@@ -1,27 +1,23 @@
 #include <game/game_object.hpp>
 #include <graphics/graphics.hpp>
 #include <log/log.hpp>
-#include <unordered_map>
 #include <mutex>
+#include <unordered_map>
 #include <util/handle_storage.hpp>
 
-HandleStorage <uint64_t, GameObject*> gameObjects;
+HandleStorage<uint64_t, GameObject*> gameObjects;
 std::recursive_mutex gameObjectMutex;
 
-uint64_t registerGameObject(GameObject* obj) {
-    return gameObjects.insert(obj);
-}
+uint64_t registerGameObject(GameObject* obj) { return gameObjects.insert(obj); }
 
 GameObject* getGameObject(uint64_t idx) {
     // TODO: may there be a situation in which we'd like to use mutableAccess?
     return gameObjects.access(idx);
 }
 
-void unregisterGameObject(uint64_t idx) {
-    gameObjects.remove(idx);
-}
+void unregisterGameObject(uint64_t idx) { gameObjects.remove(idx); }
 
-GameObject::GameObject() { }
+GameObject::GameObject() {}
 
 // TODO: replace copy-paste driven programming with using copy-and-swap idiom
 
@@ -39,7 +35,7 @@ GameObject::GameObject(GameObject&& other) {
     std::swap(id, other.id);
 }
 
-GameObject& GameObject::operator =(const GameObject& other) {
+GameObject& GameObject::operator=(const GameObject& other) {
     _sceneNode = other.sceneNode();
     position = other.getPosition();
     providingModule = other.getProvidingModule();
@@ -47,7 +43,7 @@ GameObject& GameObject::operator =(const GameObject& other) {
     return *this;
 }
 
-GameObject& GameObject::operator =(GameObject&& other) {
+GameObject& GameObject::operator=(GameObject&& other) {
     std::swap(_sceneNode, other._sceneNode);
     std::swap(position, other.position);
     std::swap(providingModule, other.providingModule);
@@ -60,19 +56,13 @@ GameObject::GameObject(std::wstring meshFilename) {
 }
 */
 
-GameObject::GameObject(ISceneNode* node): _sceneNode(node) { }
+GameObject::GameObject(ISceneNode* node) : _sceneNode(node) {}
 
-GameObject::~GameObject() { }
+GameObject::~GameObject() {}
 
-GamePosition GameObject::getPosition() const {
-    return position;
-}
-GameObjectId GameObject::getId() const {
-    return id;
-}
-ModuleId GameObject::getProvidingModule() const {
-    return providingModule;
-}
+GamePosition GameObject::getPosition() const { return position; }
+GameObjectId GameObject::getId() const { return id; }
+ModuleId GameObject::getProvidingModule() const { return providingModule; }
 
 void GameObject::setPosition(GamePosition newPosition) {
     position = newPosition;
@@ -83,6 +73,4 @@ void GameObject::setRotation(double pitch, double roll, double yaw) {
     graphicsRotateObject(_sceneNode, irr::core::vector3df(pitch, roll, yaw));
 }
 
-ISceneNode* GameObject::sceneNode() const {
-    return _sceneNode;
-}
+ISceneNode* GameObject::sceneNode() const { return _sceneNode; }

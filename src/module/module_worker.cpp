@@ -1,24 +1,25 @@
-#include <modules/module_manager.hpp>
-#include <log/log.hpp>
-#include <net/socketlib.hpp>
 #include <core/core.hpp>
-#include <exception>
-#include <string>
 #include <cstring>
-#include <vector>
-#include <sys/socket.h>
-#include <util/util.hpp>
-#include <unistd.h>
+#include <exception>
+#include <log/log.hpp>
 #include <modules/module_io.hpp>
+#include <modules/module_manager.hpp>
+#include <net/socketlib.hpp>
+#include <string>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <util/util.hpp>
+#include <vector>
 
-ModuleWorker::ModuleWorker(int _sock): sock(_sock) { }
-ModuleWorker::~ModuleWorker() { }
+ModuleWorker::ModuleWorker(int _sock) : sock(_sock) {}
+ModuleWorker::~ModuleWorker() {}
 
 void ModuleWorker::please_work() noexcept {
     try {
         work();
     } catch (std::exception& e) {
-        LOG(L"Module error: ModuleWorker::work() threw exception: '" << wstring_cast(e.what()) << L"'");
+        LOG(L"Module error: ModuleWorker::work() threw exception: '" << wstring_cast(e.what())
+                                                                     << L"'");
         return;
     } catch (...) {
         LOG(L"Module error: ModuleWorker::work() threw something we don't care about");
@@ -66,11 +67,11 @@ void ModuleWorker::work() {
         if (prov == nullptr) {
             throw std::logic_error("getFuncProvider() returned nullptr");
         }
-        
+
         ArgsSpec argsSpec = getArgsSpec(handle);
 
         // Read its arguments
-        std::vector <void*> args;
+        std::vector<void*> args;
         args.reserve(argsSpec.length());
         for (char i : argsSpec) {
             args.push_back(recvArg(sock, i));

@@ -1,10 +1,10 @@
 #ifndef NET_NET_HPP
 #define NET_NET_HPP
 
-#include <unistd.h>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <thread>
+#include <unistd.h>
 
 void createModuleListenerThread();
 void joinModuleListenerThread();

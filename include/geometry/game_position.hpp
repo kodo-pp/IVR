@@ -15,7 +15,7 @@ class GamePosition {
 public:
     GamePosition(double _x = 0.0, double _y = 0.0, double _z = 0.0);
     GamePosition(const GamePosition& gamePosition); // copy c-tor
-    GamePosition(GamePosition&& gamePosition); // move c-tor
+    GamePosition(GamePosition&& gamePosition);      // move c-tor
     explicit GamePosition(const vector3df& irrvec);
 
     vector3df toIrrVector3df();
@@ -26,11 +26,11 @@ public:
     GamePosition operator+(const GamePosition& other);
     GamePosition& operator+=(const GamePosition& other);
 
-    bool operator ==(const GamePosition& other);
-    bool operator ==(GamePosition&& other);
+    bool operator==(const GamePosition& other);
+    bool operator==(GamePosition&& other);
 
-    bool operator !=(const GamePosition& other);
-    bool operator !=(GamePosition&& other);
+    bool operator!=(const GamePosition& other);
+    bool operator!=(GamePosition&& other);
 
     // Yes, these are public
     // I think there is no need in getters and setters (as in std::pair)

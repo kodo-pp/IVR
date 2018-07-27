@@ -59,8 +59,12 @@ irr::scene::ICameraSceneNode* graphicsGetCamera();
 // ===== Managing terrain =====
 
 /// Create a terrain scene node
-/// STUB
-void graphicsLoadTerrain(const std::string& heightmap);
+// TODO
+#error TODO
+scene::ITerrainSceneNode* graphicsLoadTerrain(const std::wstring& heightmap,
+                                              const video::ITexture* tex,
+                                              const video::ITexture* detail,
+                                              const scene::ITerrainSceneNode* parent = nullptr);
 
 // ===== Utility functions =====
 

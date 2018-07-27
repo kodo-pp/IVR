@@ -1,11 +1,11 @@
 #ifndef NET_SOCKET_LIB_HPP
 #define NET_SOCKET_LIB_HPP
 
-#include <sys/socket.h>
 #include <string>
+#include <sys/socket.h>
 
-int sendBuf(int sock, const char *buf, int length);
-int recvBuf(int sock, char *buf, int length);
+int sendBuf(int sock, const char* buf, int length);
+int recvBuf(int sock, char* buf, int length);
 std::string recvString(int sock);
 int sendString(int sock, const std::string& s);
 int sendFixed(int sock, const std::string& s);

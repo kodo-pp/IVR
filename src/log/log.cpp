@@ -1,12 +1,12 @@
-#include <log/log.hpp>
-#include <mutex>
 #include <atomic>
 #include <chrono>
-#include <ctime>
+#include <codecvt>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <locale>
-#include <codecvt>
+#include <log/log.hpp>
+#include <mutex>
 
 static std::recursive_mutex lbfMutex;
 std::recursive_mutex logMutex;
@@ -28,20 +28,15 @@ static LogStream logStream([]() -> std::wstring {
     }
     prevTime = c_now;
 
-    struct tm * tm_now = new struct tm;
+    struct tm* tm_now = new struct tm;
     localtime_r(&c_now, tm_now);
     char* lineBegin;
 
     // Current time
     // Example:
     // [LOG: 23.11.2039 16:44:37]
-    asprintf(&lineBegin, "[LOG: %02d.%02d.%d %02d:%02d:%02d] ",
-             tm_now->tm_mday,
-             tm_now->tm_mon + 1,
-             tm_now->tm_year + 1900,
-             tm_now->tm_hour,
-             tm_now->tm_min,
-             tm_now->tm_sec);
+    asprintf(&lineBegin, "[LOG: %02d.%02d.%d %02d:%02d:%02d] ", tm_now->tm_mday, tm_now->tm_mon + 1,
+             tm_now->tm_year + 1900, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec);
 
     std::wstring stlLineBegin;
 
@@ -66,8 +61,6 @@ static LogStream logStream([]() -> std::wstring {
     return stlLineBegin;
 });
 
-static LogStream & logStreamLink = logStream;
+static LogStream& logStreamLink = logStream;
 
-LogStream & getLogStream() {
-    return logStreamLink;
-}
+LogStream& getLogStream() { return logStreamLink; }

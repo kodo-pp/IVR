@@ -1,25 +1,25 @@
-#include <net/net.hpp>
-#include <core/memory_manager.hpp>
-#include <modules/module_manager.hpp>
-#include <thread>
 #include <atomic>
-#include <stdexcept>
-#include <mutex>
-#include <unordered_set>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/signal.h>
-#include <log/log.hpp>
+#include <core/memory_manager.hpp>
 #include <iostream>
-#include <util/util.hpp>
+#include <log/log.hpp>
 #include <misc/die.hpp>
+#include <modules/module_manager.hpp>
+#include <mutex>
+#include <net/net.hpp>
+#include <netinet/in.h>
+#include <stdexcept>
+#include <sys/signal.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <thread>
+#include <unistd.h>
+#include <unordered_set>
+#include <util/util.hpp>
 
 // They are client threads, but we can call them server threads
 // Or maybe vice versa
 // I don't know, really
-static std::unordered_set <pthread_t> serverThreads;
+static std::unordered_set<pthread_t> serverThreads;
 
 static std::thread* moduleListenerThread;
 static std::mutex serverThreadMutex;
@@ -76,11 +76,10 @@ void createModuleServerThread(int clientSocket) {
     serverThreadMutex.unlock();
 }
 
-
 static void moduleListenerThreadFunc() {
-//    LOG(moduleListenerThread->native_handle());
-//    LOG(pthread_self());
-    //kill(getpid(), SIGKILL);
+    //    LOG(moduleListenerThread->native_handle());
+    //    LOG(pthread_self());
+    // kill(getpid(), SIGKILL);
 
     try {
         const uint16_t port = 44145; // int('MODBOX', 36) % 65536
@@ -112,7 +111,8 @@ static void moduleListenerThreadFunc() {
             int clientSocket = accept(listenSocket, nullptr, nullptr);
             LOG(L"Client connected");
             if (clientSocket < 0) {
-                LOG(L"Unable to accept the connection from the client: accept() returned " << clientSocket);
+                LOG(L"Unable to accept the connection from the client: accept() returned "
+                    << clientSocket);
                 continue;
             }
             LOG(L"Spawning client thread");
