@@ -15,6 +15,7 @@
 #include <unordered_set>
 #include <util/util.hpp>
 #include <vector>
+#include <world/terrain.hpp>
 
 bool IrrKeyboardEventReceiver::OnEvent(const irr::SEvent& event) {
     if (event.EventType == irr::EET_KEY_INPUT_EVENT) {
@@ -44,13 +45,10 @@ video::IVideoDriver* irrVideoDriver = nullptr;
 scene::ISceneManager* irrSceneManager = nullptr;
 gui::IGUIEnvironment* irrGuiEnvironment = nullptr;
 IrrKeyboardEventReceiver irrEventReceiver;
+
 scene::ICameraSceneNode* camera = nullptr;
-
-scene::ISceneNodeAnimator* cameraCollisionAnimator = nullptr;
-scene::ITriangleSelector* triangleSelector = nullptr;
-
-scene::ITerrainSceneNode* terrain = nullptr;
 std::map<std::pair<int64_t, int64_t>, scene::ITerrainSceneNode*> terrainChunks;
+scene::ITerrainSceneNode* rootTerrainSceneNode;
 
 } // namespace graphics
 
@@ -179,22 +177,25 @@ struct FuncResult* handlerGraphicsAddTexture(const std::vector<void*>& args) {
 }
 
 static inline void initializeGraphicsFuncProviders() {
-    registerFuncProvider(new FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "",
-                         "L");
-    registerFuncProvider(new FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "LFFF",
-                         "");
-    registerFuncProvider(new FuncProvider("graphics.rotateObject", handlerGraphicsRotateObject),
-                         "LFFF", "");
-    registerFuncProvider(new FuncProvider("graphics.deleteObject", handlerGraphicsDeleteObject),
-                         "L", "");
     registerFuncProvider(
-            new FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture), "s",
+            new FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
+    registerFuncProvider(
+            new FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "LFFF", "");
+    registerFuncProvider(
+            new FuncProvider("graphics.rotateObject", handlerGraphicsRotateObject), "LFFF", "");
+    registerFuncProvider(
+            new FuncProvider("graphics.deleteObject", handlerGraphicsDeleteObject), "L", "");
+    registerFuncProvider(
+            new FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture),
+            "s",
             "L");
-    registerFuncProvider(new FuncProvider("graphics.texture.add", handlerGraphicsAddTexture), "LL",
-                         "");
+    registerFuncProvider(
+            new FuncProvider("graphics.texture.add", handlerGraphicsAddTexture), "LL", "");
 }
 
-void cleanupGraphics() { graphics::irrDevice->drop(); }
+void cleanupGraphics() {
+    graphics::irrDevice->drop();
+}
 
 bool initializeGraphics(std::vector<std::string>* args) {
     if (args == nullptr) {
@@ -273,7 +274,9 @@ void graphicsDraw() {
     graphics::irrVideoDriver->beginScene(
             true, // Неясно, что это
             true, // Неясно, что это
-            irr::video::SColor(255, 100, 101,
+            irr::video::SColor(255,
+                               100,
+                               101,
                                140)); // Какой-то цвет, возможно, цвет фона (ARGB)
 
     //    graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40),
@@ -337,53 +340,72 @@ void graphicsAddTexture(const GameObject& obj, ITexture* tex) {
     LOG(L"Texture added successfully");
 }
 
-#error TODO
 // COMBAK: Stub, maybe customize arguments like node position and scale
 // Code taken from http://irrlicht.sourceforge.net/docu/example012.html
-void graphicsLoadTerrain(const std::string& heightmap, int64_t off_x, int64_t off_y) {
-    scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
-            heightmap.c_str(), // heightmap filename
-            nullptr,           // parent node
-            -1,                // node id
-            // core::vector3df(-5000.0f, -1000.0f, -5000.0f),         // position
-            core::vector3df(-500.0f, -300.0f, -500.0f), // position
-            core::vector3df(0.0f, 0.0f, 0.0f),          // rotation
-            core::vector3df(1.0f, 1.0f, 1.0f),          // scale
-            video::SColor(255, 255, 255, 255),          // vertexColor
-            5,                                          // maxLOD
-            scene::ETPS_17,                             // patchSize
-            4                                           // smoothFactor
-    );
-    terrain->setMaterialFlag(irr::video::EMF_LIGHTING, false);
-    terrain->setMaterialTexture(0, graphicsLoadTexture(L"textures/texture4.png"));
-    terrain->scaleTexture(1.0f, 20.0f);
-    graphicsPushTerrain(terrain, off_x, off_y);
 
-    graphics::triangleSelector =
-            graphics::irrSceneManager->createTerrainTriangleSelector(graphics::terrain);
-    if (graphics::triangleSelector == nullptr) {
-        throw std::runtime_error("Unable to create triangle selector on terrain scene node");
+void graphicsLoadTerrain(int64_t off_x,
+                         int64_t off_y,
+                         const std::wstring& heightmap,
+                         video::ITexture* tex,
+                         video::ITexture* detail,
+                         scene::ITerrainSceneNode* parent) {
+    double irrOffsetX = CHUNK_SIZE_IRRLICHT * off_x;
+    double irrOffsetY = CHUNK_SIZE_IRRLICHT * off_y;
+    scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
+            heightmap.c_str(),                                         // heightmap filename
+            parent,                                                    // parent node
+            -1,                                                        // node id
+            core::vector3df(irrOffsetX - 180, -300, irrOffsetY - 200), // position
+            core::vector3df(0.0f, 0.0f, 0.0f),                         // rotation
+            core::vector3df(10.0f, 1.0f, 10.0f),                       // scale
+            video::SColor(255, 255, 255, 255),                         // vertexColor (?)
+            5,                                                         // maxLOD (Level Of Detail)
+            scene::ETPS_17,                                            // patchSize (?)
+            4                                                          // smoothFactor (?)
+    );
+    if (!terrain) {
+        throw std::runtime_error("unable to create terrain scene node");
     }
-    graphics::cameraCollisionAnimator = graphics::irrSceneManager->createCollisionResponseAnimator(
-            graphics::triangleSelector,    // Triangle selector
+    terrain->setMaterialFlag(irr::video::EMF_LIGHTING, false);
+    terrain->setMaterialTexture(1, tex);
+    terrain->setMaterialTexture(0, detail);
+    terrain->scaleTexture(1.0f, 20.0f);
+
+    TerrainChunk terrainChunk(terrain);
+    terrainManager.addChunk(off_x, off_y, std::move(terrainChunk));
+}
+
+void graphicsHandleCollisions(scene::ITerrainSceneNode* node) {
+    auto selector = graphics::irrSceneManager->createTerrainTriangleSelector(node);
+    if (selector == nullptr) {
+        throw std::runtime_error("unable to create triangle selector on terrain scene node");
+    }
+    auto animator = graphics::irrSceneManager->createCollisionResponseAnimator(
+            selector,                      // Triangle selector
             graphics::camera,              // Affected scene node
             core::vector3df(30, 60, 30),   // Collision radius
             core::vector3df(0, -10.0f, 0), // Gravity vector
             core::vector3df(0, 30, 0),     // Ellipsoid translation
             0.000f                         // Sliding value
     );
-    if (graphics::cameraCollisionAnimator == nullptr) {
+    if (animator == nullptr) {
         throw std::runtime_error(
-                "Unable to create camera collision animator for terrain scene node");
+                "unable to create camera collision animator for terrain scene node");
     }
 
-    graphics::camera->addAnimator(graphics::cameraCollisionAnimator);
-    graphics::triangleSelector->drop();
-    graphics::cameraCollisionAnimator->drop();
+    graphics::camera->addAnimator(animator);
+    selector->drop();
+    animator->drop();
 }
 
-irr::scene::ICameraSceneNode* graphicsGetCamera() { return graphics::camera; }
+irr::scene::ICameraSceneNode* graphicsGetCamera() {
+    return graphics::camera;
+}
 
-bool irrDeviceRun() { return graphics::irrDevice->run(); }
+bool irrDeviceRun() {
+    return graphics::irrDevice->run();
+}
 
-const IrrKeyboardEventReceiver& getKeyboardEventReceiver() { return graphics::irrEventReceiver; }
+const IrrKeyboardEventReceiver& getKeyboardEventReceiver() {
+    return graphics::irrEventReceiver;
+}

@@ -60,12 +60,14 @@ irr::scene::ICameraSceneNode* graphicsGetCamera();
 
 /// Create a terrain scene node
 // TODO
-#error TODO
-scene::ITerrainSceneNode* graphicsLoadTerrain(const std::wstring& heightmap,
-                                              const video::ITexture* tex,
-                                              const video::ITexture* detail,
-                                              const scene::ITerrainSceneNode* parent = nullptr);
+void graphicsLoadTerrain(int64_t off_x,
+                         int64_t off_y,
+                         const std::wstring& heightmap,
+                         video::ITexture* tex,
+                         video::ITexture* detail,
+                         scene::ITerrainSceneNode* parent = nullptr);
 
+void graphicsHandleCollisions(scene::ITerrainSceneNode* node);
 // ===== Utility functions =====
 
 /// Poll for Ittlicht events related to window and similar stuff

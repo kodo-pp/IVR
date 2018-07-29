@@ -28,15 +28,14 @@ void Player::moveForward(double delta, double directionOffset) {
 }
 
 static bool checkCameraVerticalOverrotation(const irr::core::vector3df& rot) {
-    LOG(rot.X);
-    return -90 <= rot.X && rot.X <= 90;
+    return -89 <= rot.X && rot.X <= 89;
 }
 
 void Player::turn(double dx, double dy) {
     camera->setRotation(rotation);
     camera->updateAbsolutePosition();
     auto currentRotation = camera->getRotation();
-    if (!checkCameraVerticalOverrotation(currentRotation)) {
+    if (!checkCameraVerticalOverrotation(currentRotation + irr::core::vector3df(dx, dy, 0))) {
         LOG("No");
         return;
     }

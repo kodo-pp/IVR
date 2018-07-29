@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <unordered_set>
 #include <vector>
+#include <world/terrain.hpp>
 
 std::recursive_mutex irrlichtMutex;
 
@@ -37,7 +38,8 @@ static void processKeys(Player& player) {
         }
 
         double directionOffset = 0;
-        double speed = 3.0;
+        // TEMP: скорость временно увеличена для удобства тестирования, изначальное значение равно 3
+        double speed = 10;
         switch (dx * 10 + dz) {
         case -10 + -1: // back, left
             directionOffset = -0.75 * M_PI;
@@ -103,7 +105,18 @@ static void processKeys(Player& player) {
 
 void gameLoop() {
     Player player(graphicsGetCamera());
-    graphicsLoadTerrain("textures/heightmap.png");
+    graphicsLoadTerrain(0,
+                        0,
+                        L"textures/terrain/heightmap/heightmap1.png",
+                        graphicsLoadTexture(L"textures/terrain/clouds.png"),
+                        graphicsLoadTexture(L"textures/terrain/details1.png"));
+    graphicsLoadTerrain(1,
+                        0,
+                        L"textures/terrain/heightmap/heightmap2.png",
+                        graphicsLoadTexture(L"textures/terrain/clouds.png"),
+                        graphicsLoadTexture(L"textures/terrain/details2.png"),
+                        terrainManager.getChunk(0, 0).sceneNode());
+    graphicsHandleCollisions(terrainManager.getChunk(0, 0).sceneNode());
     int fpsCounter = 0;
     double oneSecondCounter = 0.0;
 

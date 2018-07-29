@@ -126,7 +126,7 @@ function run_command() {
     # And if it is not 0 (EXIT_SUCCESS), then stop build process
     if [ "$e" -ne 0 ]; then
         echo -e "\e[1;31mError: exit status $e\e[0m" >&2
-        kill $$
+        exit 1
     fi
 }
 
@@ -181,7 +181,7 @@ function build_file() {
     # Check if the source file exists
     if ! [ -f "$1" ]; then
         echo "\e[1;31mError: file '$1' not found\e[0m" >&2
-        kill $$
+        exit 1
     fi
 
     if ! [ -d ".build-cache/$(dirname "$1")" ]; then
@@ -211,7 +211,7 @@ function build_file() {
         ;;
     *)
         echo -e "\e[1;31mError: unable to build file '$1': cannot determine the compiler\e[0m" >&2
-        kill $$
+        exit 1
         ;;
     esac
 }
@@ -223,7 +223,11 @@ function thread_pool_run() {
     shift
     for src in "$@"; do
         if [[ $(jobs -p | wc -l) -ge "${proc_count}" ]]; then
-            wait -n
+            if ! wait -n; then
+                jobs -p | xargs kill
+                wait
+                exit 1
+            fi
         fi
         build_file "${src}"
     done
