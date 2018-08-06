@@ -375,11 +375,33 @@ void graphicsLoadTerrain(int64_t off_x,
     terrainManager.addChunk(off_x, off_y, std::move(terrainChunk));
 }
 
-void graphicsHandleCollisions(scene::ITerrainSceneNode* node) {
+void graphicsHandleTheseCollisionsTooPlease(scene::ITerrainSceneNode* node) {
     auto selector = graphics::irrSceneManager->createTerrainTriangleSelector(node);
     if (selector == nullptr) {
         throw std::runtime_error("unable to create triangle selector on terrain scene node");
     }
+
+    static_cast<scene::IMetaTriangleSelector*>(
+            static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
+                    *graphics::camera->getAnimators().begin())
+                    ->getWorld())
+            ->addTriangleSelector(selector);
+    selector->drop();
+}
+
+void graphicsHandleCollisions(scene::ITerrainSceneNode* node) {
+    auto terrain_selector = graphics::irrSceneManager->createTerrainTriangleSelector(node);
+    if (terrain_selector == nullptr) {
+        throw std::runtime_error("unable to create triangle selector on terrain scene node");
+    }
+
+    auto selector = graphics::irrSceneManager->createMetaTriangleSelector();
+    if (selector == nullptr) {
+        throw std::runtime_error("unable to create meta triangle selector");
+    }
+    selector->addTriangleSelector(terrain_selector);
+    terrain_selector->drop();
+
     auto animator = graphics::irrSceneManager->createCollisionResponseAnimator(
             selector,                      // Triangle selector
             graphics::camera,              // Affected scene node

@@ -68,6 +68,7 @@ void graphicsLoadTerrain(int64_t off_x,
                          scene::ITerrainSceneNode* parent = nullptr);
 
 void graphicsHandleCollisions(scene::ITerrainSceneNode* node);
+void graphicsHandleTheseCollisionsTooPlease(scene::ITerrainSceneNode* node);
 // ===== Utility functions =====
 
 /// Poll for Ittlicht events related to window and similar stuff

@@ -117,6 +117,7 @@ void gameLoop() {
                         graphicsLoadTexture(L"textures/terrain/details2.png"),
                         terrainManager.getChunk(0, 0).sceneNode());
     graphicsHandleCollisions(terrainManager.getChunk(0, 0).sceneNode());
+    graphicsHandleTheseCollisionsTooPlease(terrainManager.getChunk(1, 0).sceneNode());
     int fpsCounter = 0;
     double oneSecondCounter = 0.0;
 
