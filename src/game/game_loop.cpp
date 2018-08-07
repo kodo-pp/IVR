@@ -114,10 +114,9 @@ void gameLoop() {
                         0,
                         L"textures/terrain/heightmap/heightmap2.png",
                         graphicsLoadTexture(L"textures/terrain/clouds.png"),
-                        graphicsLoadTexture(L"textures/terrain/details2.png"),
-                        terrainManager.getChunk(0, 0).sceneNode());
+                        graphicsLoadTexture(L"textures/terrain/details2.png"));
     graphicsHandleCollisions(terrainManager.getChunk(0, 0).sceneNode());
-    graphicsHandleTheseCollisionsTooPlease(terrainManager.getChunk(1, 0).sceneNode());
+    graphicsHandleCollisions(terrainManager.getChunk(1, 0).sceneNode());
     int fpsCounter = 0;
     double oneSecondCounter = 0.0;
 

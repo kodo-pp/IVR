@@ -64,11 +64,10 @@ void graphicsLoadTerrain(int64_t off_x,
                          int64_t off_y,
                          const std::wstring& heightmap,
                          video::ITexture* tex,
-                         video::ITexture* detail,
-                         scene::ITerrainSceneNode* parent = nullptr);
+                         video::ITexture* detail);
 
+void graphicsInitializeCollisions();
 void graphicsHandleCollisions(scene::ITerrainSceneNode* node);
-void graphicsHandleTheseCollisionsTooPlease(scene::ITerrainSceneNode* node);
 // ===== Utility functions =====
 
 /// Poll for Ittlicht events related to window and similar stuff

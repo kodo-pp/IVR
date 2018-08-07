@@ -222,7 +222,7 @@ static bool initializeIrrlicht(UNUSED std::vector<std::string>* args) {
             32,                                    // Глубина цвета
             false,                                 // Полноэкранный режим
             false, // stencil buffer (не очень понятно, что это. COMBAK)
-            false, // Вертикальная синхронизация
+            true,  // Вертикальная синхронизация
             &graphics::irrEventReceiver); // Объект-обработчик событий
     if (!graphics::irrDevice) {
         // TODO: добавить fallback-настройки
@@ -254,6 +254,8 @@ static bool initializeIrrlicht(UNUSED std::vector<std::string>* args) {
         return false;
     }
     graphics::camera->bindTargetAndRotation(true);
+
+    graphicsInitializeCollisions();
     return true;
 }
 
@@ -347,13 +349,12 @@ void graphicsLoadTerrain(int64_t off_x,
                          int64_t off_y,
                          const std::wstring& heightmap,
                          video::ITexture* tex,
-                         video::ITexture* detail,
-                         scene::ITerrainSceneNode* parent) {
+                         video::ITexture* detail) {
     double irrOffsetX = CHUNK_SIZE_IRRLICHT * off_x;
     double irrOffsetY = CHUNK_SIZE_IRRLICHT * off_y;
     scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
             heightmap.c_str(),                                         // heightmap filename
-            parent,                                                    // parent node
+            nullptr,                                                   // parent node
             -1,                                                        // node id
             core::vector3df(irrOffsetX - 180, -300, irrOffsetY - 200), // position
             core::vector3df(0.0f, 0.0f, 0.0f),                         // rotation
@@ -375,7 +376,7 @@ void graphicsLoadTerrain(int64_t off_x,
     terrainManager.addChunk(off_x, off_y, std::move(terrainChunk));
 }
 
-void graphicsHandleTheseCollisionsTooPlease(scene::ITerrainSceneNode* node) {
+void graphicsHandleCollisions(scene::ITerrainSceneNode* node) {
     auto selector = graphics::irrSceneManager->createTerrainTriangleSelector(node);
     if (selector == nullptr) {
         throw std::runtime_error("unable to create triangle selector on terrain scene node");
@@ -389,18 +390,11 @@ void graphicsHandleTheseCollisionsTooPlease(scene::ITerrainSceneNode* node) {
     selector->drop();
 }
 
-void graphicsHandleCollisions(scene::ITerrainSceneNode* node) {
-    auto terrain_selector = graphics::irrSceneManager->createTerrainTriangleSelector(node);
-    if (terrain_selector == nullptr) {
-        throw std::runtime_error("unable to create triangle selector on terrain scene node");
-    }
-
+void graphicsInitializeCollisions() {
     auto selector = graphics::irrSceneManager->createMetaTriangleSelector();
     if (selector == nullptr) {
         throw std::runtime_error("unable to create meta triangle selector");
     }
-    selector->addTriangleSelector(terrain_selector);
-    terrain_selector->drop();
 
     auto animator = graphics::irrSceneManager->createCollisionResponseAnimator(
             selector,                      // Triangle selector
@@ -410,13 +404,13 @@ void graphicsHandleCollisions(scene::ITerrainSceneNode* node) {
             core::vector3df(0, 30, 0),     // Ellipsoid translation
             0.000f                         // Sliding value
     );
+    selector->drop();
     if (animator == nullptr) {
         throw std::runtime_error(
                 "unable to create camera collision animator for terrain scene node");
     }
 
     graphics::camera->addAnimator(animator);
-    selector->drop();
     animator->drop();
 }
 
