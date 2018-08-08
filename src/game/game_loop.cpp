@@ -125,12 +125,14 @@ void gameLoop() {
 
     GameObjCube object = graphicsCreateCube();
 
-    std::vector<GameObjCube> staticCubes;
+    std::vector<GameObject> staticCubes;
 
     for (int i = 0; i < 10; ++i) {
         for (int j = 0; j < 10; ++j) {
             staticCubes.push_back(graphicsCreateCube());
             staticCubes.back().setPosition(GamePosition(i * 20, j * 20, 0));
+            staticCubes.back().setPhysicsEnabled(false);
+            staticCubes.back().setPhysicsEnabled(true);
         }
     }
     graphicsAddTexture(object, graphicsLoadTexture(L"textures/cube1.png"));

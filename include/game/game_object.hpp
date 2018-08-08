@@ -42,7 +42,11 @@ public:
     GameObjectId getId() const;
     ModuleId getProvidingModule() const;
 
+    bool getPhysicsEnabled();
+    void setPhysicsEnabled(bool value);
+
 protected:
+    bool physicsEnabled;
     GamePosition position;
     GameObjectId id;
     ModuleId providingModule;

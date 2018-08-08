@@ -50,6 +50,8 @@ scene::ICameraSceneNode* camera = nullptr;
 std::map<std::pair<int64_t, int64_t>, scene::ITerrainSceneNode*> terrainChunks;
 scene::ITerrainSceneNode* rootTerrainSceneNode;
 
+scene::IMetaTriangleSelector* terrainSelector;
+
 } // namespace graphics
 
 static bool initializeIrrlicht(std::vector<std::string>* args);
@@ -194,6 +196,7 @@ static inline void initializeGraphicsFuncProviders() {
 }
 
 void cleanupGraphics() {
+    graphics::terrainSelector->drop();
     graphics::irrDevice->drop();
 }
 
@@ -390,6 +393,26 @@ void graphicsHandleCollisions(scene::ITerrainSceneNode* node) {
     selector->drop();
 }
 
+void graphicsEnablePhysics(scene::ISceneNode* node, const core::vector3df& radius) {
+    LOG("PE: " << node << " | " << graphics::terrainSelector);
+    auto animator = graphics::irrSceneManager->createCollisionResponseAnimator(
+            graphics::terrainSelector, // Comment to make code autoformatter happy
+            node,
+            radius,
+            core::vector3df(0, -10, 0),
+            core::vector3df(0, 0, 0),
+            0);
+    if (animator == nullptr) {
+        throw std::runtime_error("unable to create collision response animator for object");
+    }
+    node->addAnimator(animator);
+    animator->drop();
+}
+
+void graphicsDisablePhysics(scene::ISceneNode* node) {
+    node->removeAnimators();
+}
+
 void graphicsInitializeCollisions() {
     auto selector = graphics::irrSceneManager->createMetaTriangleSelector();
     if (selector == nullptr) {
@@ -404,7 +427,7 @@ void graphicsInitializeCollisions() {
             core::vector3df(0, 30, 0),     // Ellipsoid translation
             0.000f                         // Sliding value
     );
-    selector->drop();
+    graphics::terrainSelector = selector;
     if (animator == nullptr) {
         throw std::runtime_error(
                 "unable to create camera collision animator for terrain scene node");

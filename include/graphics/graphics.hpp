@@ -68,6 +68,11 @@ void graphicsLoadTerrain(int64_t off_x,
 
 void graphicsInitializeCollisions();
 void graphicsHandleCollisions(scene::ITerrainSceneNode* node);
+
+void graphicsEnablePhysics(scene::ISceneNode* node,
+                           const core::vector3df& radius = core::vector3df(10, 10, 10));
+void graphicsDisablePhysics(scene::ISceneNode* node);
+
 // ===== Utility functions =====
 
 /// Poll for Ittlicht events related to window and similar stuff

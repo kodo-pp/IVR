@@ -8,16 +8,20 @@
 HandleStorage<uint64_t, GameObject*> gameObjects;
 std::recursive_mutex gameObjectMutex;
 
-uint64_t registerGameObject(GameObject* obj) { return gameObjects.insert(obj); }
+uint64_t registerGameObject(GameObject* obj) {
+    return gameObjects.insert(obj);
+}
 
 GameObject* getGameObject(uint64_t idx) {
     // TODO: may there be a situation in which we'd like to use mutableAccess?
     return gameObjects.access(idx);
 }
 
-void unregisterGameObject(uint64_t idx) { gameObjects.remove(idx); }
+void unregisterGameObject(uint64_t idx) {
+    gameObjects.remove(idx);
+}
 
-GameObject::GameObject() {}
+GameObject::GameObject() : physicsEnabled(false) {}
 
 // TODO: replace copy-paste driven programming with using copy-and-swap idiom
 
@@ -60,9 +64,15 @@ GameObject::GameObject(ISceneNode* node) : _sceneNode(node) {}
 
 GameObject::~GameObject() {}
 
-GamePosition GameObject::getPosition() const { return position; }
-GameObjectId GameObject::getId() const { return id; }
-ModuleId GameObject::getProvidingModule() const { return providingModule; }
+GamePosition GameObject::getPosition() const {
+    return position;
+}
+GameObjectId GameObject::getId() const {
+    return id;
+}
+ModuleId GameObject::getProvidingModule() const {
+    return providingModule;
+}
 
 void GameObject::setPosition(GamePosition newPosition) {
     position = newPosition;
@@ -73,4 +83,19 @@ void GameObject::setRotation(double pitch, double roll, double yaw) {
     graphicsRotateObject(_sceneNode, irr::core::vector3df(pitch, roll, yaw));
 }
 
-ISceneNode* GameObject::sceneNode() const { return _sceneNode; }
+ISceneNode* GameObject::sceneNode() const {
+    return _sceneNode;
+}
+
+bool GameObject::getPhysicsEnabled() {
+    return physicsEnabled;
+}
+void GameObject::setPhysicsEnabled(bool value) {
+    if (value) {
+        graphicsEnablePhysics(_sceneNode);
+    } else {
+        position = GamePosition(_sceneNode->getPosition());
+        graphicsDisablePhysics(_sceneNode);
+    }
+    physicsEnabled = value;
+}
