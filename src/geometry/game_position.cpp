@@ -13,7 +13,9 @@ GamePosition::GamePosition(const vector3df& irrvec) {
     std::tie(x, y, z) = std::make_tuple(irrvec.X, irrvec.Y, irrvec.Z);
 }
 
-vector3df GamePosition::toIrrVector3df() { return vector3df(x, y, z); }
+vector3df GamePosition::toIrrVector3df() const {
+    return vector3df(x, y, z);
+}
 
 GamePosition& GamePosition::operator=(const GamePosition& other) {
     std::tie(x, y, z) = std::make_tuple(other.x, other.y, other.z);
@@ -24,17 +26,17 @@ GamePosition& GamePosition::operator=(GamePosition&& other) {
     return *this;
 }
 
-bool GamePosition::operator==(const GamePosition& other) {
+bool GamePosition::operator==(const GamePosition& other) const {
     return x == other.x && y == other.y && z == other.z;
 }
-bool GamePosition::operator==(GamePosition&& other) {
+bool GamePosition::operator==(GamePosition&& other) const {
     return x == other.x && y == other.y && z == other.z;
 }
 
-bool GamePosition::operator!=(const GamePosition& other) {
+bool GamePosition::operator!=(const GamePosition& other) const {
     return x != other.x || y != other.y || z != other.z;
 }
-bool GamePosition::operator!=(GamePosition&& other) {
+bool GamePosition::operator!=(GamePosition&& other) const {
     return x != other.x || y != other.y || z != other.z;
 }
 

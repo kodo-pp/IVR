@@ -77,7 +77,7 @@ static void processKeys(Player& player) {
     // Camera movement (vertical)
     {
         if (receiver.isKeyPressed(irr::KEY_SPACE)) {
-            const double jumpHeight = 5.0;
+            const double jumpHeight = 10.0;
             player.jump(jumpHeight);
         }
     }
@@ -128,7 +128,7 @@ void gameLoop() {
     std::vector<GameObject> staticCubes;
 
     for (int i = 0; i < 10; ++i) {
-        for (int j = 0; j < 10; ++j) {
+        for (int j = 0; j < 2; ++j) {
             staticCubes.push_back(graphicsCreateCube());
             staticCubes.back().setPosition(GamePosition(i * 20, j * 20, 0));
             staticCubes.back().setPhysicsEnabled(false);
@@ -152,6 +152,15 @@ void gameLoop() {
         }
         object.setPosition(GamePosition(sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20));
         object.setRotation(i * 100, i * 50, i * 20);
+
+        bool hasHit;
+        GamePosition hitPoint;
+        std::tie(hasHit, hitPoint) =
+                graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
+
+        if (hasHit) {
+            LOG("Has hit: hit point = " << hitPoint);
+        }
 
         {
             std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);

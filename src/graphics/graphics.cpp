@@ -1,3 +1,4 @@
+#include <atomic>
 #include <core/core.hpp>
 #include <game/objects/objects.hpp>
 #include <geometry/geometry.hpp>
@@ -51,6 +52,8 @@ std::map<std::pair<int64_t, int64_t>, scene::ITerrainSceneNode*> terrainChunks;
 scene::ITerrainSceneNode* rootTerrainSceneNode;
 
 scene::IMetaTriangleSelector* terrainSelector;
+
+std::atomic<bool> hasCollision(false);
 
 } // namespace graphics
 
@@ -289,6 +292,16 @@ void graphicsDraw() {
 
     graphics::irrGuiEnvironment->drawAll();
     graphics::irrSceneManager->drawAll();
+    core::recti viewport = graphics::irrVideoDriver->getViewPort();
+    auto lt = viewport.getCenter() - irr::core::vector2di(10, 10);
+    auto rb = viewport.getCenter() + irr::core::vector2di(10);
+    if (graphics::hasCollision) {
+        graphics::irrVideoDriver->draw2DRectangle(video::SColor(180, 0, 255, 0),
+                                                  core::recti(lt, rb));
+    } else {
+        graphics::irrVideoDriver->draw2DRectangle(video::SColor(180, 255, 0, 0),
+                                                  core::recti(lt, rb));
+    }
     graphics::irrVideoDriver->endScene();
 }
 
@@ -399,7 +412,7 @@ void graphicsEnablePhysics(scene::ISceneNode* node, const core::vector3df& radiu
             graphics::terrainSelector, // Comment to make code autoformatter happy
             node,
             radius,
-            core::vector3df(0, -10, 0),
+            core::vector3df(0, -20, 0),
             core::vector3df(0, 0, 0),
             0);
     if (animator == nullptr) {
@@ -420,12 +433,12 @@ void graphicsInitializeCollisions() {
     }
 
     auto animator = graphics::irrSceneManager->createCollisionResponseAnimator(
-            selector,                      // Triangle selector
-            graphics::camera,              // Affected scene node
-            core::vector3df(30, 60, 30),   // Collision radius
-            core::vector3df(0, -10.0f, 0), // Gravity vector
-            core::vector3df(0, 30, 0),     // Ellipsoid translation
-            0.000f                         // Sliding value
+            selector,                    // Triangle selector
+            graphics::camera,            // Affected scene node
+            core::vector3df(30, 60, 30), // Collision radius
+            core::vector3df(0, -20, 0),  // Gravity vector
+            core::vector3df(0, 30, 0),   // Ellipsoid translation
+            0.000f                       // Sliding value
     );
     graphics::terrainSelector = selector;
     if (animator == nullptr) {
@@ -447,4 +460,28 @@ bool irrDeviceRun() {
 
 const IrrKeyboardEventReceiver& getKeyboardEventReceiver() {
     return graphics::irrEventReceiver;
+}
+
+std::pair<bool, GamePosition> graphicsGetPlacePosition(const GamePosition& pos,
+                                                       const GamePosition& target) {
+    // Thanks to irrlicht.sourceforge.net/docu/example007.html
+    core::line3df ray;
+    ray.start = pos.toIrrVector3df();
+    ray.end = ray.start + (target.toIrrVector3df() - ray.start).normalize() * 450;
+    auto collisionManager = graphics::irrSceneManager->getSceneCollisionManager();
+
+    core::vector3df hitPoint;
+    UNUSED core::triangle3df dummy1;
+    UNUSED scene::ISceneNode* dummy2;
+
+    bool collisionHappened = collisionManager->getCollisionPoint(
+            ray,                       // A comment to make autoformatter happy
+            graphics::terrainSelector, // Even more happy -------
+            hitPoint,
+            dummy1,
+            dummy2 // EVEN MORE I SAID
+    );
+
+    graphics::hasCollision = collisionHappened;
+    return {collisionHappened, GamePosition(hitPoint)};
 }

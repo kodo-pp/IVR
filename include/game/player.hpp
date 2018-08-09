@@ -19,6 +19,10 @@ public:
     void turn(double dx, double dy);
     void jump(double speed);
 
+    GamePosition getPosition();
+    core::vector3df getRotation();
+    GamePosition getCameraTarget();
+
 private:
     irr::scene::ICameraSceneNode* camera;
     irr::core::vector3df rotation;

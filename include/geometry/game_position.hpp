@@ -18,7 +18,7 @@ public:
     GamePosition(GamePosition&& gamePosition);      // move c-tor
     explicit GamePosition(const vector3df& irrvec);
 
-    vector3df toIrrVector3df();
+    vector3df toIrrVector3df() const;
 
     GamePosition& operator=(const GamePosition& other);
     GamePosition& operator=(GamePosition&& other);
@@ -26,11 +26,11 @@ public:
     GamePosition operator+(const GamePosition& other);
     GamePosition& operator+=(const GamePosition& other);
 
-    bool operator==(const GamePosition& other);
-    bool operator==(GamePosition&& other);
+    bool operator==(const GamePosition& other) const;
+    bool operator==(GamePosition&& other) const;
 
-    bool operator!=(const GamePosition& other);
-    bool operator!=(GamePosition&& other);
+    bool operator!=(const GamePosition& other) const;
+    bool operator!=(GamePosition&& other) const;
 
     // Yes, these are public
     // I think there is no need in getters and setters (as in std::pair)

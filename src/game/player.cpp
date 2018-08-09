@@ -51,3 +51,15 @@ void Player::jump(double speed) {
         anim->jump(speed);
     }
 }
+
+GamePosition Player::getPosition() {
+    return GamePosition(camera->getPosition());
+}
+
+core::vector3df Player::getRotation() {
+    return rotation;
+}
+
+GamePosition Player::getCameraTarget() {
+    return GamePosition(camera->getTarget());
+}

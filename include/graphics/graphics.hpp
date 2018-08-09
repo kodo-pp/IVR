@@ -38,6 +38,13 @@ void graphicsRotateObject(ISceneNode* obj, core::vector3df rot);
 /// Delete and unregister a game object
 void graphicsDeleteObject(GameObject*);
 
+std::pair<bool, GamePosition> graphicsGetPlacePosition(const GamePosition& pos,
+                                                       const GamePosition& target);
+
+void graphicsEnablePhysics(scene::ISceneNode* node,
+                           const core::vector3df& radius = core::vector3df(10, 10, 10));
+void graphicsDisablePhysics(scene::ISceneNode* node);
+
 // ===== Managing textures =====
 
 /// Load texture and return Irrlicht ITexture* instance for this texture
@@ -68,10 +75,6 @@ void graphicsLoadTerrain(int64_t off_x,
 
 void graphicsInitializeCollisions();
 void graphicsHandleCollisions(scene::ITerrainSceneNode* node);
-
-void graphicsEnablePhysics(scene::ISceneNode* node,
-                           const core::vector3df& radius = core::vector3df(10, 10, 10));
-void graphicsDisablePhysics(scene::ISceneNode* node);
 
 // ===== Utility functions =====
 
