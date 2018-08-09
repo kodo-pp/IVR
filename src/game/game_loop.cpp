@@ -12,10 +12,16 @@
 #include <string>
 #include <unistd.h>
 #include <unordered_set>
+#include <util/util.hpp>
 #include <vector>
 #include <world/terrain.hpp>
 
 std::recursive_mutex irrlichtMutex;
+
+std::atomic<bool> canPlaceObject(true);
+
+// TODO: use TerrainManager or something like that
+std::vector<GameObjCube> placedCubes;
 
 static void processKeys(Player& player) {
     // XXX: This is stub, camera movement and rotation should be done by class like Player
@@ -101,6 +107,24 @@ static void processKeys(Player& player) {
         const double speed = 2.0;
         player.turn(speed * dx, speed * dy);
     }
+
+    // Place object
+    {
+        if (canPlaceObject && receiver.isKeyPressed(irr::KEY_KEY_C)) {
+            bool hasHit;
+            GamePosition hitPoint;
+            std::tie(hasHit, hitPoint) =
+                    graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
+
+            if (hasHit) {
+                LOG("Object placed at " << hitPoint);
+                placedCubes.push_back(graphicsCreateCube());
+                placedCubes.back().setPosition(hitPoint);
+                canPlaceObject = false;
+                delayedAssign(canPlaceObject, 0.4, true);
+            }
+        }
+    }
 }
 
 void gameLoop() {
@@ -131,7 +155,6 @@ void gameLoop() {
         for (int j = 0; j < 2; ++j) {
             staticCubes.push_back(graphicsCreateCube());
             staticCubes.back().setPosition(GamePosition(i * 20, j * 20, 0));
-            staticCubes.back().setPhysicsEnabled(false);
             staticCubes.back().setPhysicsEnabled(true);
         }
     }
@@ -146,21 +169,13 @@ void gameLoop() {
 
     while (irrDeviceRun()) {
         processKeys(player);
+        std::ignore = graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
         auto timeBefore = std::chrono::high_resolution_clock::now();
         if (doWeNeedToShutDown) {
             return;
         }
         object.setPosition(GamePosition(sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20));
         object.setRotation(i * 100, i * 50, i * 20);
-
-        bool hasHit;
-        GamePosition hitPoint;
-        std::tie(hasHit, hitPoint) =
-                graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
-
-        if (hasHit) {
-            LOG("Has hit: hit point = " << hitPoint);
-        }
 
         {
             std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
