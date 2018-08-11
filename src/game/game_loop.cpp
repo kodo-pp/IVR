@@ -122,6 +122,7 @@ static void processKeys(Player& player) {
                 placedCubes.push_back(graphicsCreateCube());
                 placedCubes.back().setPosition(hitPoint);
                 placedCubes.back().sceneNode()->setScale({10, 10, 10});
+                graphicsAddTexture(placedCubes.back(), graphicsLoadTexture(L"textures/cube3.png"));
                 graphicsHandleCollisionsBoundingBox(placedCubes.back().sceneNode());
                 canPlaceObject = false;
                 delayedAssign(canPlaceObject, 0.4, true);

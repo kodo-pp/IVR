@@ -372,9 +372,9 @@ void graphicsLoadTerrain(int64_t off_x,
             heightmap.c_str(),                                         // heightmap filename
             nullptr,                                                   // parent node
             -1,                                                        // node id
-            core::vector3df(irrOffsetX - 180, -300, irrOffsetY - 200), // position
+            core::vector3df(irrOffsetX - 180, -600, irrOffsetY - 200), // position
             core::vector3df(0.0f, 0.0f, 0.0f),                         // rotation
-            core::vector3df(10.0f, 1.0f, 10.0f),                       // scale
+            core::vector3df(10.0f, 4.0f, 10.0f),                       // scale
             video::SColor(255, 255, 255, 255),                         // vertexColor (?)
             5,                                                         // maxLOD (Level Of Detail)
             scene::ETPS_17,                                            // patchSize (?)

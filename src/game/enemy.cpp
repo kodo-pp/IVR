@@ -49,9 +49,15 @@ irr::scene::ISceneNode* Enemy::sceneNode() const {
 void Enemy::ai() {
     auto target = ai_func();
     auto self_position = getPosition();
-    auto vec = (target.toIrrVector3df() - self_position.toIrrVector3df()).normalize() *
-               movementSpeed;
+    auto vec = (target.toIrrVector3df() - self_position.toIrrVector3df());
     vec.Y = 0;
+
+    const double treshold = 5;
+    if (vec.getLengthSQ() < treshold) {
+        movementSpeed = 0;
+    }
+
+    vec = vec.normalize() * movementSpeed;
     auto rotation = getRotationByTarget(getPosition(), ai_func());
     rotation.X = 0;
     rotation.Z = 0;
