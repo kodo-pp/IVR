@@ -114,8 +114,8 @@ static void processKeys(Player& player) {
         if (canPlaceObject && receiver.isKeyPressed(irr::KEY_KEY_C)) {
             bool hasHit;
             GamePosition hitPoint;
-            std::tie(hasHit, hitPoint) =
-                    graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
+            std::tie(hasHit, hitPoint) = graphicsGetPlacePosition(player.getPosition(),
+                                                                  player.getCameraTarget());
 
             if (hasHit) {
                 LOG("Object placed at " << hitPoint);
@@ -166,17 +166,19 @@ void gameLoop() {
         graphicsAddTexture(cube, tex2);
     }
 
-    auto enemyMesh = graphicsLoadMesh(L"textures/cube.dae");
-    Enemy enemy = createEnemy(enemyMesh, graphicsLoadTexture(L"textures/texture4.png"));
-    enemy.sceneNode()->setScale({20, 20, 20});
+    auto enemyMesh = graphicsLoadMesh(L"textures/test_mob.dae");
+    Enemy enemy = createEnemy(
+            enemyMesh, graphicsLoadTexture(L"textures/mobs/test_mob.png"), {60, 60, 60});
+    // enemy.sceneNode()->setScale({20, 20, 20});
     enemy.sceneNode()->setMaterialFlag(EMF_LIGHTING, false);
     enemy.sceneNode()->setPosition({240, 240, 240});
-    graphicsEnablePhysics(enemy.sceneNode(), {60, 120, 60});
+    graphicsEnablePhysics(enemy.sceneNode(), {60, 75, 60});
     // graphicsHandleCollisionsMesh(enemyMesh, enemy.sceneNode());
 
     double i = 0;
 
     while (irrDeviceRun()) {
+        enemy.ai();
         processKeys(player);
         std::ignore = graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
         auto timeBefore = std::chrono::high_resolution_clock::now();
@@ -193,8 +195,8 @@ void gameLoop() {
         ++fpsCounter;
 
         auto timeAfter = std::chrono::high_resolution_clock::now();
-        auto duration =
-                std::chrono::duration_cast<std::chrono::duration<double>>(timeAfter - timeBefore);
+        auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(timeAfter -
+                                                                                  timeBefore);
         double timeToSleep = timeForFrame - duration.count();
         if (oneSecondCounter > 1.0) {
             fpsCounter = 0;

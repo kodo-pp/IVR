@@ -2,6 +2,8 @@
 #define GEOMETRY_GEOMETRY_HPP
 
 #include <algorithm>
+#include <geometry/game_position.hpp>
+#include <irrlicht.h>
 #include <stdexcept>
 #include <utility>
 
@@ -15,17 +17,25 @@
 template <typename T> class Rectangle {
 public:
     explicit Rectangle(T _left, T _top, T _right, T _bottom)
-            : left(std::min(_left, _right)), top(std::min(_top, _bottom)),
-              right(std::max(_left, _right)), bottom(std::max(_top, _bottom)) {}
+            : left(std::min(_left, _right))
+            , top(std::min(_top, _bottom))
+            , right(std::max(_left, _right))
+            , bottom(std::max(_top, _bottom)) {}
     explicit Rectangle(std::pair<T, T> left_top, std::pair<T, T> right_bottom)
-            : left(std::min(left_top.first, left_top.second)),
-              top(std::min(left_top.first, left_top.second)),
-              right(std::max(right_bottom.first, right_bottom.second)),
-              bottom(std::max(right_bottom.first, right_bottom.second)) {}
-    T height() { return bottom - top; }
-    T width() { return right - left; }
+            : left(std::min(left_top.first, left_top.second))
+            , top(std::min(left_top.first, left_top.second))
+            , right(std::max(right_bottom.first, right_bottom.second))
+            , bottom(std::max(right_bottom.first, right_bottom.second)) {}
+    T height() {
+        return bottom - top;
+    }
+    T width() {
+        return right - left;
+    }
 
-    T getLeft() { return left; }
+    T getLeft() {
+        return left;
+    }
     void setLeft(T newLeft) {
         if (newLeft > right) {
             throw std::range_error(
@@ -34,7 +44,9 @@ public:
         left = newLeft;
     }
 
-    T getRight() { return right; }
+    T getRight() {
+        return right;
+    }
     void setRight(T newRight) {
         if (newRight < left) {
             throw std::range_error(
@@ -43,7 +55,9 @@ public:
         right = newRight;
     }
 
-    T getTop() { return top; }
+    T getTop() {
+        return top;
+    }
     void setTop(T newTop) {
         if (newTop > right) {
             throw std::range_error(
@@ -52,7 +66,9 @@ public:
         top = newTop;
     }
 
-    T getBottom() { return bottom; }
+    T getBottom() {
+        return bottom;
+    }
     void setBottom(T newBottom) {
         if (newBottom < top) {
             throw std::range_error(
@@ -102,5 +118,7 @@ protected:
 
 /// Get (horizontal only) azimuth by rotation tuple (x, y, z)
 double getAzimuth(double x, double y, double z);
+
+irr::core::vector3df getRotationByTarget(const GamePosition& pos, const GamePosition& target);
 
 #endif /* end of include guard: GEOMETRY_GEOMETRY_HPP */

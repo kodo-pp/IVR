@@ -421,7 +421,6 @@ void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node) {
 }
 
 void graphicsEnablePhysics(scene::ISceneNode* node, const core::vector3df& radius) {
-    LOG("PE: " << node << " | " << graphics::terrainSelector);
     auto animator = graphics::irrSceneManager->createCollisionResponseAnimator(
             graphics::terrainSelector, // Comment to make code autoformatter happy
             node,
