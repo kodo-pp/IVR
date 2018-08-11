@@ -254,8 +254,8 @@ static bool initializeIrrlicht(UNUSED std::vector<std::string>* args) {
         return false;
     }
 
-    graphics::camera =
-            graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0, 30, -40));
+    graphics::camera = graphics::irrSceneManager->addCameraSceneNode(
+            0, irr::core::vector3df(0, 30, -40));
     if (graphics::camera == nullptr) {
         return false;
     }
@@ -410,6 +410,20 @@ void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node) {
     auto selector = graphics::irrSceneManager->createTriangleSelector(mesh, node);
     if (selector == nullptr) {
         throw std::runtime_error("unable to create triangle selector on mesh scene node");
+    }
+
+    static_cast<scene::IMetaTriangleSelector*>(
+            static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
+                    *graphics::camera->getAnimators().begin())
+                    ->getWorld())
+            ->addTriangleSelector(selector);
+    selector->drop();
+}
+
+void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node) {
+    auto selector = graphics::irrSceneManager->createTriangleSelectorFromBoundingBox(node);
+    if (selector == nullptr) {
+        throw std::runtime_error("unable to create triangle selector on scene node bounding box");
     }
 
     static_cast<scene::IMetaTriangleSelector*>(

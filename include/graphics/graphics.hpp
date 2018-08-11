@@ -76,6 +76,7 @@ void graphicsLoadTerrain(int64_t off_x,
 void graphicsInitializeCollisions();
 void graphicsHandleCollisions(scene::ITerrainSceneNode* node);
 void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node);
+void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node);
 
 // ===== Utility functions =====
 

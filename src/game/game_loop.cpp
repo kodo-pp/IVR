@@ -121,6 +121,8 @@ static void processKeys(Player& player) {
                 LOG("Object placed at " << hitPoint);
                 placedCubes.push_back(graphicsCreateCube());
                 placedCubes.back().setPosition(hitPoint);
+                placedCubes.back().sceneNode()->setScale({10, 10, 10});
+                graphicsHandleCollisionsBoundingBox(placedCubes.back().sceneNode());
                 canPlaceObject = false;
                 delayedAssign(canPlaceObject, 0.4, true);
             }
