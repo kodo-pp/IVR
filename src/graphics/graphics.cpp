@@ -406,6 +406,20 @@ void graphicsHandleCollisions(scene::ITerrainSceneNode* node) {
     selector->drop();
 }
 
+void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node) {
+    auto selector = graphics::irrSceneManager->createTriangleSelector(mesh, node);
+    if (selector == nullptr) {
+        throw std::runtime_error("unable to create triangle selector on mesh scene node");
+    }
+
+    static_cast<scene::IMetaTriangleSelector*>(
+            static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
+                    *graphics::camera->getAnimators().begin())
+                    ->getWorld())
+            ->addTriangleSelector(selector);
+    selector->drop();
+}
+
 void graphicsEnablePhysics(scene::ISceneNode* node, const core::vector3df& radius) {
     LOG("PE: " << node << " | " << graphics::terrainSelector);
     auto animator = graphics::irrSceneManager->createCollisionResponseAnimator(
@@ -484,4 +498,20 @@ std::pair<bool, GamePosition> graphicsGetPlacePosition(const GamePosition& pos,
 
     graphics::hasCollision = collisionHappened;
     return {collisionHappened, GamePosition(hitPoint)};
+}
+
+scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh) {
+    auto node = graphics::irrSceneManager->addMeshSceneNode(mesh);
+    if (node == nullptr) {
+        throw std::runtime_error("unable to create mesh scene node");
+    }
+    return node;
+}
+
+scene::IMesh* graphicsLoadMesh(const std::wstring& filename) {
+    auto mesh = graphics::irrSceneManager->getMesh(filename.c_str());
+    if (mesh == nullptr) {
+        throw std::runtime_error("unable to load mesh from file");
+    }
+    return mesh;
 }

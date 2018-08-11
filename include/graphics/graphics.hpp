@@ -75,6 +75,7 @@ void graphicsLoadTerrain(int64_t off_x,
 
 void graphicsInitializeCollisions();
 void graphicsHandleCollisions(scene::ITerrainSceneNode* node);
+void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node);
 
 // ===== Utility functions =====
 
@@ -110,5 +111,8 @@ private:
 #undef eventType
 
 const IrrKeyboardEventReceiver& getKeyboardEventReceiver();
+
+scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh);
+scene::IMesh* graphicsLoadMesh(const std::wstring& filename);
 
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */

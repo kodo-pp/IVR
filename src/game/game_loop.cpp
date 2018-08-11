@@ -1,6 +1,7 @@
 #include <chrono>
 #include <cmath>
 #include <core/init.hpp>
+#include <game/enemy.hpp>
 #include <game/game_loop.hpp>
 #include <game/player.hpp>
 #include <game/solid_object.hpp>
@@ -164,6 +165,14 @@ void gameLoop() {
     for (auto& cube : staticCubes) {
         graphicsAddTexture(cube, tex2);
     }
+
+    auto enemyMesh = graphicsLoadMesh(L"textures/cube.dae");
+    Enemy enemy = createEnemy(enemyMesh, graphicsLoadTexture(L"textures/texture4.png"));
+    enemy.sceneNode()->setScale({20, 20, 20});
+    enemy.sceneNode()->setMaterialFlag(EMF_LIGHTING, false);
+    enemy.sceneNode()->setPosition({240, 240, 240});
+    graphicsEnablePhysics(enemy.sceneNode(), {60, 120, 60});
+    // graphicsHandleCollisionsMesh(enemyMesh, enemy.sceneNode());
 
     double i = 0;
 
