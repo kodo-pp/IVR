@@ -1,5 +1,6 @@
 #include <geometry/game_position.hpp>
 #include <tuple>
+#include <world/terrain.hpp>
 
 GamePosition::GamePosition(double _x, double _y, double _z) : x(_x), y(_y), z(_z) {}
 
@@ -48,6 +49,10 @@ GamePosition& GamePosition::operator+=(const GamePosition& other) {
     y += other.y;
     z += other.z;
     return *this;
+}
+
+std::pair<int64_t, int64_t> GamePosition::getChunk() const {
+    return {floor(x) / CHUNK_SIZE_IRRLICHT, floor(z) / CHUNK_SIZE_IRRLICHT};
 }
 
 std::wostream& operator<<(std::wostream& out, const GamePosition& pos) {

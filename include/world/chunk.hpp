@@ -1,12 +1,14 @@
 #ifndef WORLD_CHUNK_HPP
 #define WORLD_CHUNK_HPP
 
+#include <game/enemy.hpp>
 #include <game/game_object.hpp>
 #include <geometry/game_position.hpp>
+#include <irrlicht.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
-
-using ChunkId = std::pair<int64_t, int64_t>;
+#include <vector>
 
 /**
  * Represents a chunk (a relatively small area in the world)
@@ -14,20 +16,34 @@ using ChunkId = std::pair<int64_t, int64_t>;
  * Chunk has game objects inside, and they (game objects) can only be located
  * in chunks.
  */
+
 class Chunk {
 public:
-    Chunk();
-    // XXX: Maybe copy c-tor should be deleted
-    explicit Chunk(Chunk& chunk);  // Copy constructor
-    explicit Chunk(Chunk&& chunk); // Move constructor
-    explicit Chunk(std::unordered_map<GameObjectId, GameObject> _objects);
+    explicit Chunk(std::unordered_map<GameObjectId, GameObject> _objects,
+                   irr::scene::ITerrainSceneNode* _terrain);
+    Chunk(const Chunk& other) = default;
+    Chunk(Chunk&& other) = default;
+    virtual ~Chunk() = default;
 
-    ChunkId getId();
-    // No setter as id should probably be read-only
+    Chunk& operator=(const Chunk& other) = default;
+    Chunk& operator=(Chunk&& other) = default;
 
-protected:
-    ChunkId id;
+    irr::scene::ITerrainSceneNode* sceneNode() const;
+
+    void trackMob(EnemyId mobId);
+    void forgetMob(EnemyId mobId);
+
+    void mobsAi();
+
+    GameObjectId addObject(GameObject&& object);
+    void removeObject(GameObjectId objectId);
+    void moveObject(GameObjectId objectId, GameObject& target);
+    const GameObject& getObject(GameObjectId objectId);
+
+private:
+    irr::scene::ITerrainSceneNode* terrain;
     std::unordered_map<GameObjectId, GameObject> objects;
+    std::unordered_set<EnemyId> mobs;
 };
 
 #endif /* end of include guard: WORLD_CHUNK_HPP */

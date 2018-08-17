@@ -65,11 +65,27 @@ void Enemy::ai() {
     setPosition(GamePosition(self_position.toIrrVector3df() + vec));
 }
 
-Enemy createEnemy(irr::scene::IMesh* model,
-                  irr::video::ITexture* texture,
-                  const irr::core::vector3df& scale) {
-    Enemy enemy(graphicsCreateMeshSceneNode(model));
+EnemyId EnemyManager::createEnemy(irr::scene::IMesh* model,
+                                  irr::video::ITexture* texture,
+                                  const irr::core::vector3df& scale) {
+    ++idCounter;
+    enemies.insert({idCounter, Enemy(graphicsCreateMeshSceneNode(model))});
+
+    Enemy& enemy = enemies.at(idCounter);
     enemy.sceneNode()->setMaterialTexture(0, texture);
     enemy.sceneNode()->setScale(scale);
-    return enemy;
+    return idCounter;
 }
+
+void EnemyManager::deleteEnemy(EnemyId id) {
+    enemies.erase(id);
+}
+
+const Enemy& EnemyManager::accessEnemy(EnemyId id) {
+    return enemies.at(id);
+}
+Enemy& EnemyManager::mutableAccessEnemy(EnemyId id) {
+    return enemies.at(id);
+}
+
+EnemyManager enemyManager;

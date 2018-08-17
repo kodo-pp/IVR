@@ -220,8 +220,8 @@ bool initializeGraphics(std::vector<std::string>* args) {
 // Инициаллизация Irrlicht
 static bool initializeIrrlicht(UNUSED std::vector<std::string>* args) {
     graphics::irrDevice = irr::createDevice(
-            irr::video::EDT_BURNINGSVIDEO, // Драйвер для рендеринга (здесь OpenGL, но пока
-                                           // программный)
+            irr::video::EDT_OPENGL, // Драйвер для рендеринга (здесь OpenGL, но пока
+                                    // программный)
             // (см. http://irrlicht.sourceforge.net/docu/example001.html)
             irr::core::dimension2d<irr::u32>(800,
                                              600), // Размеры окна (не в полноэкранном режиме)
@@ -388,7 +388,7 @@ void graphicsLoadTerrain(int64_t off_x,
     terrain->setMaterialTexture(0, detail);
     terrain->scaleTexture(1.0f, 20.0f);
 
-    TerrainChunk terrainChunk(terrain);
+    Chunk terrainChunk({}, terrain);
     terrainManager.addChunk(off_x, off_y, std::move(terrainChunk));
 }
 

@@ -170,8 +170,10 @@ void gameLoop() {
     }
 
     auto enemyMesh = graphicsLoadMesh(L"textures/test_mob.dae");
-    Enemy enemy = createEnemy(
+    EnemyId enemyId = enemyManager.createEnemy(
             enemyMesh, graphicsLoadTexture(L"textures/mobs/test_mob.png"), {60, 60, 60});
+    terrainManager.trackMob(enemyId);
+    Enemy& enemy = enemyManager.mutableAccessEnemy(enemyId);
     // enemy.sceneNode()->setScale({20, 20, 20});
     enemy.sceneNode()->setMaterialFlag(EMF_LIGHTING, false);
     enemy.sceneNode()->setPosition({240, 240, 240});

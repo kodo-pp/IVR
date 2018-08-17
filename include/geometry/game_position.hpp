@@ -32,6 +32,8 @@ public:
     bool operator!=(const GamePosition& other) const;
     bool operator!=(GamePosition&& other) const;
 
+    std::pair<int64_t, int64_t> getChunk() const;
+
     // Yes, these are public
     // I think there is no need in getters and setters (as in std::pair)
     double x;
