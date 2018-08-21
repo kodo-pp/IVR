@@ -13,6 +13,7 @@ matrix:
             - g++-7
             - libirrlicht-dev
             - clang-5.0
+            - boost
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
