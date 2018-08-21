@@ -1,6 +1,7 @@
-#include <core/memory_manager.hpp>
 #include <cstdlib>
 #include <set>
+
+#include <core/memory_manager.hpp>
 
 /**
  * Добавляет укаатель во множество отслеживаемых
@@ -9,7 +10,8 @@
  * @return false, если ptr == nullptr или уже отслеживается
  * @return true в остальных случаях
  */
-bool MemoryManager::track(void* ptr) {
+bool MemoryManager::track(void* ptr)
+{
     if (ptr == nullptr) {
         return false;
     }
@@ -29,7 +31,8 @@ bool MemoryManager::track(void* ptr) {
  * @return false, если ptr == nullptr или не отслеживается
  * @return true, если ptr отслеживается
  */
-bool MemoryManager::isTracking(void* ptr) {
+bool MemoryManager::isTracking(void* ptr)
+{
     if (ptr == nullptr) {
         return false;
     }
@@ -39,7 +42,8 @@ bool MemoryManager::isTracking(void* ptr) {
 
 // Мне лень писать документацию, Halp me pls.
 
-bool MemoryManager::forget(void* ptr) {
+bool MemoryManager::forget(void* ptr)
+{
     if (ptr == nullptr) {
         return false;
     }
@@ -52,7 +56,8 @@ bool MemoryManager::forget(void* ptr) {
     return true;
 }
 
-bool MemoryManager::freePtr(void* ptr) {
+bool MemoryManager::freePtr(void* ptr)
+{
     if (ptr == nullptr) {
         return false;
     }
@@ -66,7 +71,8 @@ bool MemoryManager::freePtr(void* ptr) {
     return true;
 }
 
-bool MemoryManager::freeAll() {
+bool MemoryManager::freeAll()
+{
     bool success = true;
     for (auto& ptr : pointersSet) {
         success = success && freePtr(ptr);
@@ -74,6 +80,9 @@ bool MemoryManager::freeAll() {
     return success;
 }
 
-std::set<void*> MemoryManager::getPointersSet() { return pointersSet; }
+std::set<void*> MemoryManager::getPointersSet()
+{
+    return pointersSet;
+}
 
 MemoryManager memoryManager;

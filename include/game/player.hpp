@@ -4,7 +4,8 @@
 #include <geometry/game_position.hpp>
 #include <graphics/graphics.hpp>
 
-class Player {
+class Player
+{
 public:
     Player(irr::scene::ICameraSceneNode* _camera);
     Player(const Player& other) = default;

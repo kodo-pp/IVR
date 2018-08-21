@@ -1,10 +1,11 @@
 #ifndef GUI_GUI_HPP
 #define GUI_GUI_HPP
 
-#include <geometry/geometry.hpp>
 #include <map>
 #include <string>
 #include <vector>
+
+#include <geometry/geometry.hpp>
 
 // COMBAK: Just a stub because config.hpp is not yet written
 enum ConfigType { CONFIG_STUB };
@@ -14,7 +15,8 @@ enum ConfigType { CONFIG_STUB };
  *
  * SHOULD NOT BE INSTANTIATED
  */
-class GuiElement {
+class GuiElement
+{
 public:
     GuiElement() = delete;
     virtual ~GuiElement();
@@ -29,7 +31,8 @@ protected:
  *
  * One of items can be selected by user
  */
-class GuiItemList : public GuiElement {
+class GuiItemList : public GuiElement
+{
 public:
     virtual void draw() override;
     std::wstring getSelectedItem();
@@ -39,14 +42,16 @@ protected:
     size_t selectedItemIndex;
 };
 
-class GuiButton : public GuiElement {
+class GuiButton : public GuiElement
+{
 public:
     virtual void draw() override;
     std::wstring getText();
 };
 
 // WARNING: 'actions' in class diagram are 'buttons' here
-class GuiDialog : public GuiElement {
+class GuiDialog : public GuiElement
+{
 public:
     GuiDialog(std::wstring _text, std::vector<std::wstring> _buttons);
 
@@ -73,7 +78,8 @@ protected:
 };
 
 // WARNING: there is some difference to class diagram
-class GuiConfigWindow : public GuiElement {
+class GuiConfigWindow : public GuiElement
+{
 public:
     GuiConfigWindow(std::map<std::wstring, ConfigType> _config);
 

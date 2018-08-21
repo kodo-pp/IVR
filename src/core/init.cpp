@@ -1,14 +1,17 @@
+#include <iostream>
+
 #include <core/core.hpp>
 #include <core/destroy.hpp>
 #include <core/memory_manager.hpp>
 #include <graphics/graphics.hpp>
-#include <iostream>
 #include <log/log.hpp>
 #include <net/net.hpp>
+
 #include <signal.h>
 #include <unistd.h>
 
-struct FuncResult* handlerTest(std::vector<void*> args) {
+struct FuncResult* handlerTest(std::vector<void*> args)
+{
     int a = *(int32_t*)args.at(0);
     int b = *(int32_t*)args.at(1);
     std::string s1 = *(std::string*)args.at(2);
@@ -28,7 +31,8 @@ struct FuncResult* handlerTest(std::vector<void*> args) {
 }
 
 // [no utf-8]
-void init(std::vector<std::string>* args) {
+void init(std::vector<std::string>* args)
+{
     std::setlocale(LC_CTYPE, "");
     std::wcerr << std::boolalpha;
     std::wcout << std::boolalpha;

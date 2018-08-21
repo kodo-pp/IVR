@@ -7,7 +7,8 @@
  * Represents an abstract weapon
  */
 
-class Weapon {
+class Weapon
+{
 public:
     // XXX: maybe c-tor should exist
     Weapon() = delete;

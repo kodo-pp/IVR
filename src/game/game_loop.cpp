@@ -1,21 +1,23 @@
 #include <chrono>
 #include <cmath>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <unordered_set>
+#include <vector>
+
 #include <core/init.hpp>
 #include <game/enemy.hpp>
 #include <game/game_loop.hpp>
 #include <game/player.hpp>
 #include <game/solid_object.hpp>
 #include <graphics/graphics.hpp>
-#include <iostream>
-#include <irrlicht.h>
 #include <log/log.hpp>
-#include <memory>
-#include <string>
-#include <unistd.h>
-#include <unordered_set>
 #include <util/util.hpp>
-#include <vector>
 #include <world/terrain.hpp>
+
+#include <irrlicht.h>
+#include <unistd.h>
 
 std::recursive_mutex irrlichtMutex;
 
@@ -24,7 +26,8 @@ std::atomic<bool> canPlaceObject(true);
 // TODO: use TerrainManager or something like that
 std::vector<GameObjCube> placedCubes;
 
-static void processKeys(Player& player) {
+static void processKeys(Player& player)
+{
     // XXX: This is stub, camera movement and rotation should be done by class like Player
     const IrrKeyboardEventReceiver& receiver = getKeyboardEventReceiver();
 
@@ -131,7 +134,8 @@ static void processKeys(Player& player) {
     }
 }
 
-void gameLoop() {
+void gameLoop()
+{
     Player player(graphicsGetCamera());
     graphicsLoadTerrain(0,
                         0,
@@ -200,8 +204,8 @@ void gameLoop() {
         ++fpsCounter;
 
         auto timeAfter = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(timeAfter -
-                                                                                  timeBefore);
+        auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(timeAfter
+                                                                                  - timeBefore);
         double timeToSleep = timeForFrame - duration.count();
         if (oneSecondCounter > 1.0) {
             fpsCounter = 0;
@@ -215,8 +219,8 @@ void gameLoop() {
         }
 
         auto timeAfterSleep = std::chrono::high_resolution_clock::now();
-        auto fullDuration = std::chrono::duration_cast<std::chrono::duration<double>>(
-                timeAfterSleep - timeBefore);
+        auto fullDuration = std::chrono::duration_cast<std::chrono::duration<double>>(timeAfterSleep
+                                                                                      - timeBefore);
         oneSecondCounter += fullDuration.count();
 
         i += timeForFrame;

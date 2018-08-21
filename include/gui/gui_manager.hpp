@@ -1,15 +1,17 @@
 #ifndef GUI_GUI_MANAGER_HPP
 #define GUI_GUI_MANAGER_HPP
 
-#include <gui/gui.hpp>
 #include <unordered_set>
+
+#include <gui/gui.hpp>
 
 /**
  * Manages GUI elements
  *
  * WARNING: should be instantiated only once
  */
-class GuiManager {
+class GuiManager
+{
 public:
     GuiManager(std::unordered_set<GuiElement> _guiElements);
     virtual ~GuiManager();

@@ -38,6 +38,8 @@ doxygen-out/
 *.swp
 IVR.log
 core.*
+!core.cpp
+!core.hpp
 build.log
 .build-cache
 *.log

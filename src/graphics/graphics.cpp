@@ -1,24 +1,27 @@
 #include <atomic>
+#include <iostream>
+#include <map>
+#include <string>
+#include <tuple>
+#include <unordered_set>
+#include <vector>
+
 #include <core/core.hpp>
 #include <game/objects/objects.hpp>
 #include <geometry/geometry.hpp>
 #include <graphics/graphics.hpp>
 #include <graphics/texture.hpp>
-#include <iostream>
-#include <irrlicht.h>
 #include <log/log.hpp>
-#include <map>
 #include <misc/irrvec.hpp>
 #include <modules/module_io.hpp>
-#include <string>
-#include <tuple>
-#include <unistd.h>
-#include <unordered_set>
 #include <util/util.hpp>
-#include <vector>
 #include <world/terrain.hpp>
 
-bool IrrKeyboardEventReceiver::OnEvent(const irr::SEvent& event) {
+#include <irrlicht.h>
+#include <unistd.h>
+
+bool IrrKeyboardEventReceiver::OnEvent(const irr::SEvent& event)
+{
     if (event.EventType == irr::EET_KEY_INPUT_EVENT) {
         if (event.KeyInput.PressedDown) {
             pressedKeys.insert(event.KeyInput.Key);
@@ -31,7 +34,8 @@ bool IrrKeyboardEventReceiver::OnEvent(const irr::SEvent& event) {
     return false;
 }
 
-bool IrrKeyboardEventReceiver::isKeyPressed(irr::EKEY_CODE key) const {
+bool IrrKeyboardEventReceiver::isKeyPressed(irr::EKEY_CODE key) const
+{
     return pressedKeys.count(key) > 0;
 }
 /**
@@ -39,27 +43,28 @@ bool IrrKeyboardEventReceiver::isKeyPressed(irr::EKEY_CODE key) const {
  *
  * Отдельное пространство имён для изоляции
  */
-namespace graphics {
+namespace graphics
+{
+    IrrlichtDevice* irrDevice = nullptr;
+    video::IVideoDriver* irrVideoDriver = nullptr;
+    scene::ISceneManager* irrSceneManager = nullptr;
+    gui::IGUIEnvironment* irrGuiEnvironment = nullptr;
+    IrrKeyboardEventReceiver irrEventReceiver;
 
-IrrlichtDevice* irrDevice = nullptr;
-video::IVideoDriver* irrVideoDriver = nullptr;
-scene::ISceneManager* irrSceneManager = nullptr;
-gui::IGUIEnvironment* irrGuiEnvironment = nullptr;
-IrrKeyboardEventReceiver irrEventReceiver;
+    scene::ICameraSceneNode* camera = nullptr;
+    std::map<std::pair<int64_t, int64_t>, scene::ITerrainSceneNode*> terrainChunks;
+    scene::ITerrainSceneNode* rootTerrainSceneNode;
 
-scene::ICameraSceneNode* camera = nullptr;
-std::map<std::pair<int64_t, int64_t>, scene::ITerrainSceneNode*> terrainChunks;
-scene::ITerrainSceneNode* rootTerrainSceneNode;
+    scene::IMetaTriangleSelector* terrainSelector;
 
-scene::IMetaTriangleSelector* terrainSelector;
-
-std::atomic<bool> hasCollision(false);
+    std::atomic<bool> hasCollision(false);
 
 } // namespace graphics
 
 static bool initializeIrrlicht(std::vector<std::string>* args);
 
-struct FuncResult* handlerGraphicsCreateCube(UNUSED const std::vector<void*>& args) {
+struct FuncResult* handlerGraphicsCreateCube(UNUSED const std::vector<void*>& args)
+{
     auto ret = new struct FuncResult;
     ret->data.resize(1);
 
@@ -73,7 +78,8 @@ struct FuncResult* handlerGraphicsCreateCube(UNUSED const std::vector<void*>& ar
     return ret;
 }
 
-struct FuncResult* handlerGraphicsMoveObject(const std::vector<void*>& args) {
+struct FuncResult* handlerGraphicsMoveObject(const std::vector<void*>& args)
+{
     if (args.size() != 4) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsMoveObject()");
     }
@@ -93,7 +99,8 @@ struct FuncResult* handlerGraphicsMoveObject(const std::vector<void*>& args) {
     return ret;
 }
 
-struct FuncResult* handlerGraphicsDeleteObject(const std::vector<void*>& args) {
+struct FuncResult* handlerGraphicsDeleteObject(const std::vector<void*>& args)
+{
     if (args.size() != 1) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsDeleteObject()");
     }
@@ -110,7 +117,8 @@ struct FuncResult* handlerGraphicsDeleteObject(const std::vector<void*>& args) {
     return ret;
 }
 
-struct FuncResult* handlerGraphicsRotateObject(const std::vector<void*>& args) {
+struct FuncResult* handlerGraphicsRotateObject(const std::vector<void*>& args)
+{
     if (args.size() != 4) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsRotateObject()");
     }
@@ -134,7 +142,8 @@ struct FuncResult* handlerGraphicsRotateObject(const std::vector<void*>& args) {
 
 extern std::recursive_mutex irrlichtMutex;
 
-FuncResult* handlerGraphicsLoadTexture(const std::vector<void*>& args) {
+FuncResult* handlerGraphicsLoadTexture(const std::vector<void*>& args)
+{
     std::lock_guard<std::recursive_mutex> irrlock(irrlichtMutex);
     if (args.size() != 1) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsLoadTexture()");
@@ -159,7 +168,8 @@ FuncResult* handlerGraphicsLoadTexture(const std::vector<void*>& args) {
     return ret;
 }
 
-struct FuncResult* handlerGraphicsAddTexture(const std::vector<void*>& args) {
+struct FuncResult* handlerGraphicsAddTexture(const std::vector<void*>& args)
+{
     if (args.size() != 2) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsAddTexture()");
     }
@@ -181,7 +191,8 @@ struct FuncResult* handlerGraphicsAddTexture(const std::vector<void*>& args) {
     return ret;
 }
 
-static inline void initializeGraphicsFuncProviders() {
+static inline void initializeGraphicsFuncProviders()
+{
     registerFuncProvider(
             new FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
     registerFuncProvider(
@@ -198,12 +209,14 @@ static inline void initializeGraphicsFuncProviders() {
             new FuncProvider("graphics.texture.add", handlerGraphicsAddTexture), "LL", "");
 }
 
-void cleanupGraphics() {
+void cleanupGraphics()
+{
     graphics::terrainSelector->drop();
     graphics::irrDevice->drop();
 }
 
-bool initializeGraphics(std::vector<std::string>* args) {
+bool initializeGraphics(std::vector<std::string>* args)
+{
     if (args == nullptr) {
         return false;
     }
@@ -218,7 +231,8 @@ bool initializeGraphics(std::vector<std::string>* args) {
 }
 
 // Инициаллизация Irrlicht
-static bool initializeIrrlicht(UNUSED std::vector<std::string>* args) {
+static bool initializeIrrlicht(UNUSED std::vector<std::string>* args)
+{
     graphics::irrDevice = irr::createDevice(
             irr::video::EDT_OPENGL, // Драйвер для рендеринга (здесь OpenGL, но пока
                                     // программный)
@@ -265,7 +279,8 @@ static bool initializeIrrlicht(UNUSED std::vector<std::string>* args) {
     return true;
 }
 
-GameObjCube graphicsCreateCube() {
+GameObjCube graphicsCreateCube()
+{
     std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
     scene::ISceneNode* node = graphics::irrSceneManager->addCubeSceneNode();
     if (!node) {
@@ -278,7 +293,8 @@ GameObjCube graphicsCreateCube() {
     return GameObjCube(node);
 }
 
-void graphicsDraw() {
+void graphicsDraw()
+{
     graphics::irrVideoDriver->beginScene(
             true, // Неясно, что это
             true, // Неясно, что это
@@ -305,38 +321,44 @@ void graphicsDraw() {
     graphics::irrVideoDriver->endScene();
 }
 
-void graphicsMoveObject(ISceneNode* obj, double x, double y, double z) {
+void graphicsMoveObject(ISceneNode* obj, double x, double y, double z)
+{
     if (!obj) {
         return;
     }
     obj->setPosition(core::vector3df(x, y, z));
 }
-void graphicsMoveObject(ISceneNode* obj, core::vector3df pos) {
+void graphicsMoveObject(ISceneNode* obj, core::vector3df pos)
+{
     if (!obj) {
         return;
     }
     obj->setPosition(pos);
 }
-void graphicsMoveObject(ISceneNode* obj, GamePosition gp) {
+void graphicsMoveObject(ISceneNode* obj, GamePosition gp)
+{
     if (!obj) {
         return;
     }
     obj->setPosition(gp.toIrrVector3df());
 }
 
-void graphicsDeleteObject(GameObject* obj) {
+void graphicsDeleteObject(GameObject* obj)
+{
     obj->sceneNode()->remove();
     delete obj;
 }
 
-void graphicsRotateObject(ISceneNode* obj, core::vector3df rot) {
+void graphicsRotateObject(ISceneNode* obj, core::vector3df rot)
+{
     if (!obj) {
         return;
     }
     obj->setRotation(rot);
 }
 
-ITexture* graphicsLoadTexture(std::wstring textureFileName) {
+ITexture* graphicsLoadTexture(std::wstring textureFileName)
+{
     LOG(L"loading texture: " << textureFileName);
     ITexture* texture = graphics::irrVideoDriver->getTexture(textureFileName.c_str());
     if (!texture) {
@@ -347,7 +369,8 @@ ITexture* graphicsLoadTexture(std::wstring textureFileName) {
     return texture;
 }
 
-void graphicsAddTexture(const GameObject& obj, ITexture* tex) {
+void graphicsAddTexture(const GameObject& obj, ITexture* tex)
+{
     LOG(L"Adding texture");
     if (!obj.sceneNode() || !tex) {
         LOG(L"Adding texture failed");
@@ -365,7 +388,8 @@ void graphicsLoadTerrain(int64_t off_x,
                          int64_t off_y,
                          const std::wstring& heightmap,
                          video::ITexture* tex,
-                         video::ITexture* detail) {
+                         video::ITexture* detail)
+{
     double irrOffsetX = CHUNK_SIZE_IRRLICHT * off_x;
     double irrOffsetY = CHUNK_SIZE_IRRLICHT * off_y;
     scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
@@ -392,7 +416,8 @@ void graphicsLoadTerrain(int64_t off_x,
     terrainManager.addChunk(off_x, off_y, std::move(terrainChunk));
 }
 
-void graphicsHandleCollisions(scene::ITerrainSceneNode* node) {
+void graphicsHandleCollisions(scene::ITerrainSceneNode* node)
+{
     auto selector = graphics::irrSceneManager->createTerrainTriangleSelector(node);
     if (selector == nullptr) {
         throw std::runtime_error("unable to create triangle selector on terrain scene node");
@@ -406,7 +431,8 @@ void graphicsHandleCollisions(scene::ITerrainSceneNode* node) {
     selector->drop();
 }
 
-void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node) {
+void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node)
+{
     auto selector = graphics::irrSceneManager->createTriangleSelector(mesh, node);
     if (selector == nullptr) {
         throw std::runtime_error("unable to create triangle selector on mesh scene node");
@@ -420,7 +446,8 @@ void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node) {
     selector->drop();
 }
 
-void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node) {
+void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node)
+{
     auto selector = graphics::irrSceneManager->createTriangleSelectorFromBoundingBox(node);
     if (selector == nullptr) {
         throw std::runtime_error("unable to create triangle selector on scene node bounding box");
@@ -434,7 +461,8 @@ void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node) {
     selector->drop();
 }
 
-void graphicsEnablePhysics(scene::ISceneNode* node, const core::vector3df& radius) {
+void graphicsEnablePhysics(scene::ISceneNode* node, const core::vector3df& radius)
+{
     auto animator = graphics::irrSceneManager->createCollisionResponseAnimator(
             graphics::terrainSelector, // Comment to make code autoformatter happy
             node,
@@ -449,11 +477,13 @@ void graphicsEnablePhysics(scene::ISceneNode* node, const core::vector3df& radiu
     animator->drop();
 }
 
-void graphicsDisablePhysics(scene::ISceneNode* node) {
+void graphicsDisablePhysics(scene::ISceneNode* node)
+{
     node->removeAnimators();
 }
 
-void graphicsInitializeCollisions() {
+void graphicsInitializeCollisions()
+{
     auto selector = graphics::irrSceneManager->createMetaTriangleSelector();
     if (selector == nullptr) {
         throw std::runtime_error("unable to create meta triangle selector");
@@ -477,20 +507,24 @@ void graphicsInitializeCollisions() {
     animator->drop();
 }
 
-irr::scene::ICameraSceneNode* graphicsGetCamera() {
+irr::scene::ICameraSceneNode* graphicsGetCamera()
+{
     return graphics::camera;
 }
 
-bool irrDeviceRun() {
+bool irrDeviceRun()
+{
     return graphics::irrDevice->run();
 }
 
-const IrrKeyboardEventReceiver& getKeyboardEventReceiver() {
+const IrrKeyboardEventReceiver& getKeyboardEventReceiver()
+{
     return graphics::irrEventReceiver;
 }
 
 std::pair<bool, GamePosition> graphicsGetPlacePosition(const GamePosition& pos,
-                                                       const GamePosition& target) {
+                                                       const GamePosition& target)
+{
     // Thanks to irrlicht.sourceforge.net/docu/example007.html
     core::line3df ray;
     ray.start = pos.toIrrVector3df();
@@ -513,7 +547,8 @@ std::pair<bool, GamePosition> graphicsGetPlacePosition(const GamePosition& pos,
     return {collisionHappened, GamePosition(hitPoint)};
 }
 
-scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh) {
+scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh)
+{
     auto node = graphics::irrSceneManager->addMeshSceneNode(mesh);
     if (node == nullptr) {
         throw std::runtime_error("unable to create mesh scene node");
@@ -521,7 +556,8 @@ scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh) {
     return node;
 }
 
-scene::IMesh* graphicsLoadMesh(const std::wstring& filename) {
+scene::IMesh* graphicsLoadMesh(const std::wstring& filename)
+{
     auto mesh = graphics::irrSceneManager->getMesh(filename.c_str());
     if (mesh == nullptr) {
         throw std::runtime_error("unable to load mesh from file");

@@ -3,7 +3,8 @@
 
 #include <game/game_object.hpp>
 
-class InventoryItem : public GameObject {
+class InventoryItem : public GameObject
+{
 public:
     InventoryItem();
 

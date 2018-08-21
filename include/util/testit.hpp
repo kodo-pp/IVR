@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <iostream>
+
 #include <log/log.hpp>
 #include <util/util.hpp>
 
@@ -10,7 +11,8 @@
 static int _testit_failed = 0;
 static std::string _testit_name = "";
 
-static void testit_func(bool expr, const char* exprStr, const char* filename, int line) {
+static void testit_func(bool expr, const char* exprStr, const char* filename, int line)
+{
     if (expr) {
         LOG(L"passed    : " << wstring_cast(exprStr) << "\t| " << wstring_cast(filename) << L":"
                             << line);

@@ -2,8 +2,9 @@
 #define MODULES_STDMODLIB_HPP
 
 #include <map>
-#include <modules/module.hpp>
 #include <vector>
+
+#include <modules/module.hpp>
 
 // TODO: make this a separate header file
 using Version = std::vector<int>;
@@ -11,7 +12,8 @@ using Version = std::vector<int>;
 /**
  * Represents the standard module library
  */
-class StdModLib {
+class StdModLib
+{
 public:
     StdModLib(Version _version, std::map<ModuleId, Module> _modules);
 

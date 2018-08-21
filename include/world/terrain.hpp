@@ -1,16 +1,19 @@
 #ifndef WORLD_TERRAIN_HPP
 #define WORLD_TERRAIN_HPP
 
-#include <game/enemy.hpp>
-#include <irrlicht.h>
 #include <map>
 #include <string>
 #include <vector>
+
+#include <game/enemy.hpp>
 #include <world/chunk.hpp>
+
+#include <irrlicht.h>
 
 const double CHUNK_SIZE_IRRLICHT = 2400;
 
-class TerrainManager {
+class TerrainManager
+{
 public:
     using offset_t = int64_t;
     TerrainManager() = default;

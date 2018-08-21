@@ -1,10 +1,11 @@
 #ifndef WORLD_WORLD_HPP
 #define WORLD_WORLD_HPP
 
-#include <geometry/game_position.hpp>
 #include <map>
 #include <set>
 #include <string>
+
+#include <geometry/game_position.hpp>
 #include <world/chunk.hpp>
 
 using WorldId = std::wstring;
@@ -16,7 +17,8 @@ using Seed = uint32_t; // XXX: maybe change to something different
  * Represents the game world.
  */
 
-class World {
+class World
+{
 public:
     // World(std::wstring _name, WorldId _id, std::wstring _path, Seed seed);
     World(std::map<std::wstring, std::wstring> config);

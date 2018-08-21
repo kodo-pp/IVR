@@ -12,7 +12,8 @@ using ModuleId = uint64_t;
  * Represents a module
  */
 
-class Module {
+class Module
+{
 public:
     void load();
     void unload();

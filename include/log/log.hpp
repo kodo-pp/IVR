@@ -25,7 +25,8 @@ enum LogStreamSpecial { lssNewline, lssFlush, lssBeginLine };
  * Позволяет управлять списком потоков, на которые будет осуществляться вывод
  * логов.
  */
-class LogStream {
+class LogStream
+{
 protected:
     std::function<std::wstring()> lineBeginnerFunc;
     bool doBeginLine;
@@ -52,7 +53,9 @@ public:
 
 LogStream& operator<<(LogStream&, LogStreamSpecial);
 
-template <class T> LogStream& operator<<(LogStream& logStream, T data) {
+template <class T>
+LogStream& operator<<(LogStream& logStream, T data)
+{
     auto streamsVec = logStream.getStreamsVec();
     for (auto& streamPtr : streamsVec) {
         assert(streamPtr != nullptr);

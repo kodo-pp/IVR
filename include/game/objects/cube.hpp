@@ -3,7 +3,8 @@
 
 #include <game/game_object.hpp>
 
-class GameObjCube : public GameObject {
+class GameObjCube : public GameObject
+{
 public:
     GameObjCube(ISceneNode*);
     GameObjCube(std::wstring) = delete;

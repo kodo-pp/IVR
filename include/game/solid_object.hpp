@@ -1,11 +1,13 @@
 #ifndef GAME_SOLID_OBJECT_HPP
 #define GAME_SOLID_OBJECT_HPP
 
-#include <game/game_object.hpp>
-#include <graphics/graphics.hpp>
 #include <vector>
 
-class SolidObjectPart : public GameObject {
+#include <game/game_object.hpp>
+#include <graphics/graphics.hpp>
+
+class SolidObjectPart : public GameObject
+{
 public:
     SolidObjectPart();
 };
@@ -15,7 +17,8 @@ public:
 // POSSIBLE FIX: hold 'parts' only for incomplete game objects, when it is complete,
 // set the 'complete' flag
 
-class SolidObject : public GameObject {
+class SolidObject : public GameObject
+{
 public:
     SolidObject();
     bool isSeparable();

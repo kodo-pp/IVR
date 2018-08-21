@@ -1,20 +1,22 @@
 #include <atomic>
-#include <core/memory_manager.hpp>
 #include <iostream>
+#include <mutex>
+#include <stdexcept>
+#include <thread>
+#include <unordered_set>
+
+#include <core/memory_manager.hpp>
 #include <log/log.hpp>
 #include <misc/die.hpp>
 #include <modules/module_manager.hpp>
-#include <mutex>
 #include <net/net.hpp>
+#include <util/util.hpp>
+
 #include <netinet/in.h>
-#include <stdexcept>
 #include <sys/signal.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <thread>
 #include <unistd.h>
-#include <unordered_set>
-#include <util/util.hpp>
 
 // They are client threads, but we can call them server threads
 // Or maybe vice versa
@@ -27,7 +29,8 @@ static std::mutex serverThreadMutex;
 static void moduleListenerThreadFunc();
 static void moduleServerThreadFunc(int);
 
-void createModuleListenerThread() {
+void createModuleListenerThread()
+{
     moduleListenerThread = new std::thread(moduleListenerThreadFunc);
     if (moduleListenerThread == nullptr) {
         throw std::runtime_error("unable to create module listener thread");
@@ -35,7 +38,8 @@ void createModuleListenerThread() {
     memoryManager.track(moduleListenerThread);
 }
 
-void joinModuleListenerThread() {
+void joinModuleListenerThread()
+{
     // Actually we just don't need to kill those threads, they are killed at exit
     // (at least on my Linux). After a 'return' from main() there is a exit_group
     // syscall (see man 2 exit_group), which terminates all process group (including
@@ -58,7 +62,8 @@ void joinModuleListenerThread() {
     LOG(L"All them are dead");
 }
 
-void createModuleServerThread(int clientSocket) {
+void createModuleServerThread(int clientSocket)
+{
     serverThreadMutex.lock();
     std::thread* thr = new std::thread(moduleServerThreadFunc, clientSocket);
     if (!thr) {
@@ -76,7 +81,8 @@ void createModuleServerThread(int clientSocket) {
     serverThreadMutex.unlock();
 }
 
-static void moduleListenerThreadFunc() {
+static void moduleListenerThreadFunc()
+{
     //    LOG(moduleListenerThread->native_handle());
     //    LOG(pthread_self());
     // kill(getpid(), SIGKILL);
@@ -125,7 +131,8 @@ static void moduleListenerThreadFunc() {
     }
 }
 
-static void moduleServerThreadFunc(int clientSocket) {
+static void moduleServerThreadFunc(int clientSocket)
+{
     ModuleWorker worker(clientSocket);
     /*
     try {

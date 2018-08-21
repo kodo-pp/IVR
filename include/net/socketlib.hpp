@@ -2,6 +2,7 @@
 #define NET_SOCKET_LIB_HPP
 
 #include <string>
+
 #include <sys/socket.h>
 
 int sendBuf(int sock, const char* buf, int length);

@@ -1,7 +1,9 @@
 #include <string>
+
 #include <util/util.hpp>
 
-std::wstring wstring_cast(const std::string& s) {
+std::wstring wstring_cast(const std::string& s)
+{
     std::wstring ws;
     ws.reserve(s.length());
     for (char c : s) {

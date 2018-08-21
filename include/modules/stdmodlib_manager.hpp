@@ -1,10 +1,12 @@
 #ifndef MODULES_STDMODLIB_MANAGER_HPP
 #define MODULES_STDMODLIB_MANAGER_HPP
 
-#include <modules/stdmodlib.hpp>
 #include <string>
 
-class StdModLibManager {
+#include <modules/stdmodlib.hpp>
+
+class StdModLibManager
+{
 public:
     explicit StdModLibManager(StdModLib stdModLib);
 

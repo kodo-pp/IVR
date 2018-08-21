@@ -1,12 +1,14 @@
 #ifndef WORLD_TERRAIN_GENERATOR_HPP
 #define WORLD_TERRAIN_GENERATOR_HPP
 
-#include <geometry/game_position.hpp>
 #include <map>
 #include <set>
+
+#include <geometry/game_position.hpp>
 #include <world/world.hpp>
 
-class TerrainGenerator {
+class TerrainGenerator
+{
 public:
     TerrainGenerator(Seed _seed);
 

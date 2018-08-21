@@ -2,9 +2,10 @@
 #define GAME_ENEMY_HPP
 
 #include <functional>
+#include <unordered_map>
+
 #include <game/ai.hpp>
 #include <geometry/game_position.hpp>
-#include <unordered_map>
 
 using EnemyId = uint64_t;
 
@@ -14,7 +15,8 @@ using EnemyId = uint64_t;
  * Represents an abstract enemy (mob)
  */
 
-class Enemy {
+class Enemy
+{
 public:
     Enemy(irr::scene::ISceneNode* _node,
           const std::function<GamePosition(void)>& _ai_func = getDefaultAiFunc());
@@ -52,7 +54,8 @@ protected:
     double movementSpeed;
 };
 
-class EnemyManager {
+class EnemyManager
+{
 public:
     EnemyManager() = default;
     EnemyManager(const EnemyManager& other) = default;

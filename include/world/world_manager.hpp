@@ -2,6 +2,7 @@
 #define WORLD_WORLD_MANAGER_HPP
 
 #include <unordered_map>
+
 #include <world/world.hpp>
 
 // WARNING: in UML class diagram this class is named WorldsManager (with 's')
@@ -13,7 +14,8 @@
  * There should be only one instance of it
  * NOTICE: (almost) all values are returned by reference
  */
-class WorldManager {
+class WorldManager
+{
 public:
     WorldManager(std::unordered_map<WorldId, World> _worlds);
 

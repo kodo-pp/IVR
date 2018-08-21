@@ -1,29 +1,33 @@
 #include <cassert>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <string>
+#include <vector>
+
 #include <core/core.hpp>
 #include <core/destroy.hpp>
 #include <core/init.hpp>
 #include <core/memory_manager.hpp>
-#include <cstdlib>
-#include <functional>
 #include <game/game_loop.hpp>
 #include <graphics/graphics.hpp>
-#include <iostream>
 #include <log/log.hpp>
 #include <net/net.hpp>
-#include <signal.h>
-#include <string>
-#include <sys/types.h>
-#include <unistd.h>
 #include <util/handle_storage.hpp>
 #include <util/testit.hpp>
-#include <vector>
 
-struct FuncResult* testFunc(const std::vector<void*>& args) {
+#include <signal.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+struct FuncResult* testFunc(const std::vector<void*>& args)
+{
     assert(args.size() >= 1);
     return (struct FuncResult*)args[0];
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     // Test for HandleStorage. TODO: move in more convenient place
     {
         HandleStorage<int, int> hs;

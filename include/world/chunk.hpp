@@ -1,14 +1,16 @@
 #ifndef WORLD_CHUNK_HPP
 #define WORLD_CHUNK_HPP
 
-#include <game/enemy.hpp>
-#include <game/game_object.hpp>
-#include <geometry/game_position.hpp>
-#include <irrlicht.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+#include <game/enemy.hpp>
+#include <game/game_object.hpp>
+#include <geometry/game_position.hpp>
+
+#include <irrlicht.h>
 
 /**
  * Represents a chunk (a relatively small area in the world)
@@ -17,7 +19,8 @@
  * in chunks.
  */
 
-class Chunk {
+class Chunk
+{
 public:
     explicit Chunk(std::unordered_map<GameObjectId, GameObject> _objects,
                    irr::scene::ITerrainSceneNode* _terrain);

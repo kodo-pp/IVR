@@ -5,8 +5,9 @@
 #include <cstdlib>
 #include <ctime>
 #include <locale>
-#include <log/log.hpp>
 #include <mutex>
+
+#include <log/log.hpp>
 
 static std::recursive_mutex lbfMutex;
 std::recursive_mutex logMutex;
@@ -35,8 +36,14 @@ static LogStream logStream([]() -> std::wstring {
     // Current time
     // Example:
     // [LOG: 23.11.2039 16:44:37]
-    asprintf(&lineBegin, "[LOG: %02d.%02d.%d %02d:%02d:%02d] ", tm_now->tm_mday, tm_now->tm_mon + 1,
-             tm_now->tm_year + 1900, tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec);
+    asprintf(&lineBegin,
+             "[LOG: %02d.%02d.%d %02d:%02d:%02d] ",
+             tm_now->tm_mday,
+             tm_now->tm_mon + 1,
+             tm_now->tm_year + 1900,
+             tm_now->tm_hour,
+             tm_now->tm_min,
+             tm_now->tm_sec);
 
     std::wstring stlLineBegin;
 
@@ -63,4 +70,7 @@ static LogStream logStream([]() -> std::wstring {
 
 static LogStream& logStreamLink = logStream;
 
-LogStream& getLogStream() { return logStreamLink; }
+LogStream& getLogStream()
+{
+    return logStreamLink;
+}

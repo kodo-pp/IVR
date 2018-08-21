@@ -2,10 +2,12 @@
 #define GEOMETRY_GEOMETRY_HPP
 
 #include <algorithm>
-#include <geometry/game_position.hpp>
-#include <irrlicht.h>
 #include <stdexcept>
 #include <utility>
+
+#include <geometry/game_position.hpp>
+
+#include <irrlicht.h>
 
 /**
  * Represents a rectangle defined by two 2D points
@@ -14,29 +16,39 @@
  * It is guaranted that left <= right and top <= bottom
  */
 
-template <typename T> class Rectangle {
+template <typename T>
+class Rectangle
+{
 public:
-    explicit Rectangle(T _left, T _top, T _right, T _bottom)
-            : left(std::min(_left, _right))
-            , top(std::min(_top, _bottom))
-            , right(std::max(_left, _right))
-            , bottom(std::max(_top, _bottom)) {}
-    explicit Rectangle(std::pair<T, T> left_top, std::pair<T, T> right_bottom)
-            : left(std::min(left_top.first, left_top.second))
-            , top(std::min(left_top.first, left_top.second))
-            , right(std::max(right_bottom.first, right_bottom.second))
-            , bottom(std::max(right_bottom.first, right_bottom.second)) {}
-    T height() {
+    explicit Rectangle(T _left, T _top, T _right, T _bottom) :
+            left(std::min(_left, _right)),
+            top(std::min(_top, _bottom)),
+            right(std::max(_left, _right)),
+            bottom(std::max(_top, _bottom))
+    {
+    }
+    explicit Rectangle(std::pair<T, T> left_top, std::pair<T, T> right_bottom) :
+            left(std::min(left_top.first, left_top.second)),
+            top(std::min(left_top.first, left_top.second)),
+            right(std::max(right_bottom.first, right_bottom.second)),
+            bottom(std::max(right_bottom.first, right_bottom.second))
+    {
+    }
+    T height()
+    {
         return bottom - top;
     }
-    T width() {
+    T width()
+    {
         return right - left;
     }
 
-    T getLeft() {
+    T getLeft()
+    {
         return left;
     }
-    void setLeft(T newLeft) {
+    void setLeft(T newLeft)
+    {
         if (newLeft > right) {
             throw std::range_error(
                     "The new 'left' value should not be greater than the current 'right' value");
@@ -44,10 +56,12 @@ public:
         left = newLeft;
     }
 
-    T getRight() {
+    T getRight()
+    {
         return right;
     }
-    void setRight(T newRight) {
+    void setRight(T newRight)
+    {
         if (newRight < left) {
             throw std::range_error(
                     "The new 'right' value should not be less than the current 'left' value");
@@ -55,10 +69,12 @@ public:
         right = newRight;
     }
 
-    T getTop() {
+    T getTop()
+    {
         return top;
     }
-    void setTop(T newTop) {
+    void setTop(T newTop)
+    {
         if (newTop > right) {
             throw std::range_error(
                     "The new 'top' value should not be greater than the current 'bottom' value");
@@ -66,10 +82,12 @@ public:
         top = newTop;
     }
 
-    T getBottom() {
+    T getBottom()
+    {
         return bottom;
     }
-    void setBottom(T newBottom) {
+    void setBottom(T newBottom)
+    {
         if (newBottom < top) {
             throw std::range_error(
                     "The new 'bottom' value should not be less than the current 'top' value");
@@ -77,7 +95,8 @@ public:
         bottom = newBottom;
     }
 
-    void setLeftRight(T newLeft, T newRight) {
+    void setLeftRight(T newLeft, T newRight)
+    {
         if (newLeft > newRight) {
             throw std::range_error(
                     "The new 'left' value should not be greater than the new 'right' value");
@@ -86,7 +105,8 @@ public:
         right = newRight;
     }
 
-    void setTopBottom(T newTop, T newBottom) {
+    void setTopBottom(T newTop, T newBottom)
+    {
         if (newTop > newBottom) {
             throw std::range_error(
                     "The new 'top' value should not be greater than the new 'bottom' value");
@@ -95,14 +115,16 @@ public:
         bottom = newBottom;
     }
 
-    Rectangle& operator=(const Rectangle& other) {
+    Rectangle& operator=(const Rectangle& other)
+    {
         left = other.left;
         right = other.right;
         top = other.top;
         bottom = other.bottom;
     }
 
-    Rectangle& operator=(const Rectangle&& other) {
+    Rectangle& operator=(const Rectangle&& other)
+    {
         left = other.left;
         right = other.right;
         top = other.top;

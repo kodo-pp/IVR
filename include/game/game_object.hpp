@@ -1,15 +1,17 @@
 #ifndef GAME_GAME_OBJECT_HPP
 #define GAME_GAME_OBJECT_HPP
 
-#include <geometry/game_position.hpp>
 #include <string>
+
+#include <geometry/game_position.hpp>
 
 // XXX: очередной костыль
 //#include <graphics/graphics.hpp>
-#include <irrlicht.h>
+#include <mutex>
 
 #include <modules/module.hpp>
-#include <mutex>
+
+#include <irrlicht.h>
 
 using irr::scene::ISceneNode;
 
@@ -22,7 +24,8 @@ extern std::recursive_mutex gameObjectMutex;
  *
  * WARNING: instantiate not this class but its derived classes
  */
-class GameObject {
+class GameObject
+{
 public:
     GameObject();
     GameObject(const GameObject&); // copy c-tor

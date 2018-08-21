@@ -6,6 +6,7 @@
 #include <string>
 #include <thread>
 #include <type_traits>
+
 #include <unistd.h>
 
 #ifdef __GNUC__
@@ -25,7 +26,9 @@ std::string bytes_pack(const std::wstring& ws);
 
 std::wstring wstringUnpack(const std::string& bytes);
 
-template <typename T> void delayedAssign(std::atomic<T>& var, double sec, const T& value) {
+template <typename T>
+void delayedAssign(std::atomic<T>& var, double sec, const T& value)
+{
     std::thread thr([&var, sec, value]() {
         usleep(round(sec * 1e+6));
         var = value;
@@ -33,7 +36,9 @@ template <typename T> void delayedAssign(std::atomic<T>& var, double sec, const 
     thr.detach();
 }
 
-template <typename T> T intFlipEndian(T n) {
+template <typename T>
+T intFlipEndian(T n)
+{
     static_assert(std::is_integral<T>::value, "intFlipEndian: argument is not integer");
     T tmp = 0;
     for (size_t i = 0; i < sizeof(n); ++i) {

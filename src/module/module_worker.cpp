@@ -1,20 +1,27 @@
-#include <core/core.hpp>
 #include <cstring>
 #include <exception>
+#include <string>
+#include <vector>
+
+#include <core/core.hpp>
 #include <log/log.hpp>
 #include <modules/module_io.hpp>
 #include <modules/module_manager.hpp>
 #include <net/socketlib.hpp>
-#include <string>
+#include <util/util.hpp>
+
 #include <sys/socket.h>
 #include <unistd.h>
-#include <util/util.hpp>
-#include <vector>
 
-ModuleWorker::ModuleWorker(int _sock) : sock(_sock) {}
-ModuleWorker::~ModuleWorker() {}
+ModuleWorker::ModuleWorker(int _sock) : sock(_sock)
+{
+}
+ModuleWorker::~ModuleWorker()
+{
+}
 
-void ModuleWorker::please_work() noexcept {
+void ModuleWorker::please_work() noexcept
+{
     try {
         work();
     } catch (std::exception& e) {
@@ -27,7 +34,8 @@ void ModuleWorker::please_work() noexcept {
     }
 }
 
-void ModuleWorker::work() {
+void ModuleWorker::work()
+{
     std::string header("ModBox/M");
     sendFixed(sock, header);
     readModuleHeader(sock);

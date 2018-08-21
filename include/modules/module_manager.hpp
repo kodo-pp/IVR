@@ -1,9 +1,10 @@
 #ifndef MODULES_MODULE_MANAGER_HPP
 #define MODULES_MODULE_MANAGER_HPP
 
-#include <modules/module.hpp>
 #include <string>
 #include <unordered_map>
+
+#include <modules/module.hpp>
 
 // TEMP: maybe we should change it to something more complex
 using ModuleMessage = std::wstring;
@@ -14,7 +15,8 @@ using ModuleMessage = std::wstring;
  * There should be only one instance of it
  */
 
-class ModuleManager {
+class ModuleManager
+{
 public:
     ModuleManager(std::unordered_map<ModuleId, Module> _modules);
 
@@ -31,7 +33,8 @@ protected:
     std::unordered_map<ModuleId, Module> modules;
 };
 
-class ModuleWorker {
+class ModuleWorker
+{
 public:
     ModuleWorker(int _sock);
     ~ModuleWorker();

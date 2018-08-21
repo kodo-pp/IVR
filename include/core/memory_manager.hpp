@@ -9,7 +9,8 @@
  * Здесь должно быть полное описание класса, но в машине темно, и мне трудно
  * (и лень) писать комментарии
  */
-class MemoryManager {
+class MemoryManager
+{
 private:
     std::set<void*> pointersSet;
 

@@ -4,49 +4,64 @@
 #include <graphics/graphics.hpp>
 #include <util/util.hpp>
 
-Enemy::Enemy(irr::scene::ISceneNode* _node, const std::function<GamePosition(void)>& _ai_func)
-        : node(_node), ai_func(_ai_func), movementSpeed(3) {}
+Enemy::Enemy(irr::scene::ISceneNode* _node, const std::function<GamePosition(void)>& _ai_func) :
+        node(_node),
+        ai_func(_ai_func),
+        movementSpeed(3)
+{
+}
 
-void Enemy::hit(double damage) {
+void Enemy::hit(double damage)
+{
     healthLeft -= damage;
 }
 
-double Enemy::getHealthLeft() const {
+double Enemy::getHealthLeft() const
+{
     return healthLeft;
 }
 
-void Enemy::setHealthLeft(double health) {
+void Enemy::setHealthLeft(double health)
+{
     healthLeft = health;
 }
 
-double Enemy::getHealthMax() const {
+double Enemy::getHealthMax() const
+{
     return healthMax;
 }
-void Enemy::setHealthMax(double health) {
+void Enemy::setHealthMax(double health)
+{
     healthMax = health;
 }
 
-GamePosition Enemy::getPosition() const {
+GamePosition Enemy::getPosition() const
+{
     position = GamePosition(node->getPosition());
     return position;
 }
-void Enemy::setPosition(const GamePosition& newPosition) {
+void Enemy::setPosition(const GamePosition& newPosition)
+{
     position = newPosition;
     node->setPosition(newPosition.toIrrVector3df());
 }
 
-double Enemy::getMovementSpeed() const {
+double Enemy::getMovementSpeed() const
+{
     return movementSpeed;
 }
-void Enemy::setMovementSpeed(double newSpeed) {
+void Enemy::setMovementSpeed(double newSpeed)
+{
     movementSpeed = newSpeed;
 }
 
-irr::scene::ISceneNode* Enemy::sceneNode() const {
+irr::scene::ISceneNode* Enemy::sceneNode() const
+{
     return node;
 }
 
-void Enemy::ai() {
+void Enemy::ai()
+{
     auto target = ai_func();
     auto self_position = getPosition();
     auto vec = (target.toIrrVector3df() - self_position.toIrrVector3df());
@@ -67,7 +82,8 @@ void Enemy::ai() {
 
 EnemyId EnemyManager::createEnemy(irr::scene::IMesh* model,
                                   irr::video::ITexture* texture,
-                                  const irr::core::vector3df& scale) {
+                                  const irr::core::vector3df& scale)
+{
     ++idCounter;
     enemies.insert({idCounter, Enemy(graphicsCreateMeshSceneNode(model))});
 
@@ -77,14 +93,17 @@ EnemyId EnemyManager::createEnemy(irr::scene::IMesh* model,
     return idCounter;
 }
 
-void EnemyManager::deleteEnemy(EnemyId id) {
+void EnemyManager::deleteEnemy(EnemyId id)
+{
     enemies.erase(id);
 }
 
-const Enemy& EnemyManager::accessEnemy(EnemyId id) {
+const Enemy& EnemyManager::accessEnemy(EnemyId id)
+{
     return enemies.at(id);
 }
-Enemy& EnemyManager::mutableAccessEnemy(EnemyId id) {
+Enemy& EnemyManager::mutableAccessEnemy(EnemyId id)
+{
     return enemies.at(id);
 }
 

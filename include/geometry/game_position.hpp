@@ -8,10 +8,12 @@
  */
 
 #include <iostream>
+
 #include <irrlicht.h>
 using namespace irr::core;
 
-class GamePosition {
+class GamePosition
+{
 public:
     GamePosition(double _x = 0.0, double _y = 0.0, double _z = 0.0);
     GamePosition(const GamePosition& gamePosition); // copy c-tor

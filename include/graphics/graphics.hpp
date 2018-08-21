@@ -1,12 +1,15 @@
 #ifndef GRAPHICS_GRAPHICS_HPP
 #define GRAPHICS_GRAPHICS_HPP
 
-#include <game/objects/objects.hpp>
-#include <geometry/game_position.hpp>
-#include <irrlicht.h>
 #include <string>
 #include <unordered_set>
 #include <vector>
+
+#include <game/objects/objects.hpp>
+#include <geometry/game_position.hpp>
+
+#include <boost/algorithm/string.hpp>
+#include <irrlicht.h>
 
 using namespace irr;
 using namespace scene;
@@ -93,7 +96,8 @@ bool irrDeviceRun();
 #define eventType EventType
 // Yeah, now it's much better
 /// Event receiver for keyboard events
-class IrrKeyboardEventReceiver : public irr::IEventReceiver {
+class IrrKeyboardEventReceiver : public irr::IEventReceiver
+{
 public:
     IrrKeyboardEventReceiver() = default;
     virtual ~IrrKeyboardEventReceiver() = default;

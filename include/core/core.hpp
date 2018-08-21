@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 // === Type definitions ===
@@ -16,7 +17,8 @@ struct FuncResult {
 
 // === FuncProvider definition ===
 
-class FuncProvider {
+class FuncProvider
+{
 public:
     FuncProvider();
     FuncProvider(std::string, std::function<struct FuncResult*(const std::vector<void*>&)>);
@@ -44,6 +46,41 @@ ArgsSpec getArgsSpec(uint64_t handle);
 ArgsSpec getRetSpec(uint64_t handle);
 
 void funcProvidersCleanup();
+
+struct ModuleClassMember {
+    uint64_t id;
+    char type;
+};
+
+struct ModuleClassMethod {
+    uint64_t id;
+    std::string return_type;
+    std::string arguments_type;
+};
+
+struct ModuleClass {
+    ModuleClass(const std::unordered_map<std::string, ModuleClassMember>& _members,
+                const std::unordered_map<std::string, ModuleClassMethod>& _methods,
+                uint64_t parent);
+    uint64_t parentId;
+    std::unordered_map<std::string, uint64_t> memberHandles;
+    std::unordered_map<std::string, uint64_t> methodHandles;
+    std::vector<ModuleClassMember> members;
+    std::vector<ModuleClassMethod> methods;
+};
+
+struct ModuleClassInstance {
+    explicit ModuleClassInstance(uint64_t handle);
+    ~ModuleClassInstance();
+    uint64_t classHandle;
+    std::vector<void*> members;
+};
+
+uint64_t addModuleClass(const std::string& name, const ModuleClass& moduleClass);
+void removeModuleClass(const std::string& name);
+const ModuleClass& getModuleClass(uint64_t handle);
+uint64_t instantiateModuleClass(uint64_t handle);
+void deleteModuleClassInstance(uint64_t handle);
 
 // === Constants ===
 const uint64_t RESERVED_FP_HANDLE = 0xFFFF'FFFF'4E5E'47EDull;
