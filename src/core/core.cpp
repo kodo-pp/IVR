@@ -70,10 +70,13 @@ static void initializeFuncProviderMap(UNUSED std::vector<std::string>* args)
     }
 }
 
+static void initializeCoreFuncProviders();
+
 bool initilaizeCore(std::vector<std::string>* args)
 {
     try {
         initializeFuncProviderMap(args);
+        initializeCoreFuncProviders();
     } catch (std::exception& e) {
         errdie("unable to initialize function provider map", e.what());
     }
@@ -148,7 +151,7 @@ void funcProvidersCleanup()
 
 ModuleClass::ModuleClass(const std::unordered_map<std::string, ModuleClassMember>& _members,
                          const std::unordered_map<std::string, ModuleClassMethod>& _methods,
-                         uint64_t parent) :
+                         uint64_t parent = 0xFFFF'FFFF'FFFF'FFFFull) :
         parentId(parent)
 {
     uint64_t counter = 0;
@@ -157,10 +160,12 @@ ModuleClass::ModuleClass(const std::unordered_map<std::string, ModuleClassMember
         members.emplace_back(sv.second);
         ++counter;
     }
-    for (const auto& sh : getModuleClass(parent).memberHandles) {
-        memberHandles.insert({sh.first, counter});
-        members.emplace_back(getModuleClass(parent).members.at(sh.second));
-        ++counter;
+    if (parent != 0xFFFF'FFFF'FFFF'FFFFull) {
+        for (const auto& sh : getModuleClass(parent).memberHandles) {
+            memberHandles.insert({sh.first, counter});
+            members.emplace_back(getModuleClass(parent).members.at(sh.second));
+            ++counter;
+        }
     }
     counter = 0;
     for (const auto& kv : _methods) {
@@ -168,10 +173,12 @@ ModuleClass::ModuleClass(const std::unordered_map<std::string, ModuleClassMember
         methods.emplace_back(kv.second);
         ++counter;
     }
-    for (const auto& sh : getModuleClass(parent).methodHandles) {
-        methodHandles.insert({sh.first, counter});
-        methods.emplace_back(getModuleClass(parent).methods.at(sh.second));
-        ++counter;
+    if (parent != 0xFFFF'FFFF'FFFF'FFFFull) {
+        for (const auto& sh : getModuleClass(parent).methodHandles) {
+            methodHandles.insert({sh.first, counter});
+            methods.emplace_back(getModuleClass(parent).methods.at(sh.second));
+            ++counter;
+        }
     }
 }
 
@@ -238,43 +245,147 @@ void deleteModuleClassInstance(uint64_t instanceId)
 FuncResult* handlerAddModuleClass(const std::vector<void*>& args)
 {
     if (args.size() != 4) {
-        throw std::logic_error("Wrong number of arguments for handlerGraphicsMoveObject()");
+        throw std::logic_error("Wrong number of arguments for handlerAddModuleClass()");
     }
     auto ret = new struct FuncResult;
+    ret->data.resize(1);
+    try {
+        uint64_t parent = getArgument<uint64_t>(args, 0);
+        std::string name = getArgument<std::string>(args, 1);
+        std::string members = getArgument<std::string>(args, 2);
+        std::string methods = getArgument<std::string>(args, 3);
 
-    uint64_t parent = getArgument<uint64_t>(args, 0);
-    std::string members = getArgument<std::string>(args, 1);
-    std::string methods = getArgument<std::string>(args, 2);
+        std::vector<std::string> memberNames;
+        std::unordered_map<std::string, ModuleClassMember> memberMap;
+        boost::algorithm::split(memberNames, members, [](char c) { return c == ':'; });
+        for (auto& i : memberNames) {
+            char type = i.back();
+            i.pop_back();
+            memberMap.insert({i, {type}});
+        }
 
-    std::vector<std::string> memberNames;
-    std::vector<char> memberTypes;
-    boost::algorithm::split(memberNames, members, ':');
-    memberTypes.reserve(memberNames.size());
-    for (auto& i : memberNames) {
-        memberTypes.emplace_back(i.back());
-        i.pop_back();
+        std::vector<std::string> methodDefs;
+        std::unordered_map<std::string, ModuleClassMethod> methodMap;
+        boost::algorithm::split(methodDefs, methods, [](char c) { return c == ':'; });
+        for (const auto& i : methodDefs) {
+            std::vector<std::string> tmp;
+            boost::algorithm::split(tmp, i, [](char c) { return c == ','; });
+            if (tmp.size() != 3) {
+                throw std::runtime_error("invalid number of comma-separated arguments");
+            }
+            methodMap.insert({tmp[0], {tmp[1], tmp[2]}});
+        }
+
+        auto handle = addModuleClass(name, ModuleClass(memberMap, methodMap, parent));
+        setReturn<uint64_t>(ret, 0, handle);
+
+    } catch (const std::exception& e) {
+        LOG("Exception caught: " << e.what());
+        ret->exitStatus = 1;
+        return ret;
     }
-    std::vector<std::string> methodDefs;
-    std::vector<std::string> methodNames;
-    std::vector<std::string> methodRetTypes;
-    std::vector<std::string> methodArgTypes;
-    boost::algorithm::split(methodDefs, methods, ':');
-    methodNames.reserve(methodDefs.size());
-    methodRetTypes.reserve(methodDefs.size());
-    methodArgTypes.reserve(methodDefs.size());
-
-    for (const auto& i : methodDefs) {
-        std::array<std::string, 3> tmp;
-        boost::algorithm::split(tmp, i, ',');
-        methodNames.emplace_back(tmp[0]);
-        methodRetTypes.emplace_back(tmp[1]);
-        methodArgTypes.emplace_back(tmp[2]);
-    }
-
     ret->exitStatus = 0;
     return ret;
 }
-void handlerRemoveModuleClass(const std::string& name);
-const ModuleClass& handlerGetModuleClass(uint64_t handle);
-uint64_t handlerInstantiateModuleClass(uint64_t handle);
-void handlerDeleteModuleClassInstance(uint64_t handle);
+
+// void handlerRemoveModuleClass(const std::string& name);
+FuncResult* handlerInstantiateModuleClass(const std::vector<void*>& args)
+{
+    if (args.size() != 1) {
+        throw std::logic_error("Wrong number of arguments for handlerInstantiateModuleClass()");
+    }
+    auto ret = new struct FuncResult;
+    ret->data.resize(1);
+    try {
+        uint64_t classHandle = getArgument<uint64_t>(args, 0);
+        auto handle = instantiateModuleClass(classHandle);
+        setReturn<uint64_t>(ret, 0, handle);
+
+    } catch (const std::exception& e) {
+        LOG("Exception caught: " << e.what());
+        ret->exitStatus = 1;
+        return ret;
+    }
+    ret->exitStatus = 0;
+    return ret;
+}
+
+FuncResult* handlerModuleClassSetString(const std::vector<void*>& args)
+{
+    LOG("SETSTRING");
+    if (args.size() != 3) {
+        throw std::logic_error("Wrong number of arguments for handlerModuleClassSetString()");
+    }
+    auto ret = new struct FuncResult;
+    try {
+        auto instanceHandle = getArgument<uint64_t>(args, 0);
+        auto memberHandle = getArgument<uint64_t>(args, 1);
+        auto value = getArgument<std::string>(args, 2);
+
+        if (moduleClasses.access(moduleClassInstances.access(instanceHandle).classHandle)
+                    .members.at(memberHandle)
+                    .type
+            != 's') {
+            LOG("Type mismatch: expected s, got "
+                << moduleClasses.access(moduleClassInstances.access(instanceHandle).classHandle)
+                           .members.at(memberHandle)
+                           .type);
+            throw std::runtime_error("type mismatch: expected string");
+        }
+        *static_cast<std::string*>(
+                moduleClassInstances.mutableAccess(instanceHandle).members.at(memberHandle))
+                = value;
+    } catch (const std::exception& e) {
+        LOG("Exception caught: " << e.what());
+        ret->exitStatus = 1;
+        return ret;
+    }
+    ret->exitStatus = 0;
+    return ret;
+}
+
+FuncResult* handlerModuleClassGetString(const std::vector<void*>& args)
+{
+    if (args.size() != 2) {
+        throw std::logic_error("Wrong number of arguments for handlerModuleClassGetString()");
+    }
+    auto ret = new struct FuncResult;
+    ret->data.resize(1);
+    try {
+        auto instanceHandle = getArgument<uint64_t>(args, 0);
+        auto memberHandle = getArgument<uint64_t>(args, 1);
+
+        if (moduleClasses.access(moduleClassInstances.access(instanceHandle).classHandle)
+                    .members.at(memberHandle)
+                    .type
+            != 's') {
+            LOG("Type mismatch: expected s, got "
+                << moduleClasses.access(moduleClassInstances.access(instanceHandle).classHandle)
+                           .members.at(memberHandle)
+                           .type);
+            throw std::runtime_error("type mismatch: expected string");
+        }
+        std::string value = *static_cast<std::string*>(
+                moduleClassInstances.access(instanceHandle).members.at(memberHandle));
+
+        setReturn<std::string>(ret, 0, value);
+    } catch (const std::exception& e) {
+        LOG("Exception caught: " << e.what());
+        ret->exitStatus = 1;
+        return ret;
+    }
+    ret->exitStatus = 0;
+    return ret;
+}
+// void handlerDeleteModuleClassInstance(uint64_t handle);
+
+static void initializeCoreFuncProviders()
+{
+    registerFuncProvider(new FuncProvider("core.class.add", handlerAddModuleClass), "Lsss", "L");
+    registerFuncProvider(
+            new FuncProvider("core.class.instantiate", handlerInstantiateModuleClass), "L", "L");
+    registerFuncProvider(
+            new FuncProvider("core.class.setString", handlerModuleClassSetString), "LLs", "");
+    registerFuncProvider(
+            new FuncProvider("core.class.getString", handlerModuleClassGetString), "LL", "s");
+}

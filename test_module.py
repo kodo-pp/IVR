@@ -171,21 +171,21 @@ def main():
     module_name = 'Python test module'
     nc.write_str(module_name)
 
-    [cube] = nc.invoke('graphics.createCube', [], '', 'L')
-    [texture] = nc.invoke('graphics.texture.loadFromFile', ['textures/cube3.png'], 's', 'L')
-    nc.invoke('graphics.texture.add', [cube, texture], 'LL', '')
+    print('Invoking core.class.add')
+    [handle] = nc.invoke('core.class.add', [0xFFFFFFFFFFFFFFFF, 'Animal', 'names:agei', 'talk,,s'], 'Lsss', 'L')
+    print('Got handle: {}'.format(handle))
+    print('Invoking core.class.instantiate')
+    [object] = nc.invoke('core.class.instantiate', [handle], 'L', 'L')
+    print('Got object: {}'.format(object))
 
-    i = 0
-    while i < 10.0: # A couple of seconds
-        pos = math.cos(i) * 20
-        nc.invoke('graphics.moveObject', [cube, pos, pos, pos], 'LFFF', '')
-        nc.invoke('graphics.rotateObject', [cube, pos, pos, pos], 'LFFF', '')
-        time.sleep(0.05)
-        i += 0.05
+    print('Invoking core.class.setString')
+    nc.invoke('core.class.setString', [object, 1, 'TesT'], 'LLs', '')
+    print('Invoking core.class.getString')
+    [s] = nc.invoke('core.class.getString', [object, 1], 'LL', 's')
+    print('Got string: {}'.format(s))
 
-    nc.invoke('graphics.deleteObject', [cube], 'L', '')
+    nc.invoke_special('exit', [], '', '')
 
-    [status] = nc.invoke_special('exit', [], '', 's')
     if status == 'exited':
         print('Exited normally')
     else:

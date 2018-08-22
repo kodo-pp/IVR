@@ -48,12 +48,10 @@ ArgsSpec getRetSpec(uint64_t handle);
 void funcProvidersCleanup();
 
 struct ModuleClassMember {
-    uint64_t id;
     char type;
 };
 
 struct ModuleClassMethod {
-    uint64_t id;
     std::string return_type;
     std::string arguments_type;
 };
