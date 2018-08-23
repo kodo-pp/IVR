@@ -184,7 +184,7 @@ def main():
     [s] = nc.invoke('core.class.getString', [object, 1], 'LL', 's')
     print('Got string: {}'.format(s))
 
-    nc.invoke_special('exit', [], '', '')
+    [status] = nc.invoke_special('exit', [], '', 's')
 
     if status == 'exited':
         print('Exited normally')

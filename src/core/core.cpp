@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <exception>
 #include <iostream>
 #include <map>
@@ -6,6 +7,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <core/core.hpp>
@@ -184,21 +186,48 @@ ModuleClass::ModuleClass(const std::unordered_map<std::string, ModuleClassMember
 
 ModuleClassInstance::ModuleClassInstance(uint64_t handle)
 {
+    LOG("B CTOR " << this);
     const auto& memberTypes = getModuleClass(handle).members;
     members.resize(memberTypes.size(), nullptr);
     for (uint64_t i = 0; i < members.size(); ++i) {
         members.at(i) = dyntypeNew(memberTypes.at(i).type);
+        LOG("members.at(" << i << ") = " << members.at(i));
     }
     classHandle = handle;
+    LOG("E CTOR " << this);
 }
+
+ModuleClassInstance::ModuleClassInstance(const ModuleClassInstance& other)
+{
+    LOG("B CTOR (MOVE) " << this);
+    const auto& memberTypes = getModuleClass(other.classHandle).members;
+    members.resize(memberTypes.size(), nullptr);
+    for (uint64_t i = 0; i < members.size(); ++i) {
+        members.at(i) = dyntypeNew(memberTypes.at(i).type);
+        std::swap(members.at(i), other.members.at(i));
+        LOG("members.at(" << i << ") = " << members.at(i));
+    }
+    classHandle = other.classHandle;
+    // std::swap(classHandle, other.classHandle);
+    LOG("E CTOR (MOVE) " << this);
+}
+//
+// ModuleClassInstance::ModuleClassInstance(const ModuleClassInstance& other)
+// {
+//     LOG("B CTOR (COPY) " << this);
+//
+//     LOG("E CTOR (COPY) " << this);
+// }
 
 ModuleClassInstance::~ModuleClassInstance()
 {
+    LOG("B DTOR " << this);
     const auto& memberTypes = getModuleClass(classHandle).members;
     members.resize(memberTypes.size(), nullptr);
     for (uint64_t i = 0; i < members.size(); ++i) {
         dyntypeDelete(members.at(i), memberTypes.at(i).type);
     }
+    LOG("E DTOR " << this);
 }
 
 std::recursive_mutex moduleClassMutex;
@@ -312,7 +341,7 @@ FuncResult* handlerInstantiateModuleClass(const std::vector<void*>& args)
 
 FuncResult* handlerModuleClassSetString(const std::vector<void*>& args)
 {
-    LOG("SETSTRING");
+    // LOG("SETSTRING");
     if (args.size() != 3) {
         throw std::logic_error("Wrong number of arguments for handlerModuleClassSetString()");
     }
@@ -332,6 +361,8 @@ FuncResult* handlerModuleClassSetString(const std::vector<void*>& args)
                            .type);
             throw std::runtime_error("type mismatch: expected string");
         }
+        LOG("setting string: " << static_cast<std::string*>(
+                    moduleClassInstances.mutableAccess(instanceHandle).members.at(memberHandle)));
         *static_cast<std::string*>(
                 moduleClassInstances.mutableAccess(instanceHandle).members.at(memberHandle))
                 = value;

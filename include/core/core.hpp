@@ -69,9 +69,11 @@ struct ModuleClass {
 
 struct ModuleClassInstance {
     explicit ModuleClassInstance(uint64_t handle);
+    ModuleClassInstance(const ModuleClassInstance& other);
+    ModuleClassInstance(ModuleClassInstance&& other) = default;
     ~ModuleClassInstance();
     uint64_t classHandle;
-    std::vector<void*> members;
+    mutable std::vector<void*> members;
 };
 
 uint64_t addModuleClass(const std::string& name, const ModuleClass& moduleClass);
