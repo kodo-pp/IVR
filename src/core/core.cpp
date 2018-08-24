@@ -38,7 +38,7 @@ FuncProvider::FuncProvider() = default;
 
 // AWW, this codestyle is awful. TODO: make it look beautiful
 // Command-and-function constructor
-FuncProvider::FuncProvider(std::string _command,
+FuncProvider::FuncProvider(std::string                                                  _command,
                            std::function<struct FuncResult*(const std::vector<void*>&)> _func) :
         command(_command),
         func(_func)
@@ -186,61 +186,47 @@ ModuleClass::ModuleClass(const std::unordered_map<std::string, ModuleClassMember
 
 ModuleClassInstance::ModuleClassInstance(uint64_t handle)
 {
-    LOG("B CTOR " << this);
     const auto& memberTypes = getModuleClass(handle).members;
     members.resize(memberTypes.size(), nullptr);
     for (uint64_t i = 0; i < members.size(); ++i) {
         members.at(i) = dyntypeNew(memberTypes.at(i).type);
-        LOG("members.at(" << i << ") = " << members.at(i));
     }
     classHandle = handle;
-    LOG("E CTOR " << this);
 }
+
+// TODO: make copy-ctor not a move one
 
 ModuleClassInstance::ModuleClassInstance(const ModuleClassInstance& other)
 {
-    LOG("B CTOR (MOVE) " << this);
     const auto& memberTypes = getModuleClass(other.classHandle).members;
     members.resize(memberTypes.size(), nullptr);
     for (uint64_t i = 0; i < members.size(); ++i) {
         members.at(i) = dyntypeNew(memberTypes.at(i).type);
         std::swap(members.at(i), other.members.at(i));
-        LOG("members.at(" << i << ") = " << members.at(i));
     }
     classHandle = other.classHandle;
-    // std::swap(classHandle, other.classHandle);
-    LOG("E CTOR (MOVE) " << this);
 }
-//
-// ModuleClassInstance::ModuleClassInstance(const ModuleClassInstance& other)
-// {
-//     LOG("B CTOR (COPY) " << this);
-//
-//     LOG("E CTOR (COPY) " << this);
-// }
 
 ModuleClassInstance::~ModuleClassInstance()
 {
-    LOG("B DTOR " << this);
     const auto& memberTypes = getModuleClass(classHandle).members;
     members.resize(memberTypes.size(), nullptr);
     for (uint64_t i = 0; i < members.size(); ++i) {
         dyntypeDelete(members.at(i), memberTypes.at(i).type);
     }
-    LOG("E DTOR " << this);
 }
 
 std::recursive_mutex moduleClassMutex;
 
 static std::unordered_map<std::string, uint64_t> moduleClassHandles;
-static HandleStorage<uint64_t, ModuleClass> moduleClasses;
+static HandleStorage<uint64_t, ModuleClass>      moduleClasses;
 
 static HandleStorage<uint64_t, ModuleClassInstance> moduleClassInstances;
 
 uint64_t addModuleClass(const std::string& name, const ModuleClass& moduleClass)
 {
     std::lock_guard<std::recursive_mutex> lock(moduleClassMutex);
-    auto handle = moduleClasses.insert(moduleClass);
+    auto                                  handle = moduleClasses.insert(moduleClass);
     moduleClassHandles.insert({name, handle});
     return handle;
 }
@@ -248,7 +234,7 @@ uint64_t addModuleClass(const std::string& name, const ModuleClass& moduleClass)
 void removeModuleClass(const std::string& name)
 {
     std::lock_guard<std::recursive_mutex> lock(moduleClassMutex);
-    auto handle = moduleClassHandles.at(name);
+    auto                                  handle = moduleClassHandles.at(name);
     moduleClassHandles.erase(name);
     moduleClasses.remove(handle);
 }
@@ -279,12 +265,12 @@ FuncResult* handlerAddModuleClass(const std::vector<void*>& args)
     auto ret = new struct FuncResult;
     ret->data.resize(1);
     try {
-        uint64_t parent = getArgument<uint64_t>(args, 0);
-        std::string name = getArgument<std::string>(args, 1);
+        uint64_t    parent  = getArgument<uint64_t>(args, 0);
+        std::string name    = getArgument<std::string>(args, 1);
         std::string members = getArgument<std::string>(args, 2);
         std::string methods = getArgument<std::string>(args, 3);
 
-        std::vector<std::string> memberNames;
+        std::vector<std::string>                           memberNames;
         std::unordered_map<std::string, ModuleClassMember> memberMap;
         boost::algorithm::split(memberNames, members, [](char c) { return c == ':'; });
         for (auto& i : memberNames) {
@@ -293,7 +279,7 @@ FuncResult* handlerAddModuleClass(const std::vector<void*>& args)
             memberMap.insert({i, {type}});
         }
 
-        std::vector<std::string> methodDefs;
+        std::vector<std::string>                           methodDefs;
         std::unordered_map<std::string, ModuleClassMethod> methodMap;
         boost::algorithm::split(methodDefs, methods, [](char c) { return c == ':'; });
         for (const auto& i : methodDefs) {
@@ -327,7 +313,7 @@ FuncResult* handlerInstantiateModuleClass(const std::vector<void*>& args)
     ret->data.resize(1);
     try {
         uint64_t classHandle = getArgument<uint64_t>(args, 0);
-        auto handle = instantiateModuleClass(classHandle);
+        auto     handle      = instantiateModuleClass(classHandle);
         setReturn<uint64_t>(ret, 0, handle);
 
     } catch (const std::exception& e) {
@@ -339,84 +325,114 @@ FuncResult* handlerInstantiateModuleClass(const std::vector<void*>& args)
     return ret;
 }
 
-FuncResult* handlerModuleClassSetString(const std::vector<void*>& args)
-{
-    // LOG("SETSTRING");
-    if (args.size() != 3) {
-        throw std::logic_error("Wrong number of arguments for handlerModuleClassSetString()");
+#define HANDLER_MODCLASS_ACCESSOR(typeWord, typeNameCxx, typeChar)                                 \
+    FuncResult* handlerModuleClassSet##typeWord(const std::vector<void*>& args)                    \
+    {                                                                                              \
+        if (args.size() != 3) {                                                                    \
+            throw std::logic_error("Wrong number of arguments for handlerModuleClassSet" #typeWord \
+                                   "()");                                                          \
+        }                                                                                          \
+        auto ret = new struct FuncResult;                                                          \
+        try {                                                                                      \
+            auto        instanceHandle = getArgument<uint64_t>(args, 0);                           \
+            auto        memberHandle   = getArgument<uint64_t>(args, 1);                           \
+            const auto& value          = getArgument<typeNameCxx>(args, 2);                        \
+                                                                                                   \
+            if (moduleClasses.access(moduleClassInstances.access(instanceHandle).classHandle)      \
+                        .members.at(memberHandle)                                                  \
+                        .type                                                                      \
+                != typeChar) {                                                                     \
+                throw std::runtime_error("type mismatch: expected: " #typeWord);                   \
+            }                                                                                      \
+            *static_cast<typeNameCxx*>(                                                            \
+                    moduleClassInstances.mutableAccess(instanceHandle).members.at(memberHandle))   \
+                    = value;                                                                       \
+        } catch (const std::exception& e) {                                                        \
+            LOG("Exception caught: " << e.what());                                                 \
+            ret->exitStatus = 1;                                                                   \
+            return ret;                                                                            \
+        }                                                                                          \
+        ret->exitStatus = 0;                                                                       \
+        return ret;                                                                                \
+    }                                                                                              \
+                                                                                                   \
+    FuncResult* handlerModuleClassGet##typeWord(const std::vector<void*>& args)                    \
+    {                                                                                              \
+        if (args.size() != 2) {                                                                    \
+            throw std::logic_error("Wrong number of arguments for handlerModuleClassGet" #typeWord \
+                                   "()");                                                          \
+        }                                                                                          \
+        auto ret = new struct FuncResult;                                                          \
+        ret->data.resize(1);                                                                       \
+        try {                                                                                      \
+            auto instanceHandle = getArgument<uint64_t>(args, 0);                                  \
+            auto memberHandle   = getArgument<uint64_t>(args, 1);                                  \
+                                                                                                   \
+            if (moduleClasses.access(moduleClassInstances.access(instanceHandle).classHandle)      \
+                        .members.at(memberHandle)                                                  \
+                        .type                                                                      \
+                != typeChar) {                                                                     \
+                throw std::runtime_error("type mismatch: expected: " #typeWord);                   \
+            }                                                                                      \
+            typeNameCxx value = *static_cast<typeNameCxx*>(                                        \
+                    moduleClassInstances.access(instanceHandle).members.at(memberHandle));         \
+                                                                                                   \
+            setReturn<typeNameCxx>(ret, 0, value);                                                 \
+        } catch (const std::exception& e) {                                                        \
+            LOG("Exception caught: " << e.what());                                                 \
+            ret->exitStatus = 1;                                                                   \
+            return ret;                                                                            \
+        }                                                                                          \
+        ret->exitStatus = 0;                                                                       \
+        return ret;                                                                                \
     }
-    auto ret = new struct FuncResult;
-    try {
-        auto instanceHandle = getArgument<uint64_t>(args, 0);
-        auto memberHandle = getArgument<uint64_t>(args, 1);
-        auto value = getArgument<std::string>(args, 2);
 
-        if (moduleClasses.access(moduleClassInstances.access(instanceHandle).classHandle)
-                    .members.at(memberHandle)
-                    .type
-            != 's') {
-            LOG("Type mismatch: expected s, got "
-                << moduleClasses.access(moduleClassInstances.access(instanceHandle).classHandle)
-                           .members.at(memberHandle)
-                           .type);
-            throw std::runtime_error("type mismatch: expected string");
-        }
-        LOG("setting string: " << static_cast<std::string*>(
-                    moduleClassInstances.mutableAccess(instanceHandle).members.at(memberHandle)));
-        *static_cast<std::string*>(
-                moduleClassInstances.mutableAccess(instanceHandle).members.at(memberHandle))
-                = value;
-    } catch (const std::exception& e) {
-        LOG("Exception caught: " << e.what());
-        ret->exitStatus = 1;
-        return ret;
-    }
-    ret->exitStatus = 0;
-    return ret;
-}
+// Здесь можно было бы написать шаблон...
+// Но я уже написал макрос
 
-FuncResult* handlerModuleClassGetString(const std::vector<void*>& args)
-{
-    if (args.size() != 2) {
-        throw std::logic_error("Wrong number of arguments for handlerModuleClassGetString()");
-    }
-    auto ret = new struct FuncResult;
-    ret->data.resize(1);
-    try {
-        auto instanceHandle = getArgument<uint64_t>(args, 0);
-        auto memberHandle = getArgument<uint64_t>(args, 1);
+HANDLER_MODCLASS_ACCESSOR(String, std::string, 's');
+HANDLER_MODCLASS_ACCESSOR(Int8, int8_t, 'b');
+HANDLER_MODCLASS_ACCESSOR(Int16, int16_t, 'h');
+HANDLER_MODCLASS_ACCESSOR(Int32, int32_t, 'i');
+HANDLER_MODCLASS_ACCESSOR(Int64, int64_t, 'l');
+HANDLER_MODCLASS_ACCESSOR(UInt8, uint8_t, 'B');
+HANDLER_MODCLASS_ACCESSOR(UInt16, uint16_t, 'H');
+HANDLER_MODCLASS_ACCESSOR(UInt32, uint32_t, 'I');
+HANDLER_MODCLASS_ACCESSOR(UInt64, uint64_t, 'L');
+HANDLER_MODCLASS_ACCESSOR(Float32, float, 'f');
+HANDLER_MODCLASS_ACCESSOR(Float64, double, 'F');
+HANDLER_MODCLASS_ACCESSOR(WideString, std::wstring, 'w');
+HANDLER_MODCLASS_ACCESSOR(Blob, std::string, 'o');
+#undef HANDLER_MODCLASS_ACCESSOR
 
-        if (moduleClasses.access(moduleClassInstances.access(instanceHandle).classHandle)
-                    .members.at(memberHandle)
-                    .type
-            != 's') {
-            LOG("Type mismatch: expected s, got "
-                << moduleClasses.access(moduleClassInstances.access(instanceHandle).classHandle)
-                           .members.at(memberHandle)
-                           .type);
-            throw std::runtime_error("type mismatch: expected string");
-        }
-        std::string value = *static_cast<std::string*>(
-                moduleClassInstances.access(instanceHandle).members.at(memberHandle));
-
-        setReturn<std::string>(ret, 0, value);
-    } catch (const std::exception& e) {
-        LOG("Exception caught: " << e.what());
-        ret->exitStatus = 1;
-        return ret;
-    }
-    ret->exitStatus = 0;
-    return ret;
-}
-// void handlerDeleteModuleClassInstance(uint64_t handle);
+#define HANDLER_MODCLASS_ACCESSOR_REGISTER(typeWord, typeChar)                                     \
+    registerFuncProvider(new FuncProvider("core.class.instance.set" #typeWord,                     \
+                                          handlerModuleClassSet##typeWord),                        \
+                         "LL" #typeChar,                                                           \
+                         "");                                                                      \
+    registerFuncProvider(new FuncProvider("core.class.instance.get" #typeWord,                     \
+                                          handlerModuleClassGet##typeWord),                        \
+                         "LL",                                                                     \
+                         #typeChar)
 
 static void initializeCoreFuncProviders()
 {
     registerFuncProvider(new FuncProvider("core.class.add", handlerAddModuleClass), "Lsss", "L");
     registerFuncProvider(
             new FuncProvider("core.class.instantiate", handlerInstantiateModuleClass), "L", "L");
-    registerFuncProvider(
-            new FuncProvider("core.class.setString", handlerModuleClassSetString), "LLs", "");
-    registerFuncProvider(
-            new FuncProvider("core.class.getString", handlerModuleClassGetString), "LL", "s");
+    HANDLER_MODCLASS_ACCESSOR_REGISTER(String, s);
+    HANDLER_MODCLASS_ACCESSOR_REGISTER(Int8, b);
+    HANDLER_MODCLASS_ACCESSOR_REGISTER(Int16, h);
+    HANDLER_MODCLASS_ACCESSOR_REGISTER(Int32, i);
+    HANDLER_MODCLASS_ACCESSOR_REGISTER(Int64, l);
+    HANDLER_MODCLASS_ACCESSOR_REGISTER(UInt8, B);
+    HANDLER_MODCLASS_ACCESSOR_REGISTER(UInt16, H);
+    HANDLER_MODCLASS_ACCESSOR_REGISTER(UInt32, I);
+    HANDLER_MODCLASS_ACCESSOR_REGISTER(UInt64, L);
+    HANDLER_MODCLASS_ACCESSOR_REGISTER(Float32, f);
+    HANDLER_MODCLASS_ACCESSOR_REGISTER(Float64, F);
+    HANDLER_MODCLASS_ACCESSOR_REGISTER(WideString, w);
+    HANDLER_MODCLASS_ACCESSOR_REGISTER(Blob, o);
 }
+
+#undef HANDLER_MODCLASS_ACCESSOR_REGISTER

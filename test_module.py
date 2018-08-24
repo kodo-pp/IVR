@@ -178,10 +178,10 @@ def main():
     [object] = nc.invoke('core.class.instantiate', [handle], 'L', 'L')
     print('Got object: {}'.format(object))
 
-    print('Invoking core.class.setString')
-    nc.invoke('core.class.setString', [object, 1, 'TesT'], 'LLs', '')
-    print('Invoking core.class.getString')
-    [s] = nc.invoke('core.class.getString', [object, 1], 'LL', 's')
+    print('Invoking core.class.instance.setString')
+    nc.invoke('core.class.instance.setString', [object, 1, 'TesT'], 'LLs', '')
+    print('Invoking core.class.instance.getString')
+    [s] = nc.invoke('core.class.instance.getString', [object, 1], 'LL', 's')
     print('Got string: {}'.format(s))
 
     [status] = nc.invoke_special('exit', [], '', 's')

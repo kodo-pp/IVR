@@ -8,7 +8,7 @@
 #include <log/log.hpp>
 #include <util/util.hpp>
 
-void* _dyntypeNew(char type)
+void* dyntypeNew(char type)
 {
     switch (type) {
     case 'b': // signed byte
@@ -42,11 +42,8 @@ void* _dyntypeNew(char type)
         return static_cast<void*>(new double(0));
         break;
     case 's': // string
-    {
-        auto x = static_cast<void*>(new std::string(""));
-        LOG(wstring_cast(*static_cast<std::string*>(x)));
-        return x;
-    } break;
+        return static_cast<void*>(new std::string(""));
+        break;
     case 'w': // wstring
         return static_cast<void*>(new std::wstring(L""));
         break;
@@ -57,7 +54,7 @@ void* _dyntypeNew(char type)
     }
 }
 
-void _dyntypeDelete(void* val, char type)
+void dyntypeDelete(void* val, char type)
 {
     if (val == nullptr) {
         return;
@@ -102,16 +99,4 @@ void _dyntypeDelete(void* val, char type)
     case 'o': delete static_cast<std::string*>(val); break;
     default: throw std::logic_error(std::string("dyntypeDelete: unknown type: ") + type);
     }
-}
-
-void* dyntypeNew(char type)
-{
-    auto x = _dyntypeNew(type);
-    LOG("dyntypeNew(" << type << ") = " << x);
-    return x;
-}
-
-void dyntypeDelete(void* val, char type)
-{
-    LOG("dyntypeDel(" << val << ", " << type << ")");
 }
