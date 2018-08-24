@@ -76,7 +76,7 @@ CFLAGS="-std=gnu99"
 # Special for C++ compiler
 CXXFLAGS="-std=gnu++14"
 # Special for linker
-LDFLAGS=""
+LDFLAGS="-z relro -z now"
 
 # Flags for C and C++ compilers
 FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -Wno-nested-anon-types -DFORTIFY_SOURCE"
