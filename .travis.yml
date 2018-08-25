@@ -14,6 +14,7 @@ matrix:
             - libirrlicht-dev
             - clang-5.0
             - libboost-all-dev
+            - python3
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
@@ -46,4 +47,4 @@ script:
       done
     - CUSTOM_CC='/usr/bin/cc' CUSTOM_CXX='/usr/bin/c++' CUSTOM_LD='c++' CC_TOOLCHAIN='custom' FORCE_REBUILD='yes' DEBUG='yes' ./build.sh
     - CUSTOM_CC='/usr/bin/cc' CUSTOM_CXX='/usr/bin/c++' CUSTOM_LD='c++' CC_TOOLCHAIN='custom' FORCE_REBUILD='yes' DEBUG='no' ./build.sh
-
+    - ./clang-tidy.py

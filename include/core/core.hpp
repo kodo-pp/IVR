@@ -2,6 +2,7 @@
 #define CORE_CORE_HPP
 
 #include <functional>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -10,7 +11,8 @@
 
 using ArgsSpec = std::string;
 
-struct FuncResult {
+struct FuncResult
+{
     std::vector<void*> data;
 };
 
@@ -48,19 +50,23 @@ ArgsSpec getRetSpec(uint64_t handle);
 
 void funcProvidersCleanup();
 
-struct ModuleClassMember {
+struct ModuleClassMember
+{
     char type;
 };
 
-struct ModuleClassMethod {
+struct ModuleClassMethod
+{
     std::string return_type;
     std::string arguments_type;
 };
 
-struct ModuleClass {
+struct ModuleClass
+{
     ModuleClass(const std::unordered_map<std::string, ModuleClassMember>& _members,
                 const std::unordered_map<std::string, ModuleClassMethod>& _methods,
                 uint64_t parent);
+
     uint64_t parentId;
     std::unordered_map<std::string, uint64_t> memberHandles;
     std::unordered_map<std::string, uint64_t> methodHandles;
@@ -68,13 +74,19 @@ struct ModuleClass {
     std::vector<ModuleClassMethod> methods;
 };
 
-struct ModuleClassInstance {
+struct ModuleClassInstance
+{
     explicit ModuleClassInstance(uint64_t handle);
     ModuleClassInstance(const ModuleClassInstance& other);
     ModuleClassInstance(ModuleClassInstance&& other) = default;
     ~ModuleClassInstance();
+
     uint64_t classHandle;
+
     mutable std::vector<void*> members;
+
+private:
+    std::shared_ptr<int> referenceCount;
 };
 
 uint64_t addModuleClass(const std::string& name, const ModuleClass& moduleClass);

@@ -172,6 +172,7 @@ ModuleClass::ModuleClass(const std::unordered_map<std::string, ModuleClassMember
 }
 
 ModuleClassInstance::ModuleClassInstance(uint64_t handle)
+        : classHandle(handle), referenceCount(std::make_shared<int>(1))
 {
     const auto& memberTypes = getModuleClass(handle).members;
     members.resize(memberTypes.size(), nullptr);
@@ -184,22 +185,31 @@ ModuleClassInstance::ModuleClassInstance(uint64_t handle)
 // TODO: make copy-ctor not a move one
 
 ModuleClassInstance::ModuleClassInstance(const ModuleClassInstance& other)
+        : classHandle(other.classHandle)
+        , members(other.members)
+        , referenceCount(other.referenceCount)
 {
-    const auto& memberTypes = getModuleClass(other.classHandle).members;
-    members.resize(memberTypes.size(), nullptr);
-    for (uint64_t i = 0; i < members.size(); ++i) {
-        members.at(i) = dyntypeNew(memberTypes.at(i).type);
-        std::swap(members.at(i), other.members.at(i));
-    }
-    classHandle = other.classHandle;
+    ++(*referenceCount);
+    // TODO: make move constructor from it
+    //
+    // const auto& memberTypes = getModuleClass(other.classHandle).members;
+    // members.resize(memberTypes.size(), nullptr);
+    // for (uint64_t i = 0; i < members.size(); ++i) {
+    //     members.at(i) = dyntypeNew(memberTypes.at(i).type);
+    //     std::swap(members.at(i), other.members.at(i));
+    // }
+    // classHandle = other.classHandle;
 }
 
 ModuleClassInstance::~ModuleClassInstance()
 {
-    const auto& memberTypes = getModuleClass(classHandle).members;
-    members.resize(memberTypes.size(), nullptr);
-    for (uint64_t i = 0; i < members.size(); ++i) {
-        dyntypeDelete(members.at(i), memberTypes.at(i).type);
+    --(*referenceCount);
+    if (*referenceCount == 0) {
+        const auto& memberTypes = getModuleClass(classHandle).members;
+        members.resize(memberTypes.size(), nullptr);
+        for (uint64_t i = 0; i < members.size(); ++i) {
+            dyntypeDelete(members.at(i), memberTypes.at(i).type);
+        }
     }
 }
 
