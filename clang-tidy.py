@@ -10,10 +10,7 @@ cxxflags = [
     '-I/usr/include/irrlicht',
 ]
 
-sources = map(
-    lambda b: b.decode(),
-    sp.check_output(['find', 'src/', '-name', '*.cpp']).split(b'\n')
-)
+sources = [b.decode() for b in sp.check_output(['find', 'src/', '-name', '*.cpp']).split(b'\n')]
 
 checks = [
 #    'cppcoreguidelines-*',
@@ -25,4 +22,4 @@ checks = [
 ]
 
 checks_flag = '--checks={}'.format(','.join(checks))
-sp.call(['/usr/bin/env', 'clang-tidy', checks_flag, *argv[1:], *sources, '--', *cxxflags])
+sp.call(['/usr/bin/env', 'clang-tidy', checks_flag] + argv[1:] + sources + ['--'] + cxxflags)
