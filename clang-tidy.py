@@ -8,6 +8,7 @@ cxxflags = [
     '-Iinclude',
     '-I/usr/include',
     '-I/usr/include/irrlicht',
+    '-std=c++14',
 ]
 
 sources = [b.decode() for b in sp.check_output(['find', 'src/', '-name', '*.cpp']).split(b'\n')]
