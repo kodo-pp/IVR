@@ -2,7 +2,7 @@
 
 #include <geometry/geometry.hpp>
 
-double getAzimuth(double, double y, double)
+double getAzimuth(double /*unused*/, double y, double /*unused*/)
 {
     // Only y is needed to perform necessary calculations
     return y * M_PI / 180;

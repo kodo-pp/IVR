@@ -42,7 +42,7 @@ void initilaizeCore(std::vector<std::string>&);
 
 void registerFuncProvider(const FuncProvider&, ArgsSpec, ArgsSpec);
 
-uint64_t getFuncProviderHandle(std::string command);
+uint64_t getFuncProviderHandle(const std::string& command);
 
 const FuncProvider& getFuncProvider(uint64_t handle);
 ArgsSpec getArgsSpec(uint64_t handle);
@@ -93,7 +93,7 @@ uint64_t addModuleClass(const std::string& name, const ModuleClass& moduleClass)
 void removeModuleClass(const std::string& name);
 const ModuleClass& getModuleClass(uint64_t handle);
 uint64_t instantiateModuleClass(uint64_t handle);
-void deleteModuleClassInstance(uint64_t handle);
+void deleteModuleClassInstance(uint64_t instanceId);
 
 // === Constants ===
 const uint64_t RESERVED_FP_HANDLE = 0xFFFF'FFFF'4E5E'47EDull;

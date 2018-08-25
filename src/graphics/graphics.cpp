@@ -26,7 +26,7 @@ bool IrrKeyboardEventReceiver::OnEvent(const irr::SEvent& event)
         if (event.KeyInput.PressedDown) {
             pressedKeys.insert(event.KeyInput.Key);
         } else {
-            if (pressedKeys.count(event.KeyInput.Key)) {
+            if (pressedKeys.count(event.KeyInput.Key) != 0u) {
                 pressedKeys.erase(event.KeyInput.Key);
             }
         }
@@ -224,7 +224,7 @@ static void initializeIrrlicht(UNUSED std::vector<std::string>& args)
             false, // stencil buffer (не очень понятно, что это. COMBAK)
             true,  // Вертикальная синхронизация
             &graphics::irrEventReceiver); // Объект-обработчик событий
-    if (!graphics::irrDevice) {
+    if (graphics::irrDevice == nullptr) {
         // TODO: добавить fallback-настройки
         throw std::runtime_error("Failed to initialize Irrlicht device");
     }
@@ -234,17 +234,17 @@ static void initializeIrrlicht(UNUSED std::vector<std::string>& args)
 
     // Получаем необходимые указатели на объекты
     graphics::irrVideoDriver = graphics::irrDevice->getVideoDriver();
-    if (!graphics::irrVideoDriver) {
+    if (graphics::irrVideoDriver == nullptr) {
         throw std::runtime_error("Failed to access Irrlicht video driver");
     }
 
     graphics::irrSceneManager = graphics::irrDevice->getSceneManager();
-    if (!graphics::irrSceneManager) {
+    if (graphics::irrSceneManager == nullptr) {
         throw std::runtime_error("Failed to access Irrlicht scene manager");
     }
 
     graphics::irrGuiEnvironment = graphics::irrDevice->getGUIEnvironment();
-    if (!graphics::irrGuiEnvironment) {
+    if (graphics::irrGuiEnvironment == nullptr) {
         throw std::runtime_error("Failed to access Irrlicht GUI environment");
     }
 
@@ -262,7 +262,7 @@ GameObjCube graphicsCreateCube()
 {
     std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
     scene::ISceneNode* node = graphics::irrSceneManager->addCubeSceneNode();
-    if (!node) {
+    if (node == nullptr) {
         // return (ISceneNode*)nullptr;
         throw std::runtime_error("failed to create a cube scene node");
     }
@@ -302,21 +302,21 @@ void graphicsDraw()
 
 void graphicsMoveObject(ISceneNode* obj, double x, double y, double z)
 {
-    if (!obj) {
+    if (obj == nullptr) {
         return;
     }
     obj->setPosition(core::vector3df(x, y, z));
 }
-void graphicsMoveObject(ISceneNode* obj, core::vector3df pos)
+void graphicsMoveObject(ISceneNode* obj, const core::vector3df& pos)
 {
-    if (!obj) {
+    if (obj == nullptr) {
         return;
     }
     obj->setPosition(pos);
 }
-void graphicsMoveObject(ISceneNode* obj, GamePosition gp)
+void graphicsMoveObject(ISceneNode* obj, const GamePosition& gp)
 {
-    if (!obj) {
+    if (obj == nullptr) {
         return;
     }
     obj->setPosition(gp.toIrrVector3df());
@@ -328,19 +328,19 @@ void graphicsDeleteObject(GameObject* obj)
     delete obj;
 }
 
-void graphicsRotateObject(ISceneNode* obj, core::vector3df rot)
+void graphicsRotateObject(ISceneNode* obj, const core::vector3df& rot)
 {
-    if (!obj) {
+    if (obj == nullptr) {
         return;
     }
     obj->setRotation(rot);
 }
 
-ITexture* graphicsLoadTexture(std::wstring textureFileName)
+ITexture* graphicsLoadTexture(const std::wstring& textureFileName)
 {
     LOG(L"loading texture: " << textureFileName);
     ITexture* texture = graphics::irrVideoDriver->getTexture(textureFileName.c_str());
-    if (!texture) {
+    if (texture == nullptr) {
         LOG(L"Loading texture failed");
         return nullptr;
     }
@@ -351,7 +351,7 @@ ITexture* graphicsLoadTexture(std::wstring textureFileName)
 void graphicsAddTexture(const GameObject& obj, ITexture* tex)
 {
     LOG(L"Adding texture");
-    if (!obj.sceneNode() || !tex) {
+    if ((obj.sceneNode() == nullptr) || (tex == nullptr)) {
         LOG(L"Adding texture failed");
         return;
     }
@@ -383,7 +383,7 @@ void graphicsLoadTerrain(int64_t off_x,
             scene::ETPS_17,                                            // patchSize (?)
             4                                                          // smoothFactor (?)
     );
-    if (!terrain) {
+    if (terrain == nullptr) {
         throw std::runtime_error("unable to create terrain scene node");
     }
     terrain->setMaterialFlag(irr::video::EMF_LIGHTING, false);

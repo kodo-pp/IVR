@@ -32,11 +32,11 @@ GameObjCube graphicsCreateCube();
 
 /// Move a scene node to the specified location
 void graphicsMoveObject(ISceneNode*, double, double, double);
-void graphicsMoveObject(ISceneNode*, core::vector3df);
-void graphicsMoveObject(ISceneNode*, GamePosition);
+void graphicsMoveObject(ISceneNode*, const core::vector3df&);
+void graphicsMoveObject(ISceneNode*, const GamePosition&);
 
 /// Rotate a scene node
-void graphicsRotateObject(ISceneNode* obj, core::vector3df rot);
+void graphicsRotateObject(ISceneNode* obj, const core::vector3df& rot);
 
 /// Delete and unregister a game object
 void graphicsDeleteObject(GameObject*);
@@ -51,7 +51,7 @@ void graphicsDisablePhysics(scene::ISceneNode* node);
 // ===== Managing textures =====
 
 /// Load texture and return Irrlicht ITexture* instance for this texture
-ITexture* graphicsLoadTexture(std::wstring);
+ITexture* graphicsLoadTexture(const std::wstring&);
 
 /// Add texture to a game object
 void graphicsAddTexture(const GameObject&, ITexture*);

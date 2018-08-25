@@ -91,7 +91,7 @@ ModuleId GameObject::getProvidingModule() const
     return providingModule;
 }
 
-void GameObject::setPosition(GamePosition newPosition)
+void GameObject::setPosition(const GamePosition& newPosition)
 {
     position = newPosition;
     graphicsMoveObject(_sceneNode, newPosition);

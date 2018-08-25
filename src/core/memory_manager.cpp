@@ -16,7 +16,7 @@ bool MemoryManager::track(void* ptr)
         return false;
     }
 
-    if (pointersSet.count(ptr)) {
+    if (pointersSet.count(ptr) != 0u) {
         return false;
     }
 

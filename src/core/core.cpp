@@ -102,7 +102,7 @@ void registerFuncProvider(const FuncProvider& prov, ArgsSpec argsSpec, ArgsSpec 
     LOG(L"Successfully registered FuncProvider for " << wstring_cast(command));
 }
 
-uint64_t getFuncProviderHandle(std::string command)
+uint64_t getFuncProviderHandle(const std::string& command)
 {
     return funcProviderMap.at(command);
 }

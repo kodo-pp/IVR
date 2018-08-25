@@ -22,7 +22,7 @@
 
 struct FuncResult* testFunc(const std::vector<void*>& args)
 {
-    assert(args.size() >= 1);
+    assert(!args.empty());
     return (struct FuncResult*)args[0];
 }
 

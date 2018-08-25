@@ -16,8 +16,8 @@ class GamePosition
 {
 public:
     GamePosition(double _x = 0.0, double _y = 0.0, double _z = 0.0);
-    GamePosition(const GamePosition& gamePosition); // copy c-tor
-    GamePosition(GamePosition&& gamePosition);      // move c-tor
+    GamePosition(const GamePosition& other); // copy c-tor
+    GamePosition(GamePosition&& other);      // move c-tor
     explicit GamePosition(const vector3df& irrvec);
 
     vector3df toIrrVector3df() const;

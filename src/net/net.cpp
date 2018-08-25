@@ -27,7 +27,7 @@ static std::thread* moduleListenerThread;
 static std::mutex serverThreadMutex;
 
 static void moduleListenerThreadFunc();
-static void moduleServerThreadFunc(int);
+static void moduleServerThreadFunc(int /*clientSocket*/);
 
 void createModuleListenerThread()
 {
@@ -66,7 +66,7 @@ void createModuleServerThread(int clientSocket)
 {
     serverThreadMutex.lock();
     std::thread* thr = new std::thread(moduleServerThreadFunc, clientSocket);
-    if (!thr) {
+    if (thr == nullptr) {
         LOG(L"Unable to create thread");
         close(clientSocket);
         return;

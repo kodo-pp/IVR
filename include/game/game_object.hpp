@@ -35,7 +35,7 @@ public:
     virtual ~GameObject();
 
     GamePosition getPosition() const;
-    void setPosition(GamePosition newPosition);
+    void setPosition(const GamePosition& newPosition);
     void setRotation(double, double, double);
 
     GameObject& operator=(const GameObject&);

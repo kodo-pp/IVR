@@ -51,25 +51,25 @@ UNUSED static double recvIeeeFloat64(int sock)
 static void sendStringFloat32(int sock, float v)
 {
     std::string str = std::to_string(v);
-    sendString(sock, std::move(str));
+    sendString(sock, str);
 }
 
 static void sendStringFloat64(int sock, double v)
 {
     std::string str = std::to_string(v);
-    sendString(sock, std::move(str));
+    sendString(sock, str);
 }
 
 static float recvStringFloat32(int sock)
 {
     std::string str = recvString(sock);
-    return std::stof(std::move(str));
+    return std::stof(str);
 }
 
 static double recvStringFloat64(int sock)
 {
     std::string str = recvString(sock);
-    return std::stod(std::move(str));
+    return std::stod(str);
 }
 
 // These are functions that may choose one or another way to transmit floating-point
