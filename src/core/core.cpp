@@ -359,19 +359,19 @@ FuncResult handlerInstantiateModuleClass(const std::vector<void*>& args)
 // Здесь можно было бы написать шаблон...
 // Но я уже написал макрос
 
-HANDLER_MODCLASS_ACCESSOR(String, std::string, 's');
-HANDLER_MODCLASS_ACCESSOR(Int8, int8_t, 'b');
-HANDLER_MODCLASS_ACCESSOR(Int16, int16_t, 'h');
-HANDLER_MODCLASS_ACCESSOR(Int32, int32_t, 'i');
-HANDLER_MODCLASS_ACCESSOR(Int64, int64_t, 'l');
-HANDLER_MODCLASS_ACCESSOR(UInt8, uint8_t, 'B');
-HANDLER_MODCLASS_ACCESSOR(UInt16, uint16_t, 'H');
-HANDLER_MODCLASS_ACCESSOR(UInt32, uint32_t, 'I');
-HANDLER_MODCLASS_ACCESSOR(UInt64, uint64_t, 'L');
-HANDLER_MODCLASS_ACCESSOR(Float32, float, 'f');
-HANDLER_MODCLASS_ACCESSOR(Float64, double, 'F');
-HANDLER_MODCLASS_ACCESSOR(WideString, std::wstring, 'w');
-HANDLER_MODCLASS_ACCESSOR(Blob, std::string, 'o');
+HANDLER_MODCLASS_ACCESSOR(String, std::string, 's')
+HANDLER_MODCLASS_ACCESSOR(Int8, int8_t, 'b')
+HANDLER_MODCLASS_ACCESSOR(Int16, int16_t, 'h')
+HANDLER_MODCLASS_ACCESSOR(Int32, int32_t, 'i')
+HANDLER_MODCLASS_ACCESSOR(Int64, int64_t, 'l')
+HANDLER_MODCLASS_ACCESSOR(UInt8, uint8_t, 'B')
+HANDLER_MODCLASS_ACCESSOR(UInt16, uint16_t, 'H')
+HANDLER_MODCLASS_ACCESSOR(UInt32, uint32_t, 'I')
+HANDLER_MODCLASS_ACCESSOR(UInt64, uint64_t, 'L')
+HANDLER_MODCLASS_ACCESSOR(Float32, float, 'f')
+HANDLER_MODCLASS_ACCESSOR(Float64, double, 'F')
+HANDLER_MODCLASS_ACCESSOR(WideString, std::wstring, 'w')
+HANDLER_MODCLASS_ACCESSOR(Blob, std::string, 'o')
 #undef HANDLER_MODCLASS_ACCESSOR
 
 #define HANDLER_MODCLASS_ACCESSOR_REGISTER(typeWord, typeChar)                                     \
