@@ -61,12 +61,12 @@ namespace graphics
 
 } // namespace graphics
 
-static bool initializeIrrlicht(std::vector<std::string>* args);
+static void initializeIrrlicht(std::vector<std::string>& args);
 
-struct FuncResult* handlerGraphicsCreateCube(UNUSED const std::vector<void*>& args)
+FuncResult handlerGraphicsCreateCube(UNUSED const std::vector<void*>& args)
 {
-    auto ret = new struct FuncResult;
-    ret->data.resize(1);
+    FuncResult ret;
+    ret.data.resize(1);
 
     std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
 
@@ -74,16 +74,15 @@ struct FuncResult* handlerGraphicsCreateCube(UNUSED const std::vector<void*>& ar
     auto objectHandle = registerGameObject(obj);
 
     setReturn<uint64_t>(ret, 0, objectHandle);
-    ret->exitStatus = 0;
     return ret;
 }
 
-struct FuncResult* handlerGraphicsMoveObject(const std::vector<void*>& args)
+FuncResult handlerGraphicsMoveObject(const std::vector<void*>& args)
 {
     if (args.size() != 4) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsMoveObject()");
     }
-    auto ret = new struct FuncResult;
+    FuncResult ret;
 
     std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
 
@@ -95,16 +94,15 @@ struct FuncResult* handlerGraphicsMoveObject(const std::vector<void*>& args)
 
     graphicsMoveObject(getGameObject(objectHandle)->sceneNode(), GamePosition(x, y, z));
 
-    ret->exitStatus = 0;
     return ret;
 }
 
-struct FuncResult* handlerGraphicsDeleteObject(const std::vector<void*>& args)
+FuncResult handlerGraphicsDeleteObject(const std::vector<void*>& args)
 {
     if (args.size() != 1) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsDeleteObject()");
     }
-    auto ret = new struct FuncResult;
+    FuncResult ret;
 
     std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
 
@@ -113,17 +111,16 @@ struct FuncResult* handlerGraphicsDeleteObject(const std::vector<void*>& args)
     graphicsDeleteObject(getGameObject(objectHandle));
     unregisterGameObject(objectHandle);
 
-    ret->exitStatus = 0;
     return ret;
 }
 
-struct FuncResult* handlerGraphicsRotateObject(const std::vector<void*>& args)
+FuncResult handlerGraphicsRotateObject(const std::vector<void*>& args)
 {
     if (args.size() != 4) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsRotateObject()");
     }
 
-    auto ret = new struct FuncResult;
+    FuncResult ret;
     std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
 
     uint64_t objectHandle = getArgument<uint64_t>(args, 0);
@@ -136,45 +133,42 @@ struct FuncResult* handlerGraphicsRotateObject(const std::vector<void*>& args)
     graphicsRotateObject(getGameObject(objectHandle)->sceneNode(),
                          core::vector3df(pitch, roll, yaw));
 
-    ret->exitStatus = 0;
     return ret;
 }
 
 extern std::recursive_mutex irrlichtMutex;
 
-FuncResult* handlerGraphicsLoadTexture(const std::vector<void*>& args)
+FuncResult handlerGraphicsLoadTexture(const std::vector<void*>& args)
 {
     std::lock_guard<std::recursive_mutex> irrlock(irrlichtMutex);
     if (args.size() != 1) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsLoadTexture()");
     }
-    auto ret = new struct FuncResult;
+    FuncResult ret;
     // TODO: replace with wstring
 
     std::string filename = getArgument<std::string>(args, 0);
     ITexture* texture = graphics::irrVideoDriver->getTexture(filename.c_str());
-    ret->data.resize(1);
+    ret.data.resize(1);
 
     if (texture == nullptr) {
-        ret->exitStatus = 1;
         setReturn<uint64_t>(ret, 0, 0ULL);
         return ret;
     }
 
     uint64_t handle = registerTexture(texture);
 
-    ret->exitStatus = 0;
     setReturn<uint64_t>(ret, 0, handle);
     return ret;
 }
 
-struct FuncResult* handlerGraphicsAddTexture(const std::vector<void*>& args)
+FuncResult handlerGraphicsAddTexture(const std::vector<void*>& args)
 {
     if (args.size() != 2) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsAddTexture()");
     }
 
-    auto ret = new struct FuncResult;
+    FuncResult ret;
     std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
 
     uint64_t objectHandle = getArgument<uint64_t>(args, 0);
@@ -187,26 +181,21 @@ struct FuncResult* handlerGraphicsAddTexture(const std::vector<void*>& args)
 
     obj->sceneNode()->setMaterialTexture(0, texture);
 
-    ret->exitStatus = 0;
     return ret;
 }
 
 static inline void initializeGraphicsFuncProviders()
 {
+    registerFuncProvider(FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
     registerFuncProvider(
-            new FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
+            FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "LFFF", "");
     registerFuncProvider(
-            new FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "LFFF", "");
+            FuncProvider("graphics.rotateObject", handlerGraphicsRotateObject), "LFFF", "");
     registerFuncProvider(
-            new FuncProvider("graphics.rotateObject", handlerGraphicsRotateObject), "LFFF", "");
+            FuncProvider("graphics.deleteObject", handlerGraphicsDeleteObject), "L", "");
     registerFuncProvider(
-            new FuncProvider("graphics.deleteObject", handlerGraphicsDeleteObject), "L", "");
-    registerFuncProvider(
-            new FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture),
-            "s",
-            "L");
-    registerFuncProvider(
-            new FuncProvider("graphics.texture.add", handlerGraphicsAddTexture), "LL", "");
+            FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture), "s", "L");
+    registerFuncProvider(FuncProvider("graphics.texture.add", handlerGraphicsAddTexture), "LL", "");
 }
 
 void cleanupGraphics()
@@ -215,23 +204,14 @@ void cleanupGraphics()
     graphics::irrDevice->drop();
 }
 
-bool initializeGraphics(std::vector<std::string>* args)
+void initializeGraphics(std::vector<std::string>& args)
 {
-    if (args == nullptr) {
-        return false;
-    }
-
-    if (!initializeIrrlicht(args)) {
-        return false;
-    }
-
+    initializeIrrlicht(args);
     initializeGraphicsFuncProviders();
-
-    return true;
 }
 
 // Инициаллизация Irrlicht
-static bool initializeIrrlicht(UNUSED std::vector<std::string>* args)
+static void initializeIrrlicht(UNUSED std::vector<std::string>& args)
 {
     graphics::irrDevice = irr::createDevice(
             irr::video::EDT_OPENGL, // Драйвер для рендеринга (здесь OpenGL, но пока
@@ -246,7 +226,7 @@ static bool initializeIrrlicht(UNUSED std::vector<std::string>* args)
             &graphics::irrEventReceiver); // Объект-обработчик событий
     if (!graphics::irrDevice) {
         // TODO: добавить fallback-настройки
-        return false;
+        throw std::runtime_error("Failed to initialize Irrlicht device");
     }
     graphics::irrDevice->getLogger()->setLogLevel(irr::ELL_NONE);
 
@@ -255,28 +235,27 @@ static bool initializeIrrlicht(UNUSED std::vector<std::string>* args)
     // Получаем необходимые указатели на объекты
     graphics::irrVideoDriver = graphics::irrDevice->getVideoDriver();
     if (!graphics::irrVideoDriver) {
-        return false;
+        throw std::runtime_error("Failed to access Irrlicht video driver");
     }
 
     graphics::irrSceneManager = graphics::irrDevice->getSceneManager();
     if (!graphics::irrSceneManager) {
-        return false;
+        throw std::runtime_error("Failed to access Irrlicht scene manager");
     }
 
     graphics::irrGuiEnvironment = graphics::irrDevice->getGUIEnvironment();
-    if (!graphics::irrSceneManager) {
-        return false;
+    if (!graphics::irrGuiEnvironment) {
+        throw std::runtime_error("Failed to access Irrlicht GUI environment");
     }
 
     graphics::camera = graphics::irrSceneManager->addCameraSceneNode(
             0, irr::core::vector3df(0, 30, -40));
     if (graphics::camera == nullptr) {
-        return false;
+        throw std::runtime_error("Failed to create Irrlicht camera");
     }
     graphics::camera->bindTargetAndRotation(true);
 
     graphicsInitializeCollisions();
-    return true;
 }
 
 GameObjCube graphicsCreateCube()

@@ -21,13 +21,13 @@ T getArgument(const std::vector<void*> args, size_t idx)
 }
 
 template <typename T>
-void setReturn(struct FuncResult* res, size_t idx, const T& value)
+void setReturn(FuncResult& res, size_t idx, const T& value)
 {
     // TODO: VERY uGly
 #ifdef FORTIFY_SOURCE
-    res->data.at(idx)
+    res.data.at(idx)
 #else
-    res->data[idx]
+    res.data[idx]
 #endif
             = static_cast<void*>(new T(value));
 }

@@ -19,7 +19,7 @@ using namespace video;
 
 /// Initialize graphical engine and related data structures
 /// Should be called once when the game is started
-bool initializeGraphics(std::vector<std::string>*);
+void initializeGraphics(std::vector<std::string>&);
 
 /// Stop graphical engine and free related resources
 /// Should be called once when the game is exited

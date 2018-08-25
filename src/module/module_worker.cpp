@@ -66,15 +66,8 @@ void ModuleWorker::work()
         }
 
         // Prepare to run it
-        FuncProvider* prov;
-        try {
-            prov = getFuncProvider(handle);
-        } catch (...) {
-            throw std::runtime_error(std::string("Invalid handle: '") + std::to_string(handle));
-        }
-        if (prov == nullptr) {
-            throw std::logic_error("getFuncProvider() returned nullptr");
-        }
+        FuncProvider prov;
+        prov = getFuncProvider(handle);
 
         ArgsSpec argsSpec = getArgsSpec(handle);
 
@@ -86,15 +79,12 @@ void ModuleWorker::work()
         }
 
         // Run it
-        struct FuncResult* result = prov->operator()(args);
-        if (result == nullptr) {
-            throw std::runtime_error("function provider error: result is nullptr");
-        }
+        FuncResult result = prov(args);
 
         // Send result back
         ArgsSpec retSpec = getRetSpec(handle);
         for (size_t i = 0; i < retSpec.length(); ++i) {
-            sendArg(sock, result->data.at(i), retSpec.at(i));
+            sendArg(sock, result.data.at(i), retSpec.at(i));
         }
 
         // Free memory allocated for arguments...
@@ -103,9 +93,8 @@ void ModuleWorker::work()
         }
         // ... and for returned data
         for (size_t i = 0; i < retSpec.length(); ++i) {
-            freeArg(result->data.at(i), retSpec.at(i));
+            freeArg(result.data.at(i), retSpec.at(i));
         }
-        delete result;
     }
 
     LOG(L"Exiting module worker");

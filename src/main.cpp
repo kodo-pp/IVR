@@ -45,12 +45,8 @@ int main(int argc, char** argv)
     }
 
     // [no utf-8]
-    std::vector<std::string>* args = new std::vector<std::string>(argc);
-    for (int i = 0; i < argc; ++i) {
-        args->at(i) = argv[i];
-    }
+    std::vector<std::string> args(argv, argv + argc);
     init(args);
-    delete args;
 
     LOG(L"ModBox version " << _PROJECT_VERSION);
     createModuleListenerThread();

@@ -12,7 +12,6 @@ using ArgsSpec = std::string;
 
 struct FuncResult {
     std::vector<void*> data;
-    uint32_t exitStatus;
 };
 
 // === FuncProvider definition ===
@@ -20,28 +19,30 @@ struct FuncResult {
 class FuncProvider
 {
 public:
+    using func_type = std::function<FuncResult(const std::vector<void*>&)>;
+
     FuncProvider();
-    FuncProvider(std::string, std::function<struct FuncResult*(const std::vector<void*>&)>);
-    std::string getCommand();
-    struct FuncResult* operator()(const std::vector<void*>&);
+    FuncProvider(const std::string&, const func_type&);
+    std::string getCommand() const;
+    FuncResult operator()(const std::vector<void*>&);
     ~FuncProvider();
 
 private:
     std::string command;
-    std::function<struct FuncResult*(const std::vector<void*>&)> func;
+    func_type func;
 };
 
 // === Initialization function ===
 
-bool initilaizeCore(std::vector<std::string>*);
+void initilaizeCore(std::vector<std::string>&);
 
 // === Working with FuncProviders ===
 
-bool registerFuncProvider(FuncProvider*, ArgsSpec, ArgsSpec);
+void registerFuncProvider(const FuncProvider&, ArgsSpec, ArgsSpec);
 
 uint64_t getFuncProviderHandle(std::string command);
 
-FuncProvider* getFuncProvider(uint64_t handle);
+const FuncProvider& getFuncProvider(uint64_t handle);
 ArgsSpec getArgsSpec(uint64_t handle);
 ArgsSpec getRetSpec(uint64_t handle);
 
