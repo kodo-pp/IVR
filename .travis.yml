@@ -14,7 +14,6 @@ matrix:
             - libirrlicht-dev
             - clang-5.0
             - libboost-all-dev
-            - python3
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
