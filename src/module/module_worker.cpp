@@ -34,6 +34,13 @@ void ModuleWorker::please_work() noexcept
     }
 }
 
+// TODO: implement it in module
+void sendError(int sock, const std::string& errorMessage, uint8_t exitCode = 1)
+{
+    sendU8(sock, exitCode);
+    sendString(sock, errorMessage);
+}
+
 void ModuleWorker::work()
 {
     std::string header("ModBox/M");
@@ -61,7 +68,7 @@ void ModuleWorker::work()
                 sendString(sock, "exited");
                 return;
             } else {
-                throw std::runtime_error(std::string("invalid internal command: ") + internal_cmd);
+                sendError(sock, std::string("invalid internal command: ") + internal_cmd);
             }
         }
 
@@ -79,7 +86,14 @@ void ModuleWorker::work()
         }
 
         // Run it
-        FuncResult result = prov(args);
+        FuncResult result;
+        try {
+            result = prov(args);
+        } catch (const std::exception& e) {
+            LOG("ModuleWorker: exception caught: " << e.what());
+            sendError(sock, e.what());
+            continue;
+        }
 
         // Send result back
         ArgsSpec retSpec = getRetSpec(handle);
