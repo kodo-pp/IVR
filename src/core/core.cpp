@@ -203,6 +203,9 @@ ModuleClassInstance::ModuleClassInstance(const ModuleClassInstance& other)
 
 ModuleClassInstance::~ModuleClassInstance()
 {
+    if (referenceCount == nullptr) {
+        return;
+    }
     --(*referenceCount);
     if (*referenceCount == 0) {
         const auto& memberTypes = getModuleClass(classHandle).members;

@@ -156,7 +156,7 @@ static void moduleListenerThreadFunc()
             int reverseClientSocket = acceptSocket(reverseListeningSocket);
             // Читаем служебную информацию, в том числе имя модуля
             sendFixed(reverseClientSocket, std::string("ModBox/R"));
-            readReverseModuleHeader(mainClientSocket);
+            readReverseModuleHeader(reverseClientSocket);
             auto reverseModuleName = readModuleName(reverseClientSocket);
             // Смотрим, подключился ли он к основному порту
             if (pendingModules.count(reverseModuleName) == 0) {
@@ -178,7 +178,8 @@ static void moduleListenerThreadFunc()
             pendingModules.erase(reverseModuleName);
             // И запускаем moduleWorker
             LOG(L"Spawning client thread");
-            createModuleServerThread(Module(mainModuleSocket, reverseModuleSocket));
+            createModuleServerThread(Module(
+                    mainModuleSocket, reverseModuleSocket, reverseModuleName, 42, L"<unset>"));
         }
     } catch (std::exception& e) {
         LOG(L"FATAL error (at " __FILE__ "): " << wstring_cast(e.what()));

@@ -1,6 +1,8 @@
 #ifndef MODULES_MODULE_HPP
 #define MODULES_MODULE_HPP
 
+#include <memory>
+#include <mutex>
 #include <string>
 
 // enum is useless in this case as we should support any programming language,
@@ -15,15 +17,19 @@ using ModuleId = uint64_t;
 class Module
 {
 public:
-    Module(int _mainSocket, int _reverseSocket);
-    Module(const Module& other) = default; // COMBAK: может быть, убрать copy ctor
+    Module(int _mainSocket,
+           int _reverseSocket,
+           const std::wstring& _name,
+           ModuleId _id,
+           const ModuleLanguage& _language);
+    Module(const Module& other);
     Module(Module&& other) = default;
 
-    Module& operator=(const Module& other) = default;
+    Module& operator=(const Module& other); //
     Module& operator=(Module&& other) = default;
 
     // Закрыть все сокеты
-    void cleanup();
+    void cleanup() noexcept;
 
     // Эту работу выполняет moduleListenerThread (и ModuleWorker)
     // void load();
@@ -33,10 +39,10 @@ public:
     // Not sure if id should be a constant, so no setModuleId() yet
 
     std::wstring getName() const;
-    void setName(std::wstring newName);
+    void setName(const std::wstring& newName);
 
     std::wstring getExecutableFileName() const;
-    void setExecutableFileName(std::wstring newExecFileName);
+    void setExecutableFileName(const std::wstring& newExecFileName);
 
     int getMainSocket() const;
     int getReverseSocket() const;
@@ -49,6 +55,7 @@ protected:
     std::wstring executableFileName;
     ModuleLanguage language; // Programming language, not sure how it'll be used,
                              // maybe in automatic setup of necessary tools
+    mutable std::recursive_mutex mtx;
 };
 
 #endif /* end of include guard: MODULES_MODULE_HPP */

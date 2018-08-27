@@ -44,11 +44,7 @@ void sendError(int sock, const std::string& errorMessage, uint8_t exitCode = 1)
 void ModuleWorker::work()
 {
     int sock = module.getMainSocket();
-    std::string header("ModBox/M");
-    sendFixed(sock, header);
-    readModuleHeader(sock);
-    std::wstring name = readModuleName(sock);
-    LOG(L"Module '" << name << L"' connected");
+    LOG(L"Module '" << module.getName() << L"' connected");
 
     while (true) {
         // Receive command from module

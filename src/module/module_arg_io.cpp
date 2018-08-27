@@ -20,7 +20,7 @@ void readReverseModuleHeader(int sock)
     char buf[8];
     recvBuf(sock, buf, 8);
     if (memcmp(buf, "ModBox/r", 8ull) != 0) {
-        throw std::runtime_error("Invalid module header");
+        throw std::runtime_error("Invalid reverse module header");
     }
 }
 

@@ -70,6 +70,14 @@ class Modcat(Netcat):
     def send_header(self):
         self.write(b'ModBox/m')
 
+    def recv_reverse_header(self):
+        header = self.read(8).decode()
+        if header != 'ModBox/R':
+            raise Exception('Invalid server header')
+
+    def send_reverse_header(self):
+        self.write(b'ModBox/r')
+
     def read_str(self):
         return self.read_until(b'\x00')[:-1].decode()
 
@@ -159,17 +167,20 @@ class Modcat(Netcat):
         return ret_ls
 
 def main():
-    nc = None
     try:
         nc = Modcat('localhost', 44145)
+        rnc = Modcat('localhost', 54144)
     except ConnectionRefusedError as e:
         print('Unable to connect to host: {}'.format(e))
         exit(1)
     nc.recv_header()
     nc.send_header()
-
     module_name = 'Python test module'
     nc.write_str(module_name)
+
+    rnc.recv_reverse_header()
+    rnc.send_reverse_header()
+    rnc.write_str(module_name)
 
     print('Invoking core.class.add')
     [handle] = nc.invoke('core.class.add', [0xFFFFFFFFFFFFFFFF, 'Animal', 'names:agei', 'talk,,s'], 'Lsss', 'L')
