@@ -26,6 +26,8 @@ std::atomic<bool> canPlaceObject(true);
 // TODO: use TerrainManager or something like that
 std::vector<GameObjCube> placedCubes;
 
+static const int desiredFps = 10;
+
 static void processKeys(Player& player)
 {
     // XXX: This is stub, camera movement and rotation should be done by class like Player
@@ -48,8 +50,8 @@ static void processKeys(Player& player)
         }
 
         double directionOffset = 0;
-        // TEMP: скорость временно увеличена для удобства тестирования, изначальное значение равно 3
-        double speed = 10;
+        // TODO: Убрать зависимость от fps
+        double speed = 10.0 / desiredFps * 30;
         switch (dx * 10 + dz) {
         case -10 + -1: // back, left
             directionOffset = -0.75 * M_PI;
@@ -87,7 +89,9 @@ static void processKeys(Player& player)
     // Camera movement (vertical)
     {
         if (receiver.isKeyPressed(irr::KEY_SPACE)) {
-            const double jumpHeight = 10.0;
+            // Не спрашивайте, как я до этого дошёл и почему это должно работать
+            // Но оно работает, и высота прыжка почти не зависит от FPS
+            const double jumpHeight = 10.0 / pow(desiredFps, 0.33) * pow(30, 0.33);
             player.jump(jumpHeight);
         }
     }
@@ -108,7 +112,7 @@ static void processKeys(Player& player)
             --dy;
         }
 
-        const double speed = 2.0;
+        const double speed = 2.0 / desiredFps * 30;
         player.turn(speed * dx, speed * dy);
     }
 
@@ -136,7 +140,7 @@ static void processKeys(Player& player)
 
 void gameLoop()
 {
-    Player player(graphicsGetCamera());
+    Player player(graphicsGetCamera(), graphicsGetPseudoCamera());
     graphicsLoadTerrain(0,
                         0,
                         L"textures/terrain/heightmap/heightmap1.png",
@@ -152,7 +156,6 @@ void gameLoop()
     int fpsCounter = 0;
     double oneSecondCounter = 0.0;
 
-    int desiredFps = 30; // Desired, but unreachable in practice
     double timeForFrame = 1.0 / desiredFps;
 
     GameObjCube object = graphicsCreateCube();

@@ -65,6 +65,7 @@ void graphicsDraw();
 
 /// Return active ICameraSceneNode pointer
 irr::scene::ICameraSceneNode* graphicsGetCamera();
+irr::scene::ISceneNode* graphicsGetPseudoCamera();
 
 // ===== Managing terrain =====
 

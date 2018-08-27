@@ -51,6 +51,7 @@ namespace graphics
     gui::IGUIEnvironment* irrGuiEnvironment = nullptr;
     IrrKeyboardEventReceiver irrEventReceiver;
 
+    scene::ISceneNode* pseudoCamera = nullptr;
     scene::ICameraSceneNode* camera = nullptr;
     std::map<std::pair<int64_t, int64_t>, scene::ITerrainSceneNode*> terrainChunks;
     scene::ITerrainSceneNode* rootTerrainSceneNode;
@@ -125,7 +126,6 @@ FuncResult handlerGraphicsRotateObject(const std::vector<void*>& args)
 
     uint64_t objectHandle = getArgument<uint64_t>(args, 0);
 
-    // TODO: make sure these thing are called this way
     double pitch = getArgument<double>(args, 1);
     double roll = getArgument<double>(args, 2);
     double yaw = getArgument<double>(args, 3);
@@ -254,6 +254,11 @@ static void initializeIrrlicht(UNUSED std::vector<std::string>& args)
         throw std::runtime_error("Failed to create Irrlicht camera");
     }
     graphics::camera->bindTargetAndRotation(true);
+    graphics::pseudoCamera = graphics::irrSceneManager->addEmptySceneNode();
+    if (graphics::pseudoCamera == nullptr) {
+        throw std::runtime_error("Failed to create Irrlicht pseudo-camera");
+    }
+    graphics::pseudoCamera->setPosition(graphics::camera->getPosition());
 
     graphicsInitializeCollisions();
 }
@@ -404,7 +409,7 @@ void graphicsHandleCollisions(scene::ITerrainSceneNode* node)
 
     static_cast<scene::IMetaTriangleSelector*>(
             static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
-                    *graphics::camera->getAnimators().begin())
+                    *graphics::pseudoCamera->getAnimators().begin())
                     ->getWorld())
             ->addTriangleSelector(selector);
     selector->drop();
@@ -419,7 +424,7 @@ void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node)
 
     static_cast<scene::IMetaTriangleSelector*>(
             static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
-                    *graphics::camera->getAnimators().begin())
+                    *graphics::pseudoCamera->getAnimators().begin())
                     ->getWorld())
             ->addTriangleSelector(selector);
     selector->drop();
@@ -434,7 +439,7 @@ void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node)
 
     static_cast<scene::IMetaTriangleSelector*>(
             static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
-                    *graphics::camera->getAnimators().begin())
+                    *graphics::pseudoCamera->getAnimators().begin())
                     ->getWorld())
             ->addTriangleSelector(selector);
     selector->drop();
@@ -470,7 +475,7 @@ void graphicsInitializeCollisions()
 
     auto animator = graphics::irrSceneManager->createCollisionResponseAnimator(
             selector,                    // Triangle selector
-            graphics::camera,            // Affected scene node
+            graphics::pseudoCamera,      // Affected scene node
             core::vector3df(30, 60, 30), // Collision radius
             core::vector3df(0, -20, 0),  // Gravity vector
             core::vector3df(0, 30, 0),   // Ellipsoid translation
@@ -482,13 +487,18 @@ void graphicsInitializeCollisions()
                 "unable to create camera collision animator for terrain scene node");
     }
 
-    graphics::camera->addAnimator(animator);
+    graphics::pseudoCamera->addAnimator(animator);
     animator->drop();
 }
 
 irr::scene::ICameraSceneNode* graphicsGetCamera()
 {
     return graphics::camera;
+}
+
+irr::scene::ISceneNode* graphicsGetPseudoCamera()
+{
+    return graphics::pseudoCamera;
 }
 
 bool irrDeviceRun()
