@@ -6,11 +6,22 @@
 #include <net/socketlib.hpp>
 #include <util/util.hpp>
 
-bool readModuleHeader(int sock)
+void readModuleHeader(int sock)
 {
     char buf[8];
     recvBuf(sock, buf, 8);
-    return memcmp(buf, "ModBox/m", 8ull) == 0;
+    if (memcmp(buf, "ModBox/m", 8ull) != 0) {
+        throw std::runtime_error("Invalid module header");
+    }
+}
+
+void readReverseModuleHeader(int sock)
+{
+    char buf[8];
+    recvBuf(sock, buf, 8);
+    if (memcmp(buf, "ModBox/r", 8ull) != 0) {
+        throw std::runtime_error("Invalid module header");
+    }
 }
 
 std::wstring readModuleName(int sock)

@@ -8,8 +8,11 @@
 #include <core/memory_manager.hpp>
 #include <log/log.hpp>
 #include <misc/die.hpp>
+#include <modules/module.hpp>
+#include <modules/module_io.hpp>
 #include <modules/module_manager.hpp>
 #include <net/net.hpp>
+#include <net/socketlib.hpp>
 #include <util/util.hpp>
 
 #include <netinet/in.h>
@@ -27,7 +30,7 @@ static std::thread* moduleListenerThread;
 static std::mutex serverThreadMutex;
 
 static void moduleListenerThreadFunc();
-static void moduleServerThreadFunc(int /*clientSocket*/);
+static void moduleServerThreadFunc(Module&& module);
 
 void createModuleListenerThread()
 {
@@ -62,13 +65,13 @@ void joinModuleListenerThread()
     LOG(L"All them are dead");
 }
 
-void createModuleServerThread(int clientSocket)
+void createModuleServerThread(Module&& module)
 {
     serverThreadMutex.lock();
-    std::thread* thr = new std::thread(moduleServerThreadFunc, clientSocket);
+    std::thread* thr = new std::thread(moduleServerThreadFunc, module);
     if (thr == nullptr) {
         LOG(L"Unable to create thread");
-        close(clientSocket);
+        module.cleanup();
         return;
     }
     LOG(L"Registering thread");
@@ -81,6 +84,46 @@ void createModuleServerThread(int clientSocket)
     serverThreadMutex.unlock();
 }
 
+int createListeningSocket(uint64_t port)
+{
+    LOG(L"Creating a socket");
+    int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (listenSocket < 0) {
+        throw std::runtime_error("unable to create listening socket");
+    }
+    LOG(L"Socket created");
+
+    union
+    {
+        struct sockaddr_in sockAddrIn;
+        struct sockaddr sockAddr;
+    } socketAddress;
+
+    socketAddress.sockAddrIn.sin_family = AF_INET;
+    socketAddress.sockAddrIn.sin_port = htons(port);
+    socketAddress.sockAddrIn.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    LOG(L"Trying to bind to 0.0.0.0:" << port);
+    if (bind(listenSocket, &socketAddress.sockAddr, sizeof(socketAddress.sockAddrIn)) < 0) {
+        throw std::runtime_error("unable to bind the socket");
+    }
+
+    listen(listenSocket, 1);
+    LOG(L"Listening on 0.0.0.0:" << port);
+    return listenSocket;
+}
+
+int acceptSocket(int listenSocket)
+{
+    int clientSocket = accept(listenSocket, nullptr, nullptr);
+    LOG(L"Client connected");
+    if (clientSocket < 0) {
+        LOG(L"Unable to accept the connection from the client: accept() returned " << clientSocket);
+        throw std::runtime_error("accept() failed");
+    }
+    return clientSocket;
+}
+
 static void moduleListenerThreadFunc()
 {
     //    LOG(moduleListenerThread->native_handle());
@@ -88,41 +131,54 @@ static void moduleListenerThreadFunc()
     // kill(getpid(), SIGKILL);
 
     try {
-        const uint16_t port = 44145; // int('MODBOX', 36) % 65536
-        LOG(L"Creating a socket");
-        int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
-        if (listenSocket < 0) {
-            throw std::runtime_error("unable to create listening socket");
-        }
-        LOG(L"Socket created");
+        const uint16_t mainPort = 44145;    // int('MODBOX', 36) % 65536
+        const uint16_t reversePort = 54144; // reversed("44145")
+        int mainListeningSocket = createListeningSocket(mainPort);
+        int reverseListeningSocket = createListeningSocket(reversePort);
 
-        union {
-            struct sockaddr_in sockAddrIn;
-            struct sockaddr sockAddr;
-        } socketAddress;
-
-        socketAddress.sockAddrIn.sin_family = AF_INET;
-        socketAddress.sockAddrIn.sin_port = htons(port);
-        socketAddress.sockAddrIn.sin_addr.s_addr = htonl(INADDR_ANY);
-
-        LOG(L"Trying to bind to 0.0.0.0:" << port);
-        if (bind(listenSocket, &socketAddress.sockAddr, sizeof(socketAddress.sockAddrIn)) < 0) {
-            throw std::runtime_error("unable to bind the socket");
-        }
-
-        listen(listenSocket, 1);
-        LOG(L"Listening on 0.0.0.0:" << port);
+        // Модули, которые уже подключились к первому сокету, но ещё не подключились ко второму
+        // Ключ - имя модуля, значение - сокет
+        std::unordered_map<std::wstring, int> pendingModules;
 
         while (true) {
-            int clientSocket = accept(listenSocket, nullptr, nullptr);
-            LOG(L"Client connected");
-            if (clientSocket < 0) {
-                LOG(L"Unable to accept the connection from the client: accept() returned "
-                    << clientSocket);
-                continue;
+            // TODO: переписать с асинхронным IO или потоками
+
+            // Ждём, пока кто-то постучится в основной порт
+            int mainClientSocket = acceptSocket(mainListeningSocket);
+            // Читаем служебную информацию, в том числе имя модуля
+            sendFixed(mainClientSocket, std::string("ModBox/M"));
+            readModuleHeader(mainClientSocket);
+            auto moduleName = readModuleName(mainClientSocket);
+            // Запоминаем, что он подключился к основному порту
+            pendingModules.insert({moduleName, mainClientSocket});
+
+            // Ждём, пока кто-то постучится в обратный порт
+            int reverseClientSocket = acceptSocket(reverseListeningSocket);
+            // Читаем служебную информацию, в том числе имя модуля
+            sendFixed(reverseClientSocket, std::string("ModBox/R"));
+            readReverseModuleHeader(mainClientSocket);
+            auto reverseModuleName = readModuleName(reverseClientSocket);
+            // Смотрим, подключился ли он к основному порту
+            if (pendingModules.count(reverseModuleName) == 0) {
+                // Если нет, то что-то тут не так. Надо придумать защиту от дурака,
+                // Но с синхронным IO в один поток это сложно. Поэтому просто вываливаемся
+
+                // TODO: написать RAII-обёртку над сокетаими
+                // Либо использовать готовую библиотеку
+                close(mainClientSocket);
+                close(reverseClientSocket);
+                close(mainListeningSocket);
+                close(reverseListeningSocket);
+                throw std::runtime_error("Module connected to reverse port but not to main");
             }
+
+            // Удаляем его из списка pending
+            int mainModuleSocket = pendingModules.at(reverseModuleName);
+            int reverseModuleSocket = reverseClientSocket;
+            pendingModules.erase(reverseModuleName);
+            // И запускаем moduleWorker
             LOG(L"Spawning client thread");
-            createModuleServerThread(clientSocket);
+            createModuleServerThread(Module(mainModuleSocket, reverseModuleSocket));
         }
     } catch (std::exception& e) {
         LOG(L"FATAL error (at " __FILE__ "): " << wstring_cast(e.what()));
@@ -131,9 +187,9 @@ static void moduleListenerThreadFunc()
     }
 }
 
-static void moduleServerThreadFunc(int clientSocket)
+static void moduleServerThreadFunc(Module&& module)
 {
-    ModuleWorker worker(clientSocket);
+    ModuleWorker worker(std::move(module));
     /*
     try {
         worker.work();
@@ -144,5 +200,5 @@ static void moduleServerThreadFunc(int clientSocket)
     }
     */
     worker.please_work();
-    close(clientSocket);
+    module.cleanup();
 }

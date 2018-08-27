@@ -36,14 +36,19 @@ protected:
 class ModuleWorker
 {
 public:
-    ModuleWorker(int _sock);
+    ModuleWorker(Module&& _module);
+    ModuleWorker(const ModuleWorker& other) = delete;
+    ModuleWorker(ModuleWorker&& other) = default;
+
+    ModuleWorker& operator=(const ModuleWorker& other) = delete;
+    ModuleWorker& operator=(ModuleWorker&& other) = default;
     ~ModuleWorker();
 
     void work();
     void please_work() noexcept;
 
 private:
-    int sock;
+    Module module;
 };
 
 extern ModuleManager moduleManager;

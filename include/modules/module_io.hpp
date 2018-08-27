@@ -6,7 +6,8 @@
 
 #include <core/core.hpp>
 
-bool readModuleHeader(int sock);
+void readModuleHeader(int sock);
+void readReverseModuleHeader(int sock);
 std::wstring readModuleName(int sock);
 
 void* recvArg(int sock, char spec);

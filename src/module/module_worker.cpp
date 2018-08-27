@@ -13,7 +13,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-ModuleWorker::ModuleWorker(int _sock) : sock(_sock)
+ModuleWorker::ModuleWorker(Module&& _module) : module(_module)
 {
 }
 ModuleWorker::~ModuleWorker()
@@ -43,6 +43,7 @@ void sendError(int sock, const std::string& errorMessage, uint8_t exitCode = 1)
 
 void ModuleWorker::work()
 {
+    int sock = module.getMainSocket();
     std::string header("ModBox/M");
     sendFixed(sock, header);
     readModuleHeader(sock);

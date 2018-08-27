@@ -15,19 +15,35 @@ using ModuleId = uint64_t;
 class Module
 {
 public:
-    void load();
-    void unload();
+    Module(int _mainSocket, int _reverseSocket);
+    Module(const Module& other) = default; // COMBAK: может быть, убрать copy ctor
+    Module(Module&& other) = default;
 
-    ModuleId getModuleId();
+    Module& operator=(const Module& other) = default;
+    Module& operator=(Module&& other) = default;
+
+    // Закрыть все сокеты
+    void cleanup();
+
+    // Эту работу выполняет moduleListenerThread (и ModuleWorker)
+    // void load();
+    // void unload();
+
+    ModuleId getModuleId() const;
     // Not sure if id should be a constant, so no setModuleId() yet
 
-    std::wstring getName();
+    std::wstring getName() const;
     void setName(std::wstring newName);
 
-    std::wstring getExecutableFileName();
+    std::wstring getExecutableFileName() const;
     void setExecutableFileName(std::wstring newExecFileName);
 
+    int getMainSocket() const;
+    int getReverseSocket() const;
+
 protected:
+    int mainSocket;
+    int reverseSocket;
     ModuleId id;
     std::wstring name;
     std::wstring executableFileName;
