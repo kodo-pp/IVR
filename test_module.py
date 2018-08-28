@@ -6,6 +6,7 @@ import base64
 import math
 import time
 from os import _exit as exit
+import threading
 
 # Netcat module taken from here: https://gist.github.com/leonjza/f35a7252babdf77c8421
 # and slightly modified
@@ -46,6 +47,8 @@ class Modcat(Netcat):
         Netcat.__init__(self, ip, port)
         self.command_handles = {}
         self.reserved_handle = 0xFFFFFFFF4E5E47ED
+        self.func_provider_names = {}
+        self.func_providers = {}
 
     def read_int(self, size=4, signed=False):
         tmp = self.read(size)
@@ -166,6 +169,51 @@ class Modcat(Netcat):
         ret_ls = [self.recv_arg(tp) for tp in ret]
         return ret_ls
 
+    def register_func_provider(self, func, name, args, ret):
+        [handle] = self.invoke('core.func_provider.register', [name, args, ret], 'sss', 'L')
+        self.func_provider_names[handle] = name
+        self.func_providers[name] = func, args, ret
+
+    def serve_func(self):
+        try:
+            while True:
+                # Wait for a request
+                handle = self.read_int(8, signed=False)
+                if handle == self.reserved_handle:
+                    return
+
+                try:
+                    # Parse the request
+                    name = self.func_provider_names[handle]
+                    func, arg_types, ret_types = self.func_providers
+
+                    # Receive function arguments
+                    args = [self.recv_arg(type) for type in arg_types]
+
+                    # Call the function
+                    ret = func(args)
+                except BaseException as e:
+                    # If something has gone wrong, respond with non-zero error code
+                    self.send_int(1, size=1, signed=False)
+                    # And with nothing else
+                    continue
+                # If everything is OK, send the zero error code
+                self.send_int(0, size=1, signed=False)
+
+                # And return values
+                for type, val in zip(ret_types, ret):
+                    self.send_arg(val, type)
+        except BaseException as e:
+            print('Exception occured at serve_func: ' + str(e))
+            return
+
+    def spawn_serving_thread(self):
+        self.serving_thread = threading.Thread(target=self.serve_func, daemon=True)
+        self.serving_thread.run()
+
+    def join_serving_thread(self):
+        self.serving_thread.join()
+
 def main():
     try:
         nc = Modcat('localhost', 44145)
@@ -181,6 +229,7 @@ def main():
     rnc.recv_reverse_header()
     rnc.send_reverse_header()
     rnc.write_str(module_name)
+    rnc.spawn_serving_thread()
 
     print('Invoking core.class.add')
     [handle] = nc.invoke('core.class.add', [0xFFFFFFFFFFFFFFFF, 'Animal', 'names:agei', 'talk,,s'], 'Lsss', 'L')
