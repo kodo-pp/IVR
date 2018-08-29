@@ -1,34 +1,17 @@
-#if false
-
-#include <string>
 #include <unordered_map>
 
-#include <modules/module.hpp>
+#include <modules/module_manager.hpp>
 
-// TEMP: maybe we should change it to something more complex
-using ModuleMessage = std::wstring;
+static std::unordered_map<std::thread::id, ModuleWorker&> moduleWorkers;
 
-/**
- * Manages modules
- *
- * There should be only one instance of it
- */
+ModuleWorker& ModuleManager::getModuleWorkerByThreadId(std::thread::id threadId)
+{
+    return moduleWorkers.at(threadId);
+}
 
-class ModuleManager {
-public:
-    ModuleManager(std::unordered_map <ModuleId, Module> _modules);
+void ModuleManager::registerModuleWorker(ModuleWorker& worker, std::thread::id threadId)
+{
+    moduleWorkers.insert({threadId, worker});
+}
 
-    ModuleId addModule(int sock);
-    void deleteModule(ModuleId id);
-
-    void loadModule(ModuleId id);
-    void unloadModule(ModuleId id);
-
-    void sendModuleMessage(ModuleId moduleId, ModuleMessage message);
-    ModuleMessage receiveModuleMessage(ModuleId moduleId, ModuleMessage message);
-
-protected:
-    std::unordered_map <ModuleId, Module> modules;
-};
-
-#endif
+ModuleManager moduleManager;

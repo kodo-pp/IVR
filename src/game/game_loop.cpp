@@ -26,7 +26,7 @@ std::atomic<bool> canPlaceObject(true);
 // TODO: use TerrainManager or something like that
 std::vector<GameObjCube> placedCubes;
 
-static const int desiredFps = 10;
+static const int desiredFps = 60;
 
 static void processKeys(Player& player)
 {

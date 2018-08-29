@@ -15,6 +15,7 @@
 #include <log/log.hpp>
 #include <misc/die.hpp>
 #include <modules/module_io.hpp>
+#include <modules/module_manager.hpp>
 #include <util/handle_storage.hpp>
 #include <util/util.hpp>
 
@@ -387,11 +388,44 @@ HANDLER_MODCLASS_ACCESSOR(Blob, std::string, 'o')
             "LL",                                                                                  \
             #typeChar)
 
+ModuleWorker& getCurrentModuleWorker()
+{
+    return moduleManager.getModuleWorkerByThreadId(std::this_thread::get_id());
+}
+
+FuncResult handlerRegisterModuleFuncProvider(const std::vector<void*>& args)
+{
+    LOG("handlerRegisterModuleFuncProvider called");
+    if (args.size() != 3) {
+        throw std::logic_error(
+                "Invalid number of arguments for handlerRegisterModuleFuncProvider()");
+    }
+    FuncResult result;
+    result.data.resize(1);
+    LOG("result initialized");
+
+    const std::string& fpname = getArgument<std::string>(args, 0);
+    std::string fpargs = getArgument<std::string>(args, 1);
+    std::string fpret = getArgument<std::string>(args, 2);
+
+    LOG("Arguments got");
+
+    ModuleWorker& worker = getCurrentModuleWorker();
+    auto pair = worker.registerModuleFuncProvider(fpname, fpargs, fpret);
+    registerFuncProvider(FuncProvider(fpname, pair.second), fpargs, fpret);
+    setReturn(result, 0, pair.first);
+    return result;
+}
+
 static void initializeCoreFuncProviders()
 {
     registerFuncProvider(FuncProvider("core.class.add", handlerAddModuleClass), "Lsss", "L");
     registerFuncProvider(
             FuncProvider("core.class.instantiate", handlerInstantiateModuleClass), "L", "L");
+    registerFuncProvider(
+            FuncProvider("core.funcProvider.register", handlerRegisterModuleFuncProvider),
+            "sss",
+            "L");
     HANDLER_MODCLASS_ACCESSOR_REGISTER(String, s);
     HANDLER_MODCLASS_ACCESSOR_REGISTER(Int8, b);
     HANDLER_MODCLASS_ACCESSOR_REGISTER(Int16, h);

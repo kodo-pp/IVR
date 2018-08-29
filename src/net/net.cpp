@@ -1,4 +1,5 @@
 #include <atomic>
+#include <cstring>
 #include <iostream>
 #include <mutex>
 #include <stdexcept>
@@ -105,7 +106,8 @@ int createListeningSocket(uint64_t port)
 
     LOG(L"Trying to bind to 0.0.0.0:" << port);
     if (bind(listenSocket, &socketAddress.sockAddr, sizeof(socketAddress.sockAddrIn)) < 0) {
-        throw std::runtime_error("unable to bind the socket");
+        // throw std::runtime_error("unable to bind the socket");
+        throw std::runtime_error(strerror(errno));
     }
 
     listen(listenSocket, 1);
@@ -200,6 +202,7 @@ static void moduleServerThreadFunc(Module&& module)
         LOG(L"module error: ModuleWorker threw something which we don't care about");
     }
     */
+    moduleManager.registerModuleWorker(worker);
     worker.please_work();
     module.cleanup();
 }

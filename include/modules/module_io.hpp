@@ -15,7 +15,7 @@ void sendArg(int sock, void* arg, char spec);
 void freeArg(void* arg, char spec);
 
 template <typename T>
-T getArgument(const std::vector<void*> args, size_t idx)
+T getArgument(const std::vector<void*>& args, size_t idx)
 {
     assert(args.at(idx) != nullptr);
     return *static_cast<T*>(args[idx]);

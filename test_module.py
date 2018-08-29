@@ -153,13 +153,19 @@ class Modcat(Netcat):
             self.write_int(0, size=8, signed=False)
             self.write_str(func)
             handle = self.read_int(size=8, signed=False)
+            if handle == 0:
+                raise Exception('No such function: "{}"'.format(func))
             self.command_handles[func] = handle
 
         self.write_int(self.command_handles[func], size=8, signed=False)
         for arg, tp in zip(ls, args):
             self.send_arg(arg, tp)
-        ret_ls = [self.recv_arg(tp) for tp in ret]
-        return ret_ls
+        exit_code = self.read_int(1, signed=False)
+        if exit_code == 0:
+            ret_ls = [self.recv_arg(tp) for tp in ret]
+            return ret_ls
+        else:
+            raise Exception(self.read_str())
 
     def invoke_special(self, func, ls, args, ret):
         self.write_int(self.reserved_handle, size=8, signed=False)
@@ -170,7 +176,7 @@ class Modcat(Netcat):
         return ret_ls
 
     def register_func_provider(self, func, name, args, ret):
-        [handle] = self.invoke('core.func_provider.register', [name, args, ret], 'sss', 'L')
+        [handle] = self.invoke('core.funcProvider.register', [name, args, ret], 'sss', 'L')
         self.func_provider_names[handle] = name
         self.func_providers[name] = func, args, ret
 
@@ -180,6 +186,7 @@ class Modcat(Netcat):
                 # Wait for a request
                 handle = self.read_int(8, signed=False)
                 if handle == self.reserved_handle:
+                    # exit
                     return
 
                 try:
@@ -191,16 +198,14 @@ class Modcat(Netcat):
                     args = [self.recv_arg(type) for type in arg_types]
 
                     # Call the function
-                    ret = func(args)
+                    ret = func(*args)
                 except BaseException as e:
-                    # If something has gone wrong, respond with non-zero error code
+                    # Something has gone wrong, exit code is not 0
                     self.send_int(1, size=1, signed=False)
-                    # And with nothing else
                     continue
-                # If everything is OK, send the zero error code
-                self.send_int(0, size=1, signed=False)
 
-                # And return values
+                # Exit code is 0
+                self.send_int(0, size=1, signed=False)
                 for type, val in zip(ret_types, ret):
                     self.send_arg(val, type)
         except BaseException as e:
@@ -208,11 +213,14 @@ class Modcat(Netcat):
             return
 
     def spawn_serving_thread(self):
-        self.serving_thread = threading.Thread(target=self.serve_func, daemon=True)
-        self.serving_thread.run()
+        self.serving_thread = threading.Thread(target=self.serve_func)
+        self.serving_thread.start()
 
     def join_serving_thread(self):
         self.serving_thread.join()
+
+def test_func(a, b):
+    return [a + b]
 
 def main():
     try:
@@ -229,7 +237,10 @@ def main():
     rnc.recv_reverse_header()
     rnc.send_reverse_header()
     rnc.write_str(module_name)
-    rnc.spawn_serving_thread()
+
+
+    print('Registering FuncProvider')
+    nc.register_func_provider(test_func, 'module.test', 'ii', 'i')
 
     print('Invoking core.class.add')
     [handle] = nc.invoke('core.class.add', [0xFFFFFFFFFFFFFFFF, 'Animal', 'names:agei', 'talk,,s'], 'Lsss', 'L')
@@ -243,6 +254,13 @@ def main():
     print('Invoking core.class.instance.getString')
     [s] = nc.invoke('core.class.instance.getString', [object, 1], 'LL', 's')
     print('Got string: {}'.format(s))
+
+    print('Sleeping for 5 seconds')
+    time.sleep(5)
+    print('Invoking module.test')
+    [result] = nc.invoke('module.test', [5, 6], 'ii', 'i')
+    print('Got result: {}'.format(result))
+    print('Expected result: 11')
 
     [status] = nc.invoke_special('exit', [], '', 's')
 
