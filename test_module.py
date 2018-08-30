@@ -175,24 +175,24 @@ class Modcat(Netcat):
         ret_ls = [self.recv_arg(tp) for tp in ret]
         return ret_ls
 
-    def register_func_provider(self, func, name, args, ret):
+    def register_func_provider(self, storage, func, name, args, ret):
         [handle] = self.invoke('core.funcProvider.register', [name, args, ret], 'sss', 'L')
-        self.func_provider_names[handle] = name
-        self.func_providers[name] = func, args, ret
+        storage.func_provider_names[handle] = name
+        storage.func_providers[name] = func, args, ret
 
     def serve_func(self):
         try:
             while True:
                 # Wait for a request
                 handle = self.read_int(8, signed=False)
+                print('Handle = {}'.format(handle))
                 if handle == self.reserved_handle:
                     # exit
                     return
-
                 try:
                     # Parse the request
                     name = self.func_provider_names[handle]
-                    func, arg_types, ret_types = self.func_providers
+                    func, arg_types, ret_types = self.func_providers[name]
 
                     # Receive function arguments
                     args = [self.recv_arg(type) for type in arg_types]
@@ -201,11 +201,11 @@ class Modcat(Netcat):
                     ret = func(*args)
                 except BaseException as e:
                     # Something has gone wrong, exit code is not 0
-                    self.send_int(1, size=1, signed=False)
+                    self.write_int(1, size=1, signed=False)
                     continue
 
                 # Exit code is 0
-                self.send_int(0, size=1, signed=False)
+                self.write_int(0, size=1, signed=False)
                 for type, val in zip(ret_types, ret):
                     self.send_arg(val, type)
         except BaseException as e:
@@ -238,9 +238,10 @@ def main():
     rnc.send_reverse_header()
     rnc.write_str(module_name)
 
-
     print('Registering FuncProvider')
-    nc.register_func_provider(test_func, 'module.test', 'ii', 'i')
+    nc.register_func_provider(rnc, test_func, 'module.test', 'ii', 'i')
+
+    rnc.spawn_serving_thread()
 
     print('Invoking core.class.add')
     [handle] = nc.invoke('core.class.add', [0xFFFFFFFFFFFFFFFF, 'Animal', 'names:agei', 'talk,,s'], 'Lsss', 'L')
@@ -255,8 +256,8 @@ def main():
     [s] = nc.invoke('core.class.instance.getString', [object, 1], 'LL', 's')
     print('Got string: {}'.format(s))
 
-    print('Sleeping for 5 seconds')
-    time.sleep(5)
+    print('Sleeping for 2 seconds')
+    time.sleep(2)
     print('Invoking module.test')
     [result] = nc.invoke('module.test', [5, 6], 'ii', 'i')
     print('Got result: {}'.format(result))
@@ -266,6 +267,7 @@ def main():
 
     if status == 'exited':
         print('Exited normally')
+        exit(0)
     else:
         raise Exception('Unknown exit status: "{}"'.format(status))
 if __name__ == '__main__':

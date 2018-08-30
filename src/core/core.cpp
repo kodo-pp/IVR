@@ -395,20 +395,16 @@ ModuleWorker& getCurrentModuleWorker()
 
 FuncResult handlerRegisterModuleFuncProvider(const std::vector<void*>& args)
 {
-    LOG("handlerRegisterModuleFuncProvider called");
     if (args.size() != 3) {
         throw std::logic_error(
                 "Invalid number of arguments for handlerRegisterModuleFuncProvider()");
     }
     FuncResult result;
     result.data.resize(1);
-    LOG("result initialized");
 
     const std::string& fpname = getArgument<std::string>(args, 0);
     std::string fpargs = getArgument<std::string>(args, 1);
     std::string fpret = getArgument<std::string>(args, 2);
-
-    LOG("Arguments got");
 
     ModuleWorker& worker = getCurrentModuleWorker();
     auto pair = worker.registerModuleFuncProvider(fpname, fpargs, fpret);
