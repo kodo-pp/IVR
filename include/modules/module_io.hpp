@@ -3,8 +3,11 @@
 
 #include <cassert>
 #include <string>
+#include <type_traits>
 
 #include <core/core.hpp>
+#include <core/memory_manager.hpp>
+#include <log/log.hpp>
 
 void readModuleHeader(int sock);
 void readReverseModuleHeader(int sock);
@@ -31,6 +34,7 @@ void setReturn(FuncResult& res, size_t idx, const T& value)
     res.data[idx]
 #endif
             = static_cast<void*>(new T(value));
+    memoryManager.track(res.data.at(idx));
 }
 
 #endif /* end of include guard: MODULES_MODULE_IO_HPP */

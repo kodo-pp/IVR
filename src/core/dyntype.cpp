@@ -5,10 +5,11 @@
 #include <string>
 
 #include <core/dyntype.hpp>
+#include <core/memory_manager.hpp>
 #include <log/log.hpp>
 #include <util/util.hpp>
 
-void* dyntypeNew(char type)
+void* _dyntypeNew(char type)
 {
     switch (type) {
     case 'b': // signed byte
@@ -56,47 +57,57 @@ void* dyntypeNew(char type)
 
 void dyntypeDelete(void* val, char type)
 {
+    LOG("dyntypeDelete(" << val << ", " << type << ")");
     if (val == nullptr) {
         return;
     }
     switch (type) {
     case 'b': // signed byte
-        delete static_cast<int8_t*>(val);
+        memoryManager.deletePtr<int8_t>(val);
         break;
     case 'h': // signed short
-        delete static_cast<int16_t*>(val);
+        memoryManager.deletePtr<int16_t>(val);
         break;
     case 'i': // signed int
-        delete static_cast<int32_t*>(val);
+        memoryManager.deletePtr<int32_t>(val);
         break;
     case 'l': // signed longlong
-        delete static_cast<int64_t*>(val);
+        memoryManager.deletePtr<int64_t>(val);
         break;
     case 'B': // unsigned byte
-        delete static_cast<uint8_t*>(val);
+        memoryManager.deletePtr<uint8_t>(val);
         break;
     case 'H': // unsigned short
-        delete static_cast<uint16_t*>(val);
+        memoryManager.deletePtr<uint16_t>(val);
         break;
     case 'I': // unsigned int
-        delete static_cast<uint32_t*>(val);
+        memoryManager.deletePtr<uint32_t>(val);
         break;
     case 'L': // unsigned longlong
-        delete static_cast<uint64_t*>(val);
+        memoryManager.deletePtr<uint64_t>(val);
         break;
     case 'f': // float32
-        delete static_cast<float*>(val);
+        memoryManager.deletePtr<float>(val);
         break;
     case 'F': // float64
-        delete static_cast<double*>(val);
+        memoryManager.deletePtr<double>(val);
         break;
     case 's': // string
-        delete static_cast<std::string*>(val);
+        memoryManager.deletePtr<std::string>(val);
         break;
     case 'w': // wstring
-        delete static_cast<std::wstring*>(val);
+        memoryManager.deletePtr<std::wstring>(val);
         break;
-    case 'o': delete static_cast<std::string*>(val); break;
+    case 'o': // blob
+        memoryManager.deletePtr<std::string>(val);
+        break;
     default: throw std::logic_error(std::string("dyntypeDelete: unknown type: ") + type);
     }
+}
+
+void* dyntypeNew(char type)
+{
+    auto ret = _dyntypeNew(type);
+    memoryManager.track(ret);
+    return ret;
 }

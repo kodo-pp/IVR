@@ -18,8 +18,6 @@ void destroy(void)
     funcProvidersCleanup();
     LOG(L"And graphics");
     cleanupGraphics();
-    LOG(L"I'll forget anything!");
-    memoryManager.freeAll();
     LOG(L"I'm dying...");
     exit(0);
 }

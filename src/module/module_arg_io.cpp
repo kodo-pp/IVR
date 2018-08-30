@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <string>
 
+#include <log/log.hpp>
 #include <modules/module_io.hpp>
 #include <net/socketlib.hpp>
 #include <util/util.hpp>
@@ -80,6 +81,7 @@ void* recvArg(int sock, char spec)
     } break;
     default: throw std::logic_error(std::string("recvArg: unknown type: ") + spec);
     }
+    memoryManager.track(arg);
     return arg;
 }
 
@@ -134,43 +136,43 @@ void freeArg(void* arg, char spec)
 {
     switch (spec) {
     case 'b': // signed byte
-        delete (int8_t*)arg;
+        memoryManager.deletePtr<int8_t>(arg);
         break;
     case 'h': // signed short
-        delete (int16_t*)arg;
+        memoryManager.deletePtr<int16_t>(arg);
         break;
     case 'i': // signed int
-        delete (int32_t*)arg;
+        memoryManager.deletePtr<int32_t>(arg);
         break;
     case 'l': // signed longlong
-        delete (int64_t*)arg;
+        memoryManager.deletePtr<int64_t>(arg);
         break;
     case 'B': // unsigned byte
-        delete (uint8_t*)arg;
+        memoryManager.deletePtr<uint8_t>(arg);
         break;
     case 'H': // unsigned short
-        delete (uint16_t*)arg;
+        memoryManager.deletePtr<uint16_t>(arg);
         break;
     case 'I': // unsigned int
-        delete (uint32_t*)arg;
+        memoryManager.deletePtr<uint32_t>(arg);
         break;
     case 'L': // unsigned longlong
-        delete (uint64_t*)arg;
+        memoryManager.deletePtr<uint64_t>(arg);
         break;
     case 'f': // float32
-        delete (float*)arg;
+        memoryManager.deletePtr<float>(arg);
         break;
     case 'F': // float64
-        delete (double*)arg;
+        memoryManager.deletePtr<double>(arg);
         break;
     case 's': // string
-        delete (std::string*)arg;
+        memoryManager.deletePtr<std::string>(arg);
         break;
     case 'w': // wstring
-        delete (std::wstring*)arg;
+        memoryManager.deletePtr<std::wstring>(arg);
         break;
     case 'o': // blob
-        delete (std::string*)arg;
+        memoryManager.deletePtr<std::string>(arg);
         break;
     default: throw std::logic_error(std::string("freeArg: unknown type: ") + spec);
     }
