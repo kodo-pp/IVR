@@ -57,6 +57,7 @@ struct ModuleClassMember
 
 struct ModuleClassMethod
 {
+    std::string name;
     std::string return_type;
     std::string arguments_type;
 };

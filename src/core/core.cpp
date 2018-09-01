@@ -274,6 +274,9 @@ FuncResult handlerAddModuleClass(const std::vector<void*>& args)
     std::unordered_map<std::string, ModuleClassMember> memberMap;
     boost::algorithm::split(memberNames, members, [](char c) { return c == ':'; });
     for (auto& i : memberNames) {
+        if (i.empty()) {
+            continue;
+        }
         char type = i.back();
         i.pop_back();
         memberMap.insert({i, {type}});
@@ -283,12 +286,15 @@ FuncResult handlerAddModuleClass(const std::vector<void*>& args)
     std::unordered_map<std::string, ModuleClassMethod> methodMap;
     boost::algorithm::split(methodDefs, methods, [](char c) { return c == ':'; });
     for (const auto& i : methodDefs) {
+        if (i.empty()) {
+            continue;
+        }
         std::vector<std::string> tmp;
         boost::algorithm::split(tmp, i, [](char c) { return c == ','; });
-        if (tmp.size() != 3) {
+        if (tmp.size() != 4) {
             throw std::runtime_error("invalid number of comma-separated arguments");
         }
-        methodMap.insert({tmp[0], {tmp[1], tmp[2]}});
+        methodMap.insert({tmp[0], {tmp[1], tmp[2], tmp[3]}});
     }
 
     auto handle = addModuleClass(name, ModuleClass(memberMap, methodMap, parent));
@@ -413,6 +419,67 @@ FuncResult handlerRegisterModuleFuncProvider(const std::vector<void*>& args)
     return result;
 }
 
+FuncResult handlerGetModuleClassHandle(const std::vector<void*>& args)
+{
+    if (args.size() != 1) {
+        throw std::logic_error("Invalid number of arguments for handlerGetModuleClassHandle()");
+    }
+    FuncResult result;
+    result.data.resize(1);
+
+    const std::string& name = getArgument<std::string>(args, 0);
+    try {
+        setReturn<uint64_t>(result, 0, moduleClassHandles.at(name));
+    } catch (const std::out_of_range& e) {
+        throw std::runtime_error(std::string("No such class name: '") + name + "'");
+    }
+
+    return result;
+}
+FuncResult handlerGetModuleClassMemberHandle(const std::vector<void*>& args)
+{
+    if (args.size() != 2) {
+        throw std::logic_error("Invalid number of arguments for handlerGetModuleClassHandle()");
+    }
+    FuncResult result;
+    result.data.resize(1);
+
+    uint64_t handle = getArgument<uint64_t>(args, 0);
+    const std::string& name = getArgument<std::string>(args, 1);
+    try {
+        setReturn<uint64_t>(result, 0, moduleClasses.access(handle).memberHandles.at(name));
+    } catch (const std::out_of_range& e) {
+        throw std::runtime_error(std::string("No such member of class ") + std::to_string(handle)
+                                 + ": '" + name + "'");
+    }
+
+    return result;
+}
+FuncResult handlerGetModuleClassMethod(const std::vector<void*>& args)
+{
+    if (args.size() != 2) {
+        throw std::logic_error("Invalid number of arguments for handlerGetModuleClassMethod()");
+    }
+    FuncResult result;
+    result.data.resize(1);
+
+    uint64_t handle = getArgument<uint64_t>(args, 0);
+    const std::string& name = getArgument<std::string>(args, 1);
+    try {
+        setReturn<std::string>(
+                result,
+                0,
+                moduleClasses.access(handle)
+                        .methods.at(moduleClasses.access(handle).methodHandles.at(name))
+                        .name);
+    } catch (const std::out_of_range& e) {
+        throw std::runtime_error(std::string("No such method of class ") + std::to_string(handle)
+                                 + ": '" + name + "'");
+    }
+
+    return result;
+}
+
 static void initializeCoreFuncProviders()
 {
     registerFuncProvider(FuncProvider("core.class.add", handlerAddModuleClass), "Lsss", "L");
@@ -422,6 +489,14 @@ static void initializeCoreFuncProviders()
             FuncProvider("core.funcProvider.register", handlerRegisterModuleFuncProvider),
             "sss",
             "L");
+    registerFuncProvider(
+            FuncProvider("core.class.getHandle", handlerGetModuleClassHandle), "s", "L");
+    registerFuncProvider(
+            FuncProvider("core.class.getMemberHandle", handlerGetModuleClassMemberHandle),
+            "Ls",
+            "L");
+    registerFuncProvider(
+            FuncProvider("core.class.getMethod", handlerGetModuleClassMethod), "Ls", "s");
     HANDLER_MODCLASS_ACCESSOR_REGISTER(String, s);
     HANDLER_MODCLASS_ACCESSOR_REGISTER(Int8, b);
     HANDLER_MODCLASS_ACCESSOR_REGISTER(Int16, h);

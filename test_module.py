@@ -8,6 +8,12 @@ import time
 from os import _exit as exit
 import threading
 
+VERBOSE = True
+
+def vlog(text):
+    if VERBOSE:
+        print(text)
+
 # Netcat module taken from here: https://gist.github.com/leonjza/f35a7252babdf77c8421
 # and slightly modified
 
@@ -23,7 +29,11 @@ class Netcat:
         """ Read 1024 bytes off the socket """
         tmp = self.socket.recv(length)
         while len(tmp) < length:
-            tmp += self.socket.recv(length - len(tmp))
+            received = self.socket.recv(length - len(tmp))
+            if len(received) == 0:
+                self.socket.close()
+                raise IOError('Connection closed')
+            tmp += received
         return tmp
 
     def read_until(self, data):
@@ -41,6 +51,34 @@ class Netcat:
     def close(self):
         self.socket.close()
 
+class Class:
+    def __init__(self, nc, handle):
+        self.handle = handle
+        self.nc = nc
+
+    def instantiate(self):
+        return Object(self, self.nc, self.nc.instantiate_class(self.handle))
+
+    def get_member_handle(self, member):
+        return nc.invoke('core.class.getMemberHandle', [self.handle, member], 'Ls', 'L')[0]
+
+    def get_method(self, method):
+        return nc.invoke('core.class.getMethod', [self.handle, method], 'Ls', 's')[0]
+
+class Object:
+    def __init__(self, cls, nc, handle):
+        self.cls = cls
+        self.handle = handle
+        self.nc = nc
+
+    def get_member_handle(self, member):
+        return nc.invoke('core.class.getMemberHandle', [self.cls.handle, member], 'Ls', 'L')[0]
+
+    def get_method(self, method):
+        return nc.invoke('core.class.getMethod', [self.cls.handle, method], 'Ls', 's')[0]
+
+    def call_method(self, method, ls, args, ret):
+        return nc.invoke(self.get_method(method), [self.handle] + ls, args, ret)
 
 class Modcat(Netcat):
     def __init__(self, ip, port):
@@ -66,19 +104,23 @@ class Modcat(Netcat):
         self.write_str(str(v))
 
     def recv_header(self):
+        vlog('Reading host header')
         header = self.read(8).decode()
         if header != 'ModBox/M':
             raise Exception('Invalid server header')
 
     def send_header(self):
+        vlog('Sending module header')
         self.write(b'ModBox/m')
 
     def recv_reverse_header(self):
+        vlog('Reading reverse host header')
         header = self.read(8).decode()
         if header != 'ModBox/R':
             raise Exception('Invalid server header')
 
     def send_reverse_header(self):
+        vlog('Sending reverse module header')
         self.write(b'ModBox/r')
 
     def read_str(self):
@@ -149,11 +191,13 @@ class Modcat(Netcat):
             raise Exception('Unknown type: "{}"'.format(tp))
 
     def invoke(self, func, ls, args, ret):
+        vlog('Invoking {}({})...'.format(func, ', '.join(map(str, ls))))
         if func not in self.command_handles:
             self.write_int(0, size=8, signed=False)
             self.write_str(func)
             handle = self.read_int(size=8, signed=False)
             if handle == 0:
+                vlog('... no such function')
                 raise Exception('No such function: "{}"'.format(func))
             self.command_handles[func] = handle
 
@@ -163,25 +207,32 @@ class Modcat(Netcat):
         exit_code = self.read_int(1, signed=False)
         if exit_code == 0:
             ret_ls = [self.recv_arg(tp) for tp in ret]
+            vlog('... = {}'.format(ret_ls))
             return ret_ls
         else:
-            raise Exception(self.read_str())
+            error = self.read_str()
+            vlog('... error: {}'.format(error))
+            raise Exception(error)
 
     def invoke_special(self, func, ls, args, ret):
+        vlog('Invoking special function {}({})...'.format(func, ', '.join(map(str, ls))))
         self.write_int(self.reserved_handle, size=8, signed=False)
         self.write_str(func)
         for arg, tp in zip(ls, args):
             self.send_arg(arg, tp)
         ret_ls = [self.recv_arg(tp) for tp in ret]
+        vlog('... = {}'.format(ret_ls))
         return ret_ls
 
     def register_func_provider(self, storage, func, name, args, ret):
+        vlog('Registering FuncProvider: "{}" ({}) -> {}'.format(name, args, ret))
         [handle] = self.invoke('core.funcProvider.register', [name, args, ret], 'sss', 'L')
         storage.func_provider_names[handle] = name
         storage.func_providers[name] = func, args, ret
 
     def serve_func(self):
         try:
+            vlog('Serving')
             while True:
                 # Wait for a request
                 handle = self.read_int(8, signed=False)
@@ -219,6 +270,22 @@ class Modcat(Netcat):
     def join_serving_thread(self):
         self.serving_thread.join()
 
+    def class_handle(self, classname):
+        return self.invoke('core.class.getHandle', [classname], 's', 'L')[0]
+
+    def get_class(self, classname):
+        return Class(self, self.class_handle(classname))
+
+    def add_class(self, classname, members, methods, parent=0xFFFFFFFFFFFFFFFF):
+        vlog('Adding class "{}"'.format(classname))
+        members_string = ':'.join(map(lambda pair: ''.join(pair), members))
+        methods_string = ':'.join(map(lambda pair: ','.join(pair), methods))
+        return Class(self, self.invoke('core.class.add', [parent, classname, members_string, methods_string], 'Lsss', 'L')[0])
+
+    def instantiate_class(self, class_handle):
+        vlog('Instantiating class {}'.format(class_handle))
+        return self.invoke('core.class.instantiate', [class_handle], 'L', 'L')[0]
+
 def test_func(a, b):
     return [a + b]
 
@@ -238,30 +305,14 @@ def main():
     rnc.send_reverse_header()
     rnc.write_str(module_name)
 
-    print('Registering FuncProvider')
-    nc.register_func_provider(rnc, test_func, 'module.test', 'ii', 'i')
-
     rnc.spawn_serving_thread()
 
-    print('Invoking core.class.add')
-    [handle] = nc.invoke('core.class.add', [0xFFFFFFFFFFFFFFFF, 'Animal', 'names:agei', 'talk,,s'], 'Lsss', 'L')
-    print('Got handle: {}'.format(handle))
-    print('Invoking core.class.instantiate')
-    [object] = nc.invoke('core.class.instantiate', [handle], 'L', 'L')
-    print('Got object: {}'.format(object))
+    Cylinder = nc.add_class('game.enemy.Cylinder', [], [], nc.class_handle('game.Enemy'))
+    cylinder = Cylinder.instantiate()
 
-    print('Invoking core.class.instance.setString')
-    nc.invoke('core.class.instance.setString', [object, 1, 'TesT'], 'LLs', '')
-    print('Invoking core.class.instance.getString')
-    [s] = nc.invoke('core.class.instance.getString', [object, 1], 'LL', 's')
-    print('Got string: {}'.format(s))
-
-    print('Sleeping for 2 seconds')
-    time.sleep(2)
-    print('Invoking module.test')
-    [result] = nc.invoke('module.test', [5, 6], 'ii', 'i')
-    print('Got result: {}'.format(result))
-    print('Expected result: 11')
+    nc.invoke('core.class.instance.setFloat64', [cylinder.handle, 0, 5.34], 'LLF', '')
+    [f] = nc.invoke('core.class.instance.getFloat64', [cylinder.handle, 0], 'LL', 'F')
+    print('Got float: {}'.format(f))
 
     [status] = nc.invoke_special('exit', [], '', 's')
 

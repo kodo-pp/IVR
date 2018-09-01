@@ -68,7 +68,7 @@ void joinModuleListenerThread()
 
 void createModuleServerThread(Module&& module)
 {
-    serverThreadMutex.lock();
+    std::lock_guard<std::mutex> lock(serverThreadMutex);
     std::thread* thr = new std::thread(moduleServerThreadFunc, module);
     if (thr == nullptr) {
         LOG(L"Unable to create thread");
@@ -82,7 +82,6 @@ void createModuleServerThread(Module&& module)
     LOG(L"Deleting thread object");
     delete thr;
     LOG(L"Done");
-    serverThreadMutex.unlock();
 }
 
 int createListeningSocket(uint64_t port)

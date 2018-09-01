@@ -1,13 +1,12 @@
+#include <core/core.hpp>
 #include <game/enemy.hpp>
 #include <geometry/game_position.hpp>
 #include <geometry/geometry.hpp>
 #include <graphics/graphics.hpp>
 #include <util/util.hpp>
 
-Enemy::Enemy(irr::scene::ISceneNode* _node, const std::function<GamePosition(void)>& _ai_func) :
-        node(_node),
-        ai_func(_ai_func),
-        movementSpeed(3)
+Enemy::Enemy(irr::scene::ISceneNode* _node, const std::function<GamePosition(void)>& _ai_func)
+        : node(_node), ai_func(_ai_func), movementSpeed(3)
 {
 }
 
@@ -108,3 +107,11 @@ Enemy& EnemyManager::mutableAccessEnemy(EnemyId id)
 }
 
 EnemyManager enemyManager;
+
+void initializeEnemies()
+{
+    addModuleClass("game.Enemy",
+                   ModuleClass({{"x", {'F'}}, {"y", {'F'}}, {"z", {'F'}}, {"hp", {'F'}}},
+                               {{"ai", {"core.nop", "", ""}}},
+                               0xFFFF'FFFF'FFFF'FFFFull));
+}

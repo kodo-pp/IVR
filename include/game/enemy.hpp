@@ -79,4 +79,6 @@ private:
 
 extern EnemyManager enemyManager;
 
+void initializeEnemies();
+
 #endif /* end of include guard: GAME_ENEMY_HPP */

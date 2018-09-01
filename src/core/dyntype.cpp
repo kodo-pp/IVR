@@ -57,7 +57,6 @@ void* _dyntypeNew(char type)
 
 void dyntypeDelete(void* val, char type)
 {
-    LOG("dyntypeDelete(" << val << ", " << type << ")");
     if (val == nullptr) {
         return;
     }
