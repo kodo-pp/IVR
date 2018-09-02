@@ -6,6 +6,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include <core/core.hpp>
+#include <core/dyntype.hpp>
 #include <core/init.hpp>
 #include <game/enemy.hpp>
 #include <game/game_loop.hpp>
@@ -25,6 +27,7 @@ std::atomic<bool> canPlaceObject(true);
 
 // TODO: use TerrainManager or something like that
 std::vector<GameObjCube> placedCubes;
+std::vector<std::pair<std::string, uint64_t>> eachTickFuncs;
 
 static const int desiredFps = 60;
 
@@ -190,6 +193,15 @@ void gameLoop()
     double i = 0;
 
     while (irrDeviceRun()) {
+        for (const auto& fp : eachTickFuncs) {
+            auto arg = dyntypeNew('L');
+            *(static_cast<uint64_t*>(arg)) = fp.second;
+            auto ret = const_cast<FuncProvider&>(getFuncProvider(getFuncProviderHandle(fp.first)))(
+                    {arg});
+            if (ret.data.size() != 0) {
+                LOG("ret.data.size() != 0");
+            }
+        }
         enemy.ai();
         processKeys(player);
         std::ignore = graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
@@ -228,4 +240,9 @@ void gameLoop()
 
         i += timeForFrame;
     }
+}
+
+void eachTickWithParam(const std::string& name, uint64_t param)
+{
+    eachTickFuncs.emplace_back(name, param);
 }

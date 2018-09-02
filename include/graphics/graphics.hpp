@@ -7,6 +7,7 @@
 
 #include <game/objects/objects.hpp>
 #include <geometry/game_position.hpp>
+#include <util/handle_storage.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <irrlicht.h>
@@ -120,5 +121,26 @@ const IrrKeyboardEventReceiver& getKeyboardEventReceiver();
 
 scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh);
 scene::IMesh* graphicsLoadMesh(const std::wstring& filename);
+
+class DrawablesManager
+{
+public:
+    DrawablesManager() = default;
+    DrawablesManager(const DrawablesManager& other) = delete;
+    DrawablesManager(DrawablesManager&& other) = default;
+    virtual ~DrawablesManager() = default;
+
+    DrawablesManager& operator=(const DrawablesManager& other) = delete;
+    DrawablesManager& operator=(DrawablesManager&& other) = default;
+
+    irr::scene::ISceneNode* access(uint64_t handle);
+    uint64_t track(irr::scene::ISceneNode* drawable);
+    void forget(uint64_t handle);
+
+private:
+    HandleStorage<uint64_t, irr::scene::ISceneNode*> drawables;
+};
+
+extern DrawablesManager drawablesManager;
 
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */

@@ -3,6 +3,7 @@
 #include <geometry/game_position.hpp>
 #include <geometry/geometry.hpp>
 #include <graphics/graphics.hpp>
+#include <modules/module_io.hpp>
 #include <util/util.hpp>
 
 Enemy::Enemy(irr::scene::ISceneNode* _node, const std::function<GamePosition(void)>& _ai_func)
@@ -108,10 +109,61 @@ Enemy& EnemyManager::mutableAccessEnemy(EnemyId id)
 
 EnemyManager enemyManager;
 
+FuncResult handlerEnemySyncDrawable(const std::vector<void*>& args)
+{
+    if (args.size() != 1) {
+        throw std::logic_error("Invalid number of arguments for handlerEnemySyncDrawable");
+    }
+    FuncResult ret;
+    auto instanceHandle = getArgument<uint64_t>(args, 0);
+    const auto& instance = getModuleClassInstance(instanceHandle);
+    const auto& _class = getModuleClass(instance.classHandle);
+    if (_class.members.at(_class.memberHandles.at("model")).type != 'L') {
+        throw std::runtime_error("enemySyncDrawable: model: type is not 'L'");
+    }
+    if (_class.members.at(_class.memberHandles.at("x")).type != 'F') {
+        throw std::runtime_error("enemySyncDrawable: x: type is not 'F'");
+    }
+    if (_class.members.at(_class.memberHandles.at("y")).type != 'F') {
+        throw std::runtime_error("enemySyncDrawable: y: type is not 'F'");
+    }
+    if (_class.members.at(_class.memberHandles.at("z")).type != 'F') {
+        throw std::runtime_error("enemySyncDrawable: z: type is not 'F'");
+    }
+    uint64_t drawableHandle = *(
+            static_cast<uint64_t*>(instance.members.at(_class.memberHandles.at("model"))));
+    float x = static_cast<float>(
+            *(static_cast<double*>(instance.members.at(_class.memberHandles.at("x")))));
+    float y = static_cast<float>(
+            *(static_cast<double*>(instance.members.at(_class.memberHandles.at("y")))));
+    float z = static_cast<float>(
+            *(static_cast<double*>(instance.members.at(_class.memberHandles.at("z")))));
+    drawablesManager.access(drawableHandle)->setPosition({x, y, z});
+
+    return ret;
+}
+
+// TODO: переместить в другое место
+FuncResult handlerEachTickWithHandle(const std::vector<void*>& args)
+{
+    if (args.size() != 2) {
+        throw std::logic_error("Invalid number of arguments for handlerEnemySyncDrawable");
+    }
+    FuncResult ret;
+    std::string name = getArgument<std::string>(args, 0);
+    uint64_t param = getArgument<uint64_t>(args, 1);
+    eachTickWithParam(name, param);
+
+    return ret;
+}
+
 void initializeEnemies()
 {
+    addModuleClass("graphics.Drawable",
+                   ModuleClass({{"model", {'L'}}}, {}, 0xFFFF'FFFF'FFFF'FFFFull));
     addModuleClass("game.Enemy",
                    ModuleClass({{"x", {'F'}}, {"y", {'F'}}, {"z", {'F'}}, {"hp", {'F'}}},
-                               {{"ai", {"core.nop", "", ""}}},
+                               {{"ai", {"core.nop", "", ""}},
+                                {"post_ai", {"enemy.syncDrawable", "L", ""}}},
                                0xFFFF'FFFF'FFFF'FFFFull));
 }

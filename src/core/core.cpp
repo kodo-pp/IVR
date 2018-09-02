@@ -436,6 +436,21 @@ FuncResult handlerGetModuleClassHandle(const std::vector<void*>& args)
 
     return result;
 }
+
+uint64_t getModuleClassHandle(const std::string& name)
+{
+    try {
+        return moduleClassHandles.at(name);
+    } catch (const std::out_of_range& e) {
+        throw std::runtime_error(std::string("No such class name: '") + name + "'");
+    }
+}
+
+const ModuleClassInstance& getModuleClassInstance(uint64_t handle)
+{
+    return moduleClassInstances.access(handle);
+}
+
 FuncResult handlerGetModuleClassMemberHandle(const std::vector<void*>& args)
 {
     if (args.size() != 2) {

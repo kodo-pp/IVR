@@ -184,6 +184,22 @@ FuncResult handlerGraphicsAddTexture(const std::vector<void*>& args)
     return ret;
 }
 
+scene::ISceneNode* graphicsCreateDrawableCube();
+
+FuncResult handlerCreateDrawableCube(const std::vector<void*>& args)
+{
+    if (args.size() != 0) {
+        throw std::logic_error("Wrong number of arguments for handlerCreateDrawableCube()");
+    }
+
+    FuncResult ret;
+    ret.data.resize(1);
+
+    LOG(L"Creating drawable cube");
+    setReturn<uint64_t>(ret, 0, drawablesManager.track(graphicsCreateDrawableCube()));
+    return ret;
+}
+
 static inline void initializeGraphicsFuncProviders()
 {
     registerFuncProvider(FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
@@ -196,6 +212,8 @@ static inline void initializeGraphicsFuncProviders()
     registerFuncProvider(
             FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture), "s", "L");
     registerFuncProvider(FuncProvider("graphics.texture.add", handlerGraphicsAddTexture), "LL", "");
+    registerFuncProvider(
+            FuncProvider("graphics.drawable.createCube", handlerCreateDrawableCube), "", "L");
 }
 
 void cleanupGraphics()
@@ -552,4 +570,13 @@ scene::IMesh* graphicsLoadMesh(const std::wstring& filename)
         throw std::runtime_error("unable to load mesh from file");
     }
     return mesh;
+}
+
+scene::ISceneNode* graphicsCreateDrawableCube()
+{
+    auto node = graphics::irrSceneManager->addCubeSceneNode();
+    if (node != nullptr) {
+        throw std::runtime_error("unable to add cube scene node");
+    }
+    return node;
 }

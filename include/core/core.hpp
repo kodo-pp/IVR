@@ -58,8 +58,8 @@ struct ModuleClassMember
 struct ModuleClassMethod
 {
     std::string name;
-    std::string return_type;
     std::string arguments_type;
+    std::string return_type;
 };
 
 struct ModuleClass
@@ -94,6 +94,8 @@ uint64_t addModuleClass(const std::string& name, const ModuleClass& moduleClass)
 void removeModuleClass(const std::string& name);
 const ModuleClass& getModuleClass(uint64_t handle);
 uint64_t instantiateModuleClass(uint64_t handle);
+const ModuleClassInstance& getModuleClassInstance(uint64_t handle);
+uint64_t getModuleClassHandle(const std::string& name);
 void deleteModuleClassInstance(uint64_t instanceId);
 
 // === Constants ===
