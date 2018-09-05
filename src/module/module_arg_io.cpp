@@ -71,15 +71,10 @@ void* recvArg(int sock, char spec)
         arg = (void*)(new std::wstring(wstringUnpack(recvString(sock))));
         break;
     case 'o': { // blob
-        uint64_t size = recvU64(sock);
-        std::string* bytes = new std::string;
-        bytes->reserve(size);
-        for (size_t i = 0; i < size; ++i) {
-            bytes->push_back(static_cast<char>(recvByte(sock)));
-        }
-        arg = (void*)bytes;
+        arg = (void*)(new std::vector<uint8_t>(recvBlob(sock)));
     } break;
-    default: throw std::logic_error(std::string("recvArg: unknown type: ") + spec);
+    default:
+        throw std::logic_error(std::string("recvArg: unknown type: ") + spec);
     }
     memoryManager.track(arg);
     return arg;
@@ -125,10 +120,10 @@ void sendArg(int sock, void* arg, char spec)
         sendString(sock, bytes_pack(*(std::wstring*)arg));
         break;
     case 'o': { // blob
-        sendU64(sock, ((std::string*)arg)->length());
-        sendBuf(sock, ((std::string*)arg)->c_str(), (int)((std::string*)arg)->length());
+        sendBlob(sock, *static_cast<std::vector<uint8_t>*>(arg));
     } break;
-    default: throw std::logic_error(std::string("sendArg: unknown type: ") + spec);
+    default:
+        throw std::logic_error(std::string("sendArg: unknown type: ") + spec);
     }
 }
 
@@ -172,8 +167,9 @@ void freeArg(void* arg, char spec)
         memoryManager.deletePtr<std::wstring>(arg);
         break;
     case 'o': // blob
-        memoryManager.deletePtr<std::string>(arg);
+        memoryManager.deletePtr<std::vector<uint8_t>>(arg);
         break;
-    default: throw std::logic_error(std::string("freeArg: unknown type: ") + spec);
+    default:
+        throw std::logic_error(std::string("freeArg: unknown type: ") + spec);
     }
 }

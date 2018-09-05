@@ -49,9 +49,10 @@ void* _dyntypeNew(char type)
         return static_cast<void*>(new std::wstring(L""));
         break;
     case 'o': // blob
-        return static_cast<void*>(new std::string(""));
+        return static_cast<void*>(new std::vector<uint8_t>());
         break;
-    default: throw std::logic_error(std::string("dyntypeNew: unknown type: ") + type);
+    default:
+        throw std::logic_error(std::string("dyntypeNew: unknown type: ") + type);
     }
 }
 
@@ -98,9 +99,10 @@ void dyntypeDelete(void* val, char type)
         memoryManager.deletePtr<std::wstring>(val);
         break;
     case 'o': // blob
-        memoryManager.deletePtr<std::string>(val);
+        memoryManager.deletePtr<std::vector<uint8_t>>(val);
         break;
-    default: throw std::logic_error(std::string("dyntypeDelete: unknown type: ") + type);
+    default:
+        throw std::logic_error(std::string("dyntypeDelete: unknown type: ") + type);
     }
 }
 

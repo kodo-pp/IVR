@@ -1,5 +1,6 @@
 #include <core/core.hpp>
 #include <game/enemy.hpp>
+#include <game/game_loop.hpp>
 #include <geometry/game_position.hpp>
 #include <geometry/geometry.hpp>
 #include <graphics/graphics.hpp>
@@ -117,27 +118,11 @@ FuncResult handlerEnemySyncDrawable(const std::vector<void*>& args)
     FuncResult ret;
     auto instanceHandle = getArgument<uint64_t>(args, 0);
     const auto& instance = getModuleClassInstance(instanceHandle);
-    const auto& _class = getModuleClass(instance.classHandle);
-    if (_class.members.at(_class.memberHandles.at("model")).type != 'L') {
-        throw std::runtime_error("enemySyncDrawable: model: type is not 'L'");
-    }
-    if (_class.members.at(_class.memberHandles.at("x")).type != 'F') {
-        throw std::runtime_error("enemySyncDrawable: x: type is not 'F'");
-    }
-    if (_class.members.at(_class.memberHandles.at("y")).type != 'F') {
-        throw std::runtime_error("enemySyncDrawable: y: type is not 'F'");
-    }
-    if (_class.members.at(_class.memberHandles.at("z")).type != 'F') {
-        throw std::runtime_error("enemySyncDrawable: z: type is not 'F'");
-    }
-    uint64_t drawableHandle = *(
-            static_cast<uint64_t*>(instance.members.at(_class.memberHandles.at("model"))));
-    float x = static_cast<float>(
-            *(static_cast<double*>(instance.members.at(_class.memberHandles.at("x")))));
-    float y = static_cast<float>(
-            *(static_cast<double*>(instance.members.at(_class.memberHandles.at("y")))));
-    float z = static_cast<float>(
-            *(static_cast<double*>(instance.members.at(_class.memberHandles.at("z")))));
+
+    uint64_t drawableHandle = instance.members.at("model").get<uint64_t>();
+    float x = instance.members.at("x").get<float>();
+    float y = instance.members.at("y").get<float>();
+    float z = instance.members.at("z").get<float>();
     drawablesManager.access(drawableHandle)->setPosition({x, y, z});
 
     return ret;
@@ -159,11 +144,10 @@ FuncResult handlerEachTickWithHandle(const std::vector<void*>& args)
 
 void initializeEnemies()
 {
-    addModuleClass("graphics.Drawable",
-                   ModuleClass({{"model", {'L'}}}, {}, 0xFFFF'FFFF'FFFF'FFFFull));
+    addModuleClass("graphics.Drawable", ModuleClass({{"model", {'L'}}}, {}, ""));
     addModuleClass("game.Enemy",
                    ModuleClass({{"x", {'F'}}, {"y", {'F'}}, {"z", {'F'}}, {"hp", {'F'}}},
                                {{"ai", {"core.nop", "", ""}},
                                 {"post_ai", {"enemy.syncDrawable", "L", ""}}},
-                               0xFFFF'FFFF'FFFF'FFFFull));
+                               ""));
 }

@@ -2,6 +2,7 @@
 #define NET_SOCKET_LIB_HPP
 
 #include <string>
+#include <vector>
 
 #include <sys/socket.h>
 
@@ -39,5 +40,8 @@ void sendFloat64(int sock, double v);
 
 float recvFloat32(int sock);
 double recvFloat64(int sock);
+
+void sendBlob(int sock, const std::vector<uint8_t>& blob);
+std::vector<uint8_t> recvBlob(int sock);
 
 #endif /* end of include guard: NET_SOCKET_LIB_HPP */
