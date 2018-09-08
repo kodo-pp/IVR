@@ -20,6 +20,7 @@
 #include <util/util.hpp>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 
 // === Static variables ===
 
@@ -51,7 +52,7 @@ FuncProvider::~FuncProvider()
 }
 
 // operator()
-FuncResult FuncProvider::operator()(const std::vector<void*>& args)
+FuncResult FuncProvider::operator()(const std::vector<void*>& args) const
 {
     return func(args);
 }
@@ -275,6 +276,27 @@ FuncResult handlerInstantiateModuleClass(const std::vector<void*>& args)
     return ret;
 }
 
+FuncResult handlerGetModuleClassMethod(const std::vector<void*>& args)
+{
+    if (args.size() != 2) {
+        throw std::logic_error("Wrong number of arguments for handlerGetModuleClassMethod()");
+    }
+    FuncResult ret;
+    ret.data.resize(3);
+
+    std::string className = getArgument<std::string>(args, 0);
+    std::string methodName = getArgument<std::string>(args, 1);
+
+    const auto& method = getModuleClass(className).methods.at(methodName);
+    std::string funcProviderName = method.name;
+    std::string argTypes = method.arguments_type;
+    std::string retTypes = method.return_type;
+    setReturn(ret, 0, funcProviderName);
+    setReturn(ret, 1, argTypes);
+    setReturn(ret, 2, retTypes);
+    return ret;
+}
+
 #define HANDLER_MODCLASS_ACCESSOR(typeWord, typeNameCxx, typeChar)                                   \
     FuncResult handlerModuleClassSet##typeWord(const std::vector<void*>& args)                       \
     {                                                                                                \
@@ -326,7 +348,7 @@ HANDLER_MODCLASS_ACCESSOR(UInt64, uint64_t, 'L')
 HANDLER_MODCLASS_ACCESSOR(Float32, float, 'f')
 HANDLER_MODCLASS_ACCESSOR(Float64, double, 'F')
 HANDLER_MODCLASS_ACCESSOR(WideString, std::wstring, 'w')
-HANDLER_MODCLASS_ACCESSOR(Blob, std::string, 'o')
+HANDLER_MODCLASS_ACCESSOR(Blob, std::vector<uint8_t>, 'o')
 #undef HANDLER_MODCLASS_ACCESSOR
 
 #define HANDLER_MODCLASS_ACCESSOR_REGISTER(typeWord, typeChar)                                     \
@@ -364,9 +386,178 @@ FuncResult handlerRegisterModuleFuncProvider(const std::vector<void*>& args)
     return result;
 }
 
-const ModuleClassInstance& getModuleClassInstance(uint64_t handle)
+std::vector<uint8_t> moduleClassBlobifyMembers(uint64_t objectHandle)
 {
-    return moduleClassInstances.access(handle);
+    std::vector<uint8_t> blob;
+    const auto& instance = getModuleClassInstance(objectHandle);
+    for (const auto& kv : instance.members) {
+        blob.reserve(blob.size() + kv.first.length() + 2);
+        for (char c : kv.first) {
+            blob.push_back(static_cast<uint8_t>(c));
+        }
+        blob.push_back(static_cast<uint8_t>(kv.second.type));
+        blob.push_back(0);
+        std::string enc;
+        switch (kv.second.type) {
+        case 'b':
+            enc = std::to_string(kv.second.get<int8_t>());
+            break;
+        case 'B':
+            enc = std::to_string(kv.second.get<uint8_t>());
+            break;
+        case 'h':
+            enc = std::to_string(kv.second.get<int16_t>());
+            break;
+        case 'H':
+            enc = std::to_string(kv.second.get<uint16_t>());
+            break;
+        case 'i':
+            enc = std::to_string(kv.second.get<int32_t>());
+            break;
+        case 'I':
+            enc = std::to_string(kv.second.get<uint32_t>());
+            break;
+        case 'l':
+            enc = std::to_string(kv.second.get<int64_t>());
+            break;
+        case 'L':
+            enc = std::to_string(kv.second.get<uint64_t>());
+            break;
+        case 's':
+            enc = kv.second.get<std::string>();
+            break;
+        case 'w':
+            enc = bytes_pack(kv.second.get<std::wstring>());
+            break;
+        case 'o':
+            throw std::runtime_error("Blob as member is not implemented");
+        default:
+            throw std::logic_error("blobify: unknown type");
+        }
+        blob.reserve(blob.size() + enc.length() + 1);
+        for (char c : enc) {
+            blob.push_back(static_cast<uint8_t>(c));
+        }
+        blob.push_back(0);
+    }
+
+    return blob;
+}
+
+void moduleClassUnblobifyMembers(uint64_t objectHandle, const std::vector<uint8_t>& blob)
+{
+    ModuleClassInstance& instance = getModuleClassInstance(objectHandle);
+    size_t idx = 0;
+    try {
+        while (true) {
+            if (idx == blob.size()) {
+                break;
+            }
+            std::string namet, enc;
+            for (;; ++idx) {
+                auto val = blob.at(idx);
+                if (val == 0) {
+                    break;
+                }
+                namet.push_back(val);
+            }
+            for (;; ++idx) {
+                auto val = blob.at(idx);
+                if (val == 0) {
+                    break;
+                }
+                enc.push_back(val);
+            }
+            std::string name = namet;
+            name.pop_back();
+            char type = namet.back();
+            switch (type) {
+            case 'b':
+                instance.members.at(name).set(boost::lexical_cast<int8_t>(enc));
+                break;
+            case 'B':
+                instance.members.at(name).set(boost::lexical_cast<uint8_t>(enc));
+                break;
+            case 'h':
+                instance.members.at(name).set(boost::lexical_cast<int16_t>(enc));
+                break;
+            case 'H':
+                instance.members.at(name).set(boost::lexical_cast<uint16_t>(enc));
+                break;
+            case 'i':
+                instance.members.at(name).set(boost::lexical_cast<int32_t>(enc));
+                break;
+            case 'I':
+                instance.members.at(name).set(boost::lexical_cast<uint32_t>(enc));
+                break;
+            case 'l':
+                instance.members.at(name).set(boost::lexical_cast<int64_t>(enc));
+                break;
+            case 'L':
+                instance.members.at(name).set(boost::lexical_cast<uint64_t>(enc));
+                break;
+            case 's':
+                instance.members.at(name).set<std::string>(enc);
+                break;
+            case 'w':
+                instance.members.at(name).set<std::wstring>(wstringUnpack(enc));
+                break;
+            case 'o':
+                throw std::runtime_error("Blob as member is not implemented");
+            default:
+                throw std::logic_error("blobify: unknown type");
+            }
+        }
+    } catch (const std::out_of_range& e) {
+        throw std::runtime_error("Malformed blobified member diff");
+    }
+}
+
+std::string moduleClassBindMethod(std::string className, std::string methodName)
+{
+    static uint64_t counter = 1;
+    std::string funcName = "core.class.__bound__.";
+    funcName += std::to_string(counter);
+    auto method = getModuleClass(className).methods.at(methodName);
+
+    if (method.arguments_type.substr(0, 2) != "Lo") {
+        throw std::runtime_error("Method cannot be bound: invalid arguments type");
+    }
+    method.arguments_type.erase(1, 1);
+    if (method.return_type.substr(0, 1) != "o") {
+        throw std::runtime_error("Method cannot be bound: invalid return type");
+    }
+    method.return_type.erase(0, 1);
+    std::string command = method.name;
+
+    auto& funcProvider = getFuncProvider(getFuncProviderHandle(command));
+
+    registerFuncProvider(
+            FuncProvider(
+                    funcName,
+                    [className, methodName, funcProvider](std::vector<void*> args) -> FuncResult {
+                        auto* blob = static_cast<std::vector<uint8_t>*>(dyntypeNew('o'));
+                        uint64_t objectHandle = getArgument<uint64_t>(args, 0);
+                        auto encoded = moduleClassBlobifyMembers(objectHandle);
+                        blob->swap(encoded);
+                        args.emplace(args.begin() + 1, static_cast<void*>(blob));
+                        FuncResult res = funcProvider(args);
+                        dyntypeDelete(blob, 'o');
+                        auto retBlob = static_cast<std::vector<uint8_t>*>(res.data.front());
+                        moduleClassUnblobifyMembers(objectHandle, *retBlob);
+                        dyntypeDelete(retBlob, 'o');
+                        res.data.erase(res.data.begin());
+                        return res;
+                    }),
+            method.arguments_type,
+            method.return_type);
+    ++counter;
+    return funcName;
+}
+
+ModuleClassInstance& getModuleClassInstance(uint64_t handle)
+{
+    return moduleClassInstances.mutableAccess(handle);
 }
 
 static void initializeCoreFuncProviders()
@@ -378,6 +569,8 @@ static void initializeCoreFuncProviders()
             FuncProvider("core.funcProvider.register", handlerRegisterModuleFuncProvider),
             "sss",
             "L");
+    registerFuncProvider(
+            FuncProvider("core.class.getMethod", handlerGetModuleClassMethod), "ss", "sss");
     HANDLER_MODCLASS_ACCESSOR_REGISTER(String, s);
     HANDLER_MODCLASS_ACCESSOR_REGISTER(Int8, b);
     HANDLER_MODCLASS_ACCESSOR_REGISTER(Int16, h);

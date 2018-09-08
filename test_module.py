@@ -71,9 +71,6 @@ class Object:
         self.handle = handle
         self.nc = nc
 
-    def get_member_handle(self, member):
-        return nc.invoke('core.class.getMemberHandle', [self.cls.handle, member], 'Ls', 'L')[0]
-
     def get_method(self, method):
         return nc.invoke('core.class.getMethod', [self.cls.handle, method], 'Ls', 's')[0]
 
@@ -309,6 +306,7 @@ def main():
 
     Cylinder = nc.add_class('game.enemy.Cylinder', [], [], nc.class_handle('game.Enemy'))
     cylinder = Cylinder.instantiate()
+    cylinder.
 
     nc.invoke('core.class.instance.setFloat64', [cylinder.handle, 0, 5.34], 'LLF', '')
     [f] = nc.invoke('core.class.instance.getFloat64', [cylinder.handle, 0], 'LL', 'F')

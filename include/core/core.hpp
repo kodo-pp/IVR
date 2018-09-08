@@ -28,7 +28,7 @@ public:
     FuncProvider();
     FuncProvider(const std::string&, const func_type&);
     std::string getCommand() const;
-    FuncResult operator()(const std::vector<void*>&);
+    FuncResult operator()(const std::vector<void*>&) const;
     ~FuncProvider();
 
 private:
@@ -73,6 +73,7 @@ struct ModuleClass
     std::string parentClassName;
     std::unordered_map<std::string, ModuleClassMember> members;
     std::unordered_map<std::string, ModuleClassMethod> methods;
+    std::unordered_map<std::string, std::string> boundMethods;
 };
 
 template <typename T>
@@ -160,6 +161,15 @@ struct ModuleClassMemberData
             return *static_cast<T*>(value);
         }
     }
+    template <typename T>
+    T& set(const T& x)
+    {
+        if (type != TypeChar<T>::value) {
+            throw std::runtime_error("Type mismatch");
+        } else {
+            *static_cast<T*>(value) = x;
+        }
+    }
 
     mutable std::shared_ptr<size_t> referenceCount;
 };
@@ -180,7 +190,7 @@ void addModuleClass(const std::string& name, const ModuleClass& moduleClass);
 void removeModuleClass(const std::string& name);
 const ModuleClass& getModuleClass(const std::string& className);
 uint64_t instantiateModuleClass(const std::string& className);
-const ModuleClassInstance& getModuleClassInstance(uint64_t instanceId);
+ModuleClassInstance& getModuleClassInstance(uint64_t instanceId);
 void deleteModuleClassInstance(uint64_t instanceId);
 
 // === Constants ===
