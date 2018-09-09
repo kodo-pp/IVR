@@ -227,6 +227,8 @@ std::vector<uint8_t> moduleClassBlobifyMembers(uint64_t objectHandle)
     std::vector<uint8_t> blob;
     const auto& instance = getModuleClassInstance(objectHandle);
     for (const auto& kv : instance.members) {
+        LOG("Blobify: kv.first = " << wstring_cast(kv.first)
+                                   << ", kv.second.type = " << kv.second.type);
         blob.reserve(blob.size() + kv.first.length() + 2);
         for (char c : kv.first) {
             blob.push_back(static_cast<uint8_t>(c));
@@ -293,6 +295,7 @@ void moduleClassUnblobifyMembers(uint64_t objectHandle, const std::vector<uint8_
             for (;; ++idx) {
                 auto val = blob.at(idx);
                 if (val == 0) {
+                    ++idx;
                     break;
                 }
                 namet.push_back(val);
@@ -300,6 +303,7 @@ void moduleClassUnblobifyMembers(uint64_t objectHandle, const std::vector<uint8_
             for (;; ++idx) {
                 auto val = blob.at(idx);
                 if (val == 0) {
+                    ++idx;
                     break;
                 }
                 enc.push_back(val);
@@ -307,6 +311,7 @@ void moduleClassUnblobifyMembers(uint64_t objectHandle, const std::vector<uint8_
             std::string name = namet;
             name.pop_back();
             char type = namet.back();
+            LOG("Unblobify: name = " << wstring_cast(name) << ", type = " << type);
             switch (type) {
             case 'b':
                 instance.members.at(name).set(boost::lexical_cast<int8_t>(enc));
@@ -321,6 +326,7 @@ void moduleClassUnblobifyMembers(uint64_t objectHandle, const std::vector<uint8_
                 instance.members.at(name).set(boost::lexical_cast<uint16_t>(enc));
                 break;
             case 'i':
+                LOG("AAA: " << wstring_cast(enc));
                 instance.members.at(name).set(boost::lexical_cast<int32_t>(enc));
                 break;
             case 'I':
@@ -349,10 +355,10 @@ void moduleClassUnblobifyMembers(uint64_t objectHandle, const std::vector<uint8_
     }
 }
 
-std::string moduleClassBindMethod(const std::string& className,
-                                  const std::string& command,
-                                  std::string argTypes,
-                                  std::string retTypes)
+std::tuple<std::string, std::string, std::string> moduleClassBindMethod(const std::string& className,
+                                                                        const std::string& command,
+                                                                        std::string argTypes,
+                                                                        std::string retTypes)
 {
     std::lock_guard<std::recursive_mutex> lock(moduleClassMutex);
     static uint64_t counter = 1;
@@ -408,7 +414,7 @@ std::string moduleClassBindMethod(const std::string& className,
             argTypes,
             retTypes);
     ++counter;
-    return funcName;
+    return {funcName, argTypes, retTypes};
 }
 
 FuncResult handlerAddModuleClass(const std::vector<void*>& args)
@@ -447,7 +453,7 @@ FuncResult handlerAddModuleClass(const std::vector<void*>& args)
             throw std::runtime_error("invalid number of comma-separated arguments");
         }
         // tmp[1] is method global callable name
-        tmp[1] = moduleClassBindMethod(name, tmp[1], tmp[2], tmp[3]);
+        std::tie(tmp[1], tmp[2], tmp[3]) = moduleClassBindMethod(name, tmp[1], tmp[2], tmp[3]);
         methodMap.insert({tmp[0], {tmp[1], tmp[2], tmp[3]}});
     }
 

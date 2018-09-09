@@ -7,6 +7,7 @@ import math
 import time
 from os import _exit as exit
 import threading
+import traceback
 
 VERBOSE = True
 
@@ -60,7 +61,7 @@ class Class:
         return Object(self, self.nc, self.nc.instantiate_class(self.name))
 
     def get_method(self, method):
-        return nc.invoke('core.class.getMethod', [self.name, method], 'Ls', 's')[0]
+        return self.nc.invoke('core.class.getMethod', [self.name, method], 'ss', 'sss')
 
 class Object:
     def __init__(self, cls, nc, handle):
@@ -69,10 +70,11 @@ class Object:
         self.nc = nc
 
     def get_method(self, method):
-        return nc.invoke('core.class.getMethod', [self.cls.handle, method], 'Ls', 's')[0]
+        return self.cls.get_method(method)
 
-    def call_method(self, method, ls, args, ret):
-        return nc.invoke(self.get_method(method), [self.handle] + ls, args, ret)
+    def call_method(self, method, ls):
+        command, arg_types, ret_types = self.get_method(method)
+        return self.nc.invoke(command, [self.handle] + ls, arg_types, ret_types)
 
 class Modcat(Netcat):
     def __init__(self, ip, port):
@@ -124,6 +126,14 @@ class Modcat(Netcat):
         s += '\x00'
         self.write(bytes(s, 'ascii'))
 
+    def read_blob(self):
+        size = self.read_int(8, signed=False)
+        return self.read(size)
+
+    def write_blob(self, blob):
+        self.write_int(len(blob), 8, signed=False)
+        self.write(blob)
+
     def send_arg(self, arg, tp):
         if tp == 'b':
             self.write_int(arg, 1, signed=True)
@@ -150,7 +160,7 @@ class Modcat(Netcat):
         elif tp == 'w':
             raise Exception('Wide string is unimplemented')
         elif tp == 'o':
-            raise Exception('BLOB is unimplemented')
+            self.write_blob(arg)
         else:
             raise Exception('Unknown type: "{}"'.format(tp))
 
@@ -180,9 +190,55 @@ class Modcat(Netcat):
         elif tp == 'w':
             raise Exception('Wide string is unimplemented')
         elif tp == 'o':
-            raise Exception('BLOB is unimplemented')
+            return self.read_blob()
         else:
             raise Exception('Unknown type: "{}"'.format(tp))
+
+    def type_decode(self, enc, type):
+        if type in 'bBhHiIlL':
+            return int(enc.decode())
+        elif type in 'fF':
+            return float(enc.decode())
+        elif type == 's':
+            return enc.decode()
+        elif type == 'o':
+            raise Exception('BLOB is unimplemented')
+        elif type == 'w':
+            raise Exception('Wide string is unimplemented')
+        else:
+            raise Exception('Unknown type: "{}"'.format(type))
+
+    def type_encode(self, value, type):
+        if type in 'bBhHiIlLfFs':
+            return bytes(str(value), 'utf-8')
+        elif type == 'o':
+            raise Exception('BLOB is unimplemented')
+        elif type == 'w':
+            raise Exception('Wide string is unimplemented')
+        else:
+            raise Exception('Unknown type: "{}"'.format(type))
+
+
+    def unblobify(self, blob):
+        split_blob = blob.split(b'\x00')
+
+        # Костыль № 9124721
+        split_blob = split_blob[:-1]
+
+        raw_members = dict([split_blob[i:i+2] for i in range(0, len(split_blob), 2)])
+        members = {
+            key.decode()[:-1]: (
+                key.decode()[-1], self.type_decode(value, key.decode()[-1])
+            ) for key, value in raw_members.items()
+        }
+        return members
+
+    def blobify(self, values):
+        blob = b''
+        for name, (type, value) in values.items():
+            blob += bytes(name, 'utf-8') + bytes(type, 'utf-8') + b'\x00'
+            blob += self.type_encode(value, type) + b'\x00'
+        return blob
 
     def invoke(self, func, ls, args, ret):
         vlog('Invoking {}({})...'.format(func, ', '.join(map(str, ls))))
@@ -246,6 +302,8 @@ class Modcat(Netcat):
                     ret = func(*args)
                 except BaseException as e:
                     # Something has gone wrong, exit code is not 0
+                    print('Exception at module function:')
+                    traceback.print_exc()
                     self.write_int(1, size=1, signed=False)
                     continue
 
@@ -281,9 +339,12 @@ class Modcat(Netcat):
         vlog('Instantiating class {}'.format(classname))
         return self.invoke('core.class.instantiate', [classname], 's', 'L')[0]
 
-def baz(handle, blob, number):
+def baz(nc, handle, blob, number):
     print('baz: blob: ' + base64.b64encode(blob).decode())
-    return ['', number + 5]
+    print(repr(nc.unblobify(blob)))
+    retblob = nc.blobify({'foo': ('i', 166)})
+    print('baz: retblob: ' + base64.b64encode(retblob).decode())
+    return [retblob, number + 5]
 
 def main():
     try:
@@ -301,7 +362,7 @@ def main():
     rnc.send_reverse_header()
     rnc.write_str(module_name)
 
-    nc.register_func_provider(rnc, baz, 'test.baz', 'Loi', 'oi')
+    nc.register_func_provider(rnc, baz.__get__(rnc), 'test.baz', 'Loi', 'oi')
 
     rnc.spawn_serving_thread()
 
@@ -310,6 +371,9 @@ def main():
 
     nc.invoke('core.class.instance.setInt32', [test_class.handle, 'foo', 5], 'Lsi', '')
     nc.invoke('core.class.instance.setInt32', [test_class.handle, 'bar', 3], 'Lsi', '')
+    nc.invoke('core.class.instance.getInt32', [test_class.handle, 'foo'], 'Ls', 'i')
+    nc.invoke('core.class.instance.getInt32', [test_class.handle, 'bar'], 'Ls', 'i')
+    test_class.call_method('baz', [77])
     nc.invoke('core.class.instance.getInt32', [test_class.handle, 'foo'], 'Ls', 'i')
     nc.invoke('core.class.instance.getInt32', [test_class.handle, 'bar'], 'Ls', 'i')
 
@@ -321,4 +385,9 @@ def main():
     else:
         raise Exception('Unknown exit status: "{}"'.format(status))
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+        exit(0)
+    except BaseException as e:
+        traceback.print_exc()
+        exit(1)
