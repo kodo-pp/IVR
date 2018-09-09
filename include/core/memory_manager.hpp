@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <unordered_set>
 
+#include <core/destroy.hpp>
 #include <log/log.hpp>
 
 class MemoryManager
@@ -16,6 +17,9 @@ public:
     template <typename T>
     void deletePtr(void* ptr)
     {
+        if (areWeShuttingDown) {
+            return;
+        }
         if (!isTracking(ptr)) {
             LOG("WARNING: attempted to delete untracked pointer " << ptr);
             // abort();

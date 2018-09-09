@@ -2,8 +2,10 @@
 #define CORE_DESTROY_HPP
 
 #include <atomic>
+#include <mutex>
 
 extern std::atomic<bool> doWeNeedToShutDown;
+extern std::atomic<bool> areWeShuttingDown;
 
 void destroy(void);
 void sigIntHandler(int);

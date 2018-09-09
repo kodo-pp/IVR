@@ -8,15 +8,23 @@
 #include <string>
 #include <vector>
 
+#include <core/destroy.hpp>
+
 extern std::recursive_mutex logMutex;
 
-enum LogStreamSpecial { lssNewline, lssFlush, lssBeginLine };
+enum LogStreamSpecial
+{
+    lssNewline,
+    lssFlush,
+    lssBeginLine
+};
 
 #define LOG(data)                                                                                  \
     do {                                                                                           \
-        logMutex.lock();                                                                           \
-        getLogStream() << data << lssNewline;                                                      \
-        logMutex.unlock();                                                                         \
+        if (!areWeShuttingDown) {                                                                  \
+            std::lock_guard<std::recursive_mutex> log_lock(logMutex);                              \
+            getLogStream() << data << lssNewline;                                                  \
+        }                                                                                          \
     } while (false)
 
 /**

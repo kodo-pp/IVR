@@ -9,6 +9,7 @@
 #include <util/util.hpp>
 
 std::atomic<bool> doWeNeedToShutDown(false);
+std::atomic<bool> areWeShuttingDown(false);
 
 void destroy(void)
 {
@@ -19,6 +20,8 @@ void destroy(void)
     LOG(L"And graphics");
     cleanupGraphics();
     LOG(L"I'm dying...");
+    areWeShuttingDown = true;
+
     exit(0);
 }
 
