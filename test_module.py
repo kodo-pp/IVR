@@ -52,18 +52,15 @@ class Netcat:
         self.socket.close()
 
 class Class:
-    def __init__(self, nc, handle):
-        self.handle = handle
+    def __init__(self, nc, name):
+        self.name = name
         self.nc = nc
 
     def instantiate(self):
-        return Object(self, self.nc, self.nc.instantiate_class(self.handle))
-
-    def get_member_handle(self, member):
-        return nc.invoke('core.class.getMemberHandle', [self.handle, member], 'Ls', 'L')[0]
+        return Object(self, self.nc, self.nc.instantiate_class(self.name))
 
     def get_method(self, method):
-        return nc.invoke('core.class.getMethod', [self.handle, method], 'Ls', 's')[0]
+        return nc.invoke('core.class.getMethod', [self.name, method], 'Ls', 's')[0]
 
 class Object:
     def __init__(self, cls, nc, handle):
@@ -273,18 +270,20 @@ class Modcat(Netcat):
     def get_class(self, classname):
         return Class(self, self.class_handle(classname))
 
-    def add_class(self, classname, members, methods, parent=0xFFFFFFFFFFFFFFFF):
+    def add_class(self, classname, members, methods, parent=''):
         vlog('Adding class "{}"'.format(classname))
         members_string = ':'.join(map(lambda pair: ''.join(pair), members))
-        methods_string = ':'.join(map(lambda pair: ','.join(pair), methods))
-        return Class(self, self.invoke('core.class.add', [parent, classname, members_string, methods_string], 'Lsss', 'L')[0])
+        methods_string = ':'.join(map(lambda tup: ','.join(tup), methods))
+        self.invoke('core.class.add', [parent, classname, members_string, methods_string], 'ssss', '')
+        return Class(self, classname)
 
-    def instantiate_class(self, class_handle):
-        vlog('Instantiating class {}'.format(class_handle))
-        return self.invoke('core.class.instantiate', [class_handle], 'L', 'L')[0]
+    def instantiate_class(self, classname):
+        vlog('Instantiating class {}'.format(classname))
+        return self.invoke('core.class.instantiate', [classname], 's', 'L')[0]
 
-def test_func(a, b):
-    return [a + b]
+def baz(handle, blob, number):
+    print('baz: blob: ' + base64.b64encode(blob).decode())
+    return ['', number + 5]
 
 def main():
     try:
@@ -302,15 +301,17 @@ def main():
     rnc.send_reverse_header()
     rnc.write_str(module_name)
 
+    nc.register_func_provider(rnc, baz, 'test.baz', 'Loi', 'oi')
+
     rnc.spawn_serving_thread()
 
-    Cylinder = nc.add_class('game.enemy.Cylinder', [], [], nc.class_handle('game.Enemy'))
-    cylinder = Cylinder.instantiate()
-    cylinder.
+    TestClass = nc.add_class('test.TestClass', [('foo', 'i'), ('bar', 'i')], [('baz', 'test.baz', 'Loi', 'oi')], '')
+    test_class = TestClass.instantiate()
 
-    nc.invoke('core.class.instance.setFloat64', [cylinder.handle, 0, 5.34], 'LLF', '')
-    [f] = nc.invoke('core.class.instance.getFloat64', [cylinder.handle, 0], 'LL', 'F')
-    print('Got float: {}'.format(f))
+    nc.invoke('core.class.instance.setInt32', [test_class.handle, 'foo', 5], 'Lsi', '')
+    nc.invoke('core.class.instance.setInt32', [test_class.handle, 'bar', 3], 'Lsi', '')
+    nc.invoke('core.class.instance.getInt32', [test_class.handle, 'foo'], 'Ls', 'i')
+    nc.invoke('core.class.instance.getInt32', [test_class.handle, 'bar'], 'Ls', 'i')
 
     [status] = nc.invoke_special('exit', [], '', 's')
 

@@ -134,12 +134,15 @@ struct ModuleClassMemberData
         value = dyntypeNew(type);
     }
 
+    // TODO: Написать move-конструктор и оператор присваивания
+    // Пока они =delete, т.к. дефолтные приводят к Segfault
+
     ModuleClassMemberData(const ModuleClassMemberData& other);
-    ModuleClassMemberData(ModuleClassMemberData&& other) = default;
+    ModuleClassMemberData(ModuleClassMemberData&& other) = delete;
     virtual ~ModuleClassMemberData();
 
     ModuleClassMemberData& operator=(const ModuleClassMemberData& other);
-    ModuleClassMemberData& operator=(ModuleClassMemberData&& other) = default;
+    ModuleClassMemberData& operator=(ModuleClassMemberData&& other) = delete;
 
     char type;
     void* value;
@@ -162,7 +165,7 @@ struct ModuleClassMemberData
         }
     }
     template <typename T>
-    T& set(const T& x)
+    void set(const T& x)
     {
         if (type != TypeChar<T>::value) {
             throw std::runtime_error("Type mismatch");
