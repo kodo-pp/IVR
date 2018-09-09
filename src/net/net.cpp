@@ -148,6 +148,7 @@ static void moduleListenerThreadFunc()
             int mainClientSocket = acceptSocket(mainListeningSocket);
             // Читаем служебную информацию, в том числе имя модуля
             sendFixed(mainClientSocket, std::string("ModBox/M"));
+            flushBuffer(mainClientSocket);
             readModuleHeader(mainClientSocket);
             auto moduleName = readModuleName(mainClientSocket);
             // Запоминаем, что он подключился к основному порту
@@ -157,6 +158,7 @@ static void moduleListenerThreadFunc()
             int reverseClientSocket = acceptSocket(reverseListeningSocket);
             // Читаем служебную информацию, в том числе имя модуля
             sendFixed(reverseClientSocket, std::string("ModBox/R"));
+            flushBuffer(reverseClientSocket);
             readReverseModuleHeader(reverseClientSocket);
             auto reverseModuleName = readModuleName(reverseClientSocket);
             // Смотрим, подключился ли он к основному порту

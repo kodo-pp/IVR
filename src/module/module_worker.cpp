@@ -39,6 +39,7 @@ void sendError(int sock, const std::string& errorMessage, uint8_t exitCode = 1)
 {
     sendU8(sock, exitCode);
     sendString(sock, errorMessage);
+    flushBuffer(sock);
 }
 
 void ModuleWorker::work()
@@ -58,12 +59,14 @@ void ModuleWorker::work()
             } catch (const std::out_of_range& e) {
                 sendU64(sock, 0);
             }
+            flushBuffer(sock);
             continue;
         } else if (handle == RESERVED_FP_HANDLE) {
             std::string internal_cmd = recvString(sock);
             if (internal_cmd == "exit") {
                 LOG("exiting");
                 sendString(sock, "exited");
+                flushBuffer(sock);
                 return;
             } else {
                 sendError(sock, std::string("invalid internal command: ") + internal_cmd);
@@ -100,6 +103,7 @@ void ModuleWorker::work()
         for (size_t i = 0; i < retSpec.length(); ++i) {
             sendArg(sock, result.data.at(i), retSpec.at(i));
         }
+        flushBuffer(sock);
 
         // Free memory allocated for arguments...
         for (size_t i = 0; i < argsSpec.length(); ++i) {
@@ -126,6 +130,7 @@ std::vector<void*> ModuleWorker::runModuleFunc(uint64_t id,
     for (size_t i = 0; i < argTypes.length(); ++i) {
         sendArg(sock, arguments.at(i), argTypes.at(i));
     }
+    flushBuffer(sock);
     for (size_t i = 0; i < argTypes.length(); ++i) {
         freeArg(arguments.at(i), argTypes.at(i));
     }

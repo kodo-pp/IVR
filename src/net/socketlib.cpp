@@ -1,12 +1,46 @@
 #include <cstring>
 #include <exception>
 #include <string>
+#include <unordered_map>
 
 #include <log/log.hpp>
 #include <net/socketlib.hpp>
 #include <util/util.hpp>
 
 #include <sys/socket.h>
+
+std::recursive_mutex netMutex;
+std::unordered_map<int, std::vector<uint8_t>> buffers;
+
+void putBuffer(int sock, const std::vector<uint8_t>& data)
+{
+    std::lock_guard<decltype(netMutex)> lock(netMutex);
+    if (buffers.count(sock) == 0) {
+        buffers.insert({sock, data});
+    } else {
+        buffers.at(sock).insert(buffers.at(sock).end(), data.begin(), data.end());
+    }
+}
+
+template <typename Iterator>
+void putBuffer(int sock, const Iterator& begin, const Iterator& end)
+{
+    std::lock_guard<decltype(netMutex)> lock(netMutex);
+    if (buffers.count(sock) == 0) {
+        buffers.insert({sock, {}});
+    }
+    buffers.at(sock).insert(buffers.at(sock).end(), begin, end);
+}
+
+void flushBuffer(int sock)
+{
+    std::lock_guard<decltype(netMutex)> lock(netMutex);
+    if (buffers.count(sock) == 0) {
+        throw std::logic_error(std::string("No such socket: ") + std::to_string(sock));
+    }
+    sendBuf(sock, buffers.at(sock).data(), buffers.at(sock).size());
+    buffers.at(sock).clear();
+}
 
 void sendBuf(int sock, const void* buf, size_t length)
 {
@@ -59,18 +93,17 @@ std::string recvString(int sock)
 
 void sendString(int sock, const std::string& s)
 {
-    sendBuf(sock, s.c_str(), s.length() * sizeof(char));
-    sendByte(sock, 0);
+    putBuffer(sock, s.begin(), s.end());
+    putBuffer(sock, {0});
 }
 void sendFixed(int sock, const std::string& s)
 {
-    sendBuf(sock, s.c_str(), s.length() * sizeof(char));
+    putBuffer(sock, s.begin(), s.end());
 }
 
-void sendByte(int sock, uint8_t byte)
+inline void sendByte(int sock, uint8_t byte)
 {
-    char tmp = static_cast<char>(byte);
-    sendBuf(sock, &tmp, 1);
+    putBuffer(sock, {byte});
 }
 
 uint8_t recvByte(int sock)
@@ -179,7 +212,7 @@ void sendS64(int sock, int64_t v)
 void sendBlob(int sock, const std::vector<uint8_t>& blob)
 {
     sendU64(sock, blob.size());
-    sendBuf(sock, blob.data(), blob.size());
+    putBuffer(sock, blob);
 }
 std::vector<uint8_t> recvBlob(int sock)
 {
