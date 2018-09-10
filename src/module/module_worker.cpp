@@ -123,30 +123,42 @@ std::vector<void*> ModuleWorker::runModuleFunc(uint64_t id,
                                                const std::string& retTypes,
                                                const std::vector<void*> arguments)
 {
-    std::lock_guard<std::mutex> lock(reverseMutex);
-    int sock = module.getReverseSocket();
+    try {
+        if (argTypes.size() != arguments.size()) {
+            LOG("Error at ModuleWorker::runModuleFunc(): arguments.size() != argTypes.size()  @ "
+                "argTypes = "
+                << wstring_cast(argTypes) << ", arguments.size == " << arguments.size());
+            throw std::logic_error("arguments.size() != argTypes.size()");
+        }
+        std::lock_guard<std::mutex> lock(reverseMutex);
+        int sock = module.getReverseSocket();
 
-    sendU64(sock, id);
-    for (size_t i = 0; i < argTypes.length(); ++i) {
-        sendArg(sock, arguments.at(i), argTypes.at(i));
-    }
-    flushBuffer(sock);
-    for (size_t i = 0; i < argTypes.length(); ++i) {
-        freeArg(arguments.at(i), argTypes.at(i));
-    }
-    uint8_t exitCode = recvU8(sock);
-    if (exitCode != 0) {
-        throw std::runtime_error(std::string("Module function exit code is ")
-                                 + std::to_string(exitCode));
-    }
+        sendU64(sock, id);
+        for (size_t i = 0; i < argTypes.length(); ++i) {
+            sendArg(sock, arguments.at(i), argTypes.at(i));
+        }
+        flushBuffer(sock);
+        for (size_t i = 0; i < argTypes.length(); ++i) {
+            freeArg(arguments.at(i), argTypes.at(i));
+        }
+        uint8_t exitCode = recvU8(sock);
+        if (exitCode != 0) {
+            throw std::runtime_error(std::string("Module function exit code is ")
+                                     + std::to_string(exitCode));
+        }
 
-    std::vector<void*> result;
-    result.reserve(retTypes.length());
-    for (char i : retTypes) {
-        result.push_back(recvArg(sock, i));
-    }
+        std::vector<void*> result;
+        result.reserve(retTypes.length());
+        for (char i : retTypes) {
+            result.push_back(recvArg(sock, i));
+        }
 
-    return result;
+        return result;
+    } catch (const std::exception& e) {
+        LOG("Exception happened at ModuleWorker::runModuleFunc(): " << wstring_cast(e.what()));
+        logStackTrace();
+        throw e;
+    }
 }
 
 std::pair<uint64_t, std::function<FuncResult(const std::vector<void*>&)>>

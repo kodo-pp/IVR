@@ -184,6 +184,28 @@ FuncResult handlerGraphicsAddTexture(const std::vector<void*>& args)
     return ret;
 }
 
+FuncResult handlerGraphicsDrawableAddTexture(const std::vector<void*>& args)
+{
+    if (args.size() != 2) {
+        throw std::logic_error("Wrong number of arguments for handlerGraphicsAddTexture()");
+    }
+
+    FuncResult ret;
+    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
+
+    uint64_t objectHandle = getArgument<uint64_t>(args, 0);
+    uint64_t textureHandle = getArgument<uint64_t>(args, 1);
+
+    auto obj = drawablesManager.access(objectHandle);
+    ITexture* texture = accessTexture(textureHandle);
+
+    LOG(L"Adding texture " << textureHandle << L" to object " << objectHandle);
+
+    obj->setMaterialTexture(0, texture);
+
+    return ret;
+}
+
 scene::ISceneNode* graphicsCreateDrawableCube();
 
 FuncResult handlerCreateDrawableCube(const std::vector<void*>& args)
@@ -200,6 +222,25 @@ FuncResult handlerCreateDrawableCube(const std::vector<void*>& args)
     return ret;
 }
 
+FuncResult handlerDrawableEnablePhysics(const std::vector<void*>& args)
+{
+    if (args.size() != 4) {
+        throw std::logic_error("Wrong number of arguments for handlerDrawableEnablePhysics()");
+    }
+
+    auto drawableHandle = getArgument<uint64_t>(args, 0);
+    auto x = getArgument<float>(args, 1);
+    auto y = getArgument<float>(args, 2);
+    auto z = getArgument<float>(args, 3);
+
+    auto drawable = drawablesManager.access(drawableHandle);
+
+    graphicsEnablePhysics(drawable, {x, y, z});
+
+    FuncResult ret;
+    return ret;
+}
+
 static inline void initializeGraphicsFuncProviders()
 {
     registerFuncProvider(FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
@@ -213,7 +254,15 @@ static inline void initializeGraphicsFuncProviders()
             FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture), "s", "L");
     registerFuncProvider(FuncProvider("graphics.texture.add", handlerGraphicsAddTexture), "LL", "");
     registerFuncProvider(
+            FuncProvider("graphics.texture.addToDrawable", handlerGraphicsDrawableAddTexture),
+            "LL",
+            "");
+    registerFuncProvider(
             FuncProvider("graphics.drawable.createCube", handlerCreateDrawableCube), "", "L");
+    registerFuncProvider(
+            FuncProvider("graphics.drawable.enablePhysics", handlerDrawableEnablePhysics),
+            "Lfff",
+            "");
 }
 
 void cleanupGraphics()
@@ -575,8 +624,44 @@ scene::IMesh* graphicsLoadMesh(const std::wstring& filename)
 scene::ISceneNode* graphicsCreateDrawableCube()
 {
     auto node = graphics::irrSceneManager->addCubeSceneNode();
-    if (node != nullptr) {
+    if (node == nullptr) {
         throw std::runtime_error("unable to add cube scene node");
     }
     return node;
+}
+
+void graphicsJump(scene::ISceneNode* node, float jumpSpeed)
+{
+    auto list = node->getAnimators();
+    if (list.empty()) {
+        throw std::runtime_error("Physics are disabled for this scene node");
+    }
+
+    auto animator = static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(*list.begin());
+    if (!animator->isFalling()) {
+        animator->jump(jumpSpeed);
+    }
+}
+
+void graphicsStep(scene::ISceneNode* node, float distance)
+{
+    auto direction = node->getRotation().rotationToDirection().normalize();
+    node->setPosition(node->getPosition() + direction * distance);
+}
+
+void graphicsLookAt(scene::ISceneNode* node, float x, float y, float z)
+{
+    core::vector3df src = node->getAbsolutePosition();
+    core::vector3df dst(x, y, z);
+    core::vector3df diff = dst - src;
+    node->setRotation(diff.getHorizontalAngle());
+}
+
+void graphicsGetPosition(scene::ISceneNode* node, float& x, float& y, float& z)
+{
+    std::array<float, 3> arr;
+    node->getPosition().getAs3Values(arr.data());
+    x = arr[0];
+    y = arr[1];
+    z = arr[2];
 }

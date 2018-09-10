@@ -47,4 +47,6 @@ T intFlipEndian(T n)
     return tmp;
 }
 
+void logStackTrace();
+
 #endif /* end of include guard: UTIL_UTIL_HPP */

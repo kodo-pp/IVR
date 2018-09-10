@@ -49,6 +49,11 @@ void graphicsEnablePhysics(scene::ISceneNode* node,
                            const core::vector3df& radius = core::vector3df(10, 10, 10));
 void graphicsDisablePhysics(scene::ISceneNode* node);
 
+void graphicsJump(scene::ISceneNode* node, float jumpSpeed);
+void graphicsStep(scene::ISceneNode* node, float distance);
+void graphicsLookAt(scene::ISceneNode* node, float x, float y, float z);
+void graphicsGetPosition(scene::ISceneNode* node, float& x, float& y, float& z);
+
 // ===== Managing textures =====
 
 /// Load texture and return Irrlicht ITexture* instance for this texture

@@ -3,6 +3,7 @@
 
 import socket
 import base64
+import sys
 import math
 import time
 from os import _exit as exit
@@ -14,6 +15,7 @@ VERBOSE = True
 def vlog(text):
     if VERBOSE:
         print(text)
+    sys.stdout.flush()
 
 # Netcat module taken from here: https://gist.github.com/leonjza/f35a7252babdf77c8421
 # and slightly modified
@@ -220,6 +222,7 @@ class Modcat(Netcat):
 
 
     def unblobify(self, blob):
+        vlog('unblobify: {}'.format(repr(blob)))
         split_blob = blob.split(b'\x00')
 
         # Костыль № 9124721
@@ -238,6 +241,7 @@ class Modcat(Netcat):
         for name, (type, value) in values.items():
             blob += bytes(name, 'utf-8') + bytes(type, 'utf-8') + b'\x00'
             blob += self.type_encode(value, type) + b'\x00'
+        vlog('blobify: {}'.format(repr(blob)))
         return blob
 
     def invoke(self, func, ls, args, ret):
@@ -280,13 +284,19 @@ class Modcat(Netcat):
         storage.func_provider_names[handle] = name
         storage.func_providers[name] = func, args, ret
 
+    def maybe_register_func_provider(self, *args):
+        try:
+            self.register_func_provider(*args)
+        except Exception as e:
+            vlog('Skipped: ' + str(e))
+
     def serve_func(self):
         try:
             vlog('Serving')
             while True:
                 # Wait for a request
                 handle = self.read_int(8, signed=False)
-                print('Handle = {}'.format(handle))
+                # vlog('Handle = {}'.format(handle))
                 if handle == self.reserved_handle:
                     # exit
                     return
@@ -322,11 +332,8 @@ class Modcat(Netcat):
     def join_serving_thread(self):
         self.serving_thread.join()
 
-    def class_handle(self, classname):
-        return self.invoke('core.class.getHandle', [classname], 's', 'L')[0]
-
     def get_class(self, classname):
-        return Class(self, self.class_handle(classname))
+        return Class(self, classname)
 
     def add_class(self, classname, members, methods, parent=''):
         vlog('Adding class "{}"'.format(classname))
@@ -339,12 +346,8 @@ class Modcat(Netcat):
         vlog('Instantiating class {}'.format(classname))
         return self.invoke('core.class.instantiate', [classname], 's', 'L')[0]
 
-def baz(nc, handle, blob, number):
-    print('baz: blob: ' + base64.b64encode(blob).decode())
-    print(repr(nc.unblobify(blob)))
-    retblob = nc.blobify({'foo': ('i', 166)})
-    print('baz: retblob: ' + base64.b64encode(retblob).decode())
-    return [retblob, number + 5]
+def cube_ai(nc, handle, blob):
+    return [b'', 'jump 10']
 
 def main():
     try:
@@ -362,20 +365,33 @@ def main():
     rnc.send_reverse_header()
     rnc.write_str(module_name)
 
-    nc.register_func_provider(rnc, baz.__get__(rnc), 'test.baz', 'Loi', 'oi')
+    nc.maybe_register_func_provider(rnc, cube_ai.__get__(rnc), 'game.enemy.Cube.ai', 'Lo', 'os')
 
     rnc.spawn_serving_thread()
 
-    TestClass = nc.add_class('test.TestClass', [('foo', 'i'), ('bar', 'i')], [('baz', 'test.baz', 'Loi', 'oi')], '')
-    test_class = TestClass.instantiate()
+    # TestClass = nc.add_class('test.TestClass', [('foo', 'i'), ('bar', 'i')], [('baz', 'test.baz', 'Loi', 'oi')], '')
+    # test_class = TestClass.instantiate()
 
-    nc.invoke('core.class.instance.setInt32', [test_class.handle, 'foo', 5], 'Lsi', '')
-    nc.invoke('core.class.instance.setInt32', [test_class.handle, 'bar', 3], 'Lsi', '')
-    nc.invoke('core.class.instance.getInt32', [test_class.handle, 'foo'], 'Ls', 'i')
-    nc.invoke('core.class.instance.getInt32', [test_class.handle, 'bar'], 'Ls', 'i')
-    test_class.call_method('baz', [77])
-    nc.invoke('core.class.instance.getInt32', [test_class.handle, 'foo'], 'Ls', 'i')
-    nc.invoke('core.class.instance.getInt32', [test_class.handle, 'bar'], 'Ls', 'i')
+    # nc.invoke('core.class.instance.setInt32', [test_class.handle, 'bar', 3], 'Lsi', '')
+    # nc.invoke('core.class.instance.setInt32', [test_class.handle, 'foo', 5], 'Lsi', '')
+    # nc.invoke('core.class.instance.getInt32', [test_class.handle, 'foo'], 'Ls', 'i')
+    # nc.invoke('core.class.instance.getInt32', [test_class.handle, 'bar'], 'Ls', 'i')
+    # test_class.call_method('baz', [77])
+    # nc.invoke('core.class.instance.getInt32', [test_class.handle, 'foo'], 'Ls', 'i')
+    # nc.invoke('core.class.instance.getInt32', [test_class.handle, 'bar'], 'Ls', 'i')
+
+    [model_handle] = nc.invoke('graphics.drawable.createCube', [], '', 'L')
+    nc.invoke('graphics.drawable.enablePhysics', [model_handle, 10, 10, 10], 'Lfff', '')
+    try:
+        CubeEnemy = nc.add_class('game.enemy.Cube', [], [('ai', 'game.enemy.Cube.ai', 'Lo', 'os')], 'game.Enemy')
+    except BaseException:
+        CubeEnemy = nc.get_class('game.enemy.Cube')
+    cube = CubeEnemy.instantiate()
+    nc.invoke('core.class.instance.setUInt64', [cube.handle, 'model', model_handle], 'LsL', '')
+    nc.invoke('core.eachTickWithHandle', ['enemy.processAi', cube.handle], 'sL', '')
+
+    while True:
+        time.sleep(1)
 
     [status] = nc.invoke_special('exit', [], '', 's')
 

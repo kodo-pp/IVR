@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <core/dyntype.hpp>
+#include <util/util.hpp>
 
 // === Type definitions ===
 
@@ -68,6 +69,7 @@ struct ModuleClass
 {
     ModuleClass(const std::unordered_map<std::string, ModuleClassMember>& _members,
                 const std::unordered_map<std::string, ModuleClassMethod>& _methods,
+                const std::string& className,
                 const std::string& parent);
 
     std::string parentClassName;
@@ -150,7 +152,9 @@ struct ModuleClassMemberData
     T& get()
     {
         if (type != TypeChar<T>::value) {
-            throw std::runtime_error("Type mismatch");
+            logStackTrace();
+            throw std::runtime_error(std::string("Type mismatch(get): expected ")
+                                     + TypeChar<T>::value + ", got " + type);
         } else {
             return *static_cast<T*>(value);
         }
@@ -159,7 +163,9 @@ struct ModuleClassMemberData
     const T& get() const
     {
         if (type != TypeChar<T>::value) {
-            throw std::runtime_error("Type mismatch");
+            logStackTrace();
+            throw std::runtime_error(std::string("Type mismatch(get const): expected ")
+                                     + TypeChar<T>::value + ", got " + type);
         } else {
             return *static_cast<T*>(value);
         }
@@ -168,7 +174,9 @@ struct ModuleClassMemberData
     void set(const T& x)
     {
         if (type != TypeChar<T>::value) {
-            throw std::runtime_error("Type mismatch");
+            logStackTrace();
+            throw std::runtime_error(std::string("Type mismatch(set): expected ")
+                                     + TypeChar<T>::value + ", got " + type);
         } else {
             *static_cast<T*>(value) = x;
         }
@@ -195,6 +203,11 @@ const ModuleClass& getModuleClass(const std::string& className);
 uint64_t instantiateModuleClass(const std::string& className);
 ModuleClassInstance& getModuleClassInstance(uint64_t instanceId);
 void deleteModuleClassInstance(uint64_t instanceId);
+
+std::tuple<std::string, std::string, std::string> moduleClassBindMethod(const std::string& className,
+                                                                        const std::string& command,
+                                                                        std::string argTypes,
+                                                                        std::string retTypes);
 
 // === Constants ===
 const uint64_t RESERVED_FP_HANDLE = 0xFFFF'FFFF'4E5E'47EDull;

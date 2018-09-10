@@ -14,7 +14,7 @@
 #include <log/log.hpp>
 #include <net/net.hpp>
 #include <util/handle_storage.hpp>
-#include <util/testit.hpp>
+#include <util/util.hpp>
 
 #include <signal.h>
 #include <sys/types.h>
@@ -28,29 +28,22 @@ struct FuncResult* testFunc(const std::vector<void*>& args)
 
 int main(int argc, char** argv)
 {
-    // Test for HandleStorage. TODO: move in more convenient place
-    {
-        HandleStorage<int, int> hs;
+    try {
+        std::vector<std::string> args(argv, argv + argc);
+        init(args);
 
-        testit_begin("HandleStorage");
-        testit(hs.insert(25) == 0);
-        testit(hs.insert(44) == 1);
-        testit(hs.insert(354) == 2);
-        testit((hs.remove(1), true));
-        testit(hs.insert(33) == 1);
-        testit(hs.access(2) == 354);
-        testit((hs.mutableAccess(1) = 66, true));
-        testit(hs.access(1) == 66);
-        testit_end();
+        LOG(L"ModBox version " << _PROJECT_VERSION);
+        createModuleListenerThread();
+        gameLoop();
+        destroy();
+    } catch (const std::logic_error& e) {
+        LOG("Logic error caught in main(): " << wstring_cast(e.what()));
+        std::terminate();
+    } catch (const std::exception& e) {
+        LOG("Exception caught in main(): " << wstring_cast(e.what()));
+        std::terminate();
+    } catch (...) {
+        LOG("Unknown exception caught in main()");
+        std::terminate();
     }
-
-    // [no utf-8]
-    std::vector<std::string> args(argv, argv + argc);
-    init(args);
-
-    LOG(L"ModBox version " << _PROJECT_VERSION);
-    createModuleListenerThread();
-    gameLoop();
-    destroy();
-    return 0;
 }

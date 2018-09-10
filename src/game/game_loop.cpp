@@ -18,6 +18,7 @@
 #include <util/util.hpp>
 #include <world/terrain.hpp>
 
+#include <boost/stacktrace.hpp>
 #include <irrlicht.h>
 #include <unistd.h>
 
@@ -29,7 +30,7 @@ std::atomic<bool> canPlaceObject(true);
 std::vector<GameObjCube> placedCubes;
 std::vector<std::pair<std::string, uint64_t>> eachTickFuncs;
 
-static const int desiredFps = 60;
+static const int desiredFps = 30;
 
 static void processKeys(Player& player)
 {
@@ -192,16 +193,37 @@ void gameLoop()
 
     double i = 0;
 
+    int counter = 0;
     while (irrDeviceRun()) {
-        for (const auto& fp : eachTickFuncs) {
-            auto arg = dyntypeNew('L');
-            *(static_cast<uint64_t*>(arg)) = fp.second;
-            auto ret = const_cast<FuncProvider&>(getFuncProvider(getFuncProviderHandle(fp.first)))(
-                    {arg});
-            if (ret.data.size() != 0) {
-                LOG("ret.data.size() != 0");
+        size_t idx = 0;
+        std::vector<size_t> toRemove;
+        ++counter;
+        if (counter == desiredFps / 10) {
+            counter = 0;
+            for (const auto& fp : eachTickFuncs) {
+                try {
+                    auto arg = dyntypeNew('L');
+                    *(static_cast<uint64_t*>(arg)) = fp.second;
+                    auto ret = getFuncProvider(getFuncProviderHandle(fp.first))({arg});
+                    if (ret.data.size() != 0) {
+                        LOG("ret.data.size() != 0");
+                    }
+                } catch (const std::exception& e) {
+                    LOG("Exception caught at game_loop(): " << wstring_cast(e.what()));
+                    logStackTrace();
+                    LOG("This funcProvider will be removed from each-tick execution list");
+                    toRemove.push_back(idx);
+                    break;
+                }
+                ++idx;
             }
         }
+
+        for (const auto& i : toRemove) {
+            LOG("Removing entry " << i << " from each-tick execution list");
+            eachTickFuncs.erase(eachTickFuncs.begin() + i);
+        }
+        toRemove.clear();
         enemy.ai();
         processKeys(player);
         std::ignore = graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());

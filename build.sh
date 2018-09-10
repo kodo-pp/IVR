@@ -76,7 +76,7 @@ CFLAGS="-std=gnu99"
 # Special for C++ compiler
 CXXFLAGS="-std=gnu++14"
 # Special for linker
-LDFLAGS="-z relro -z now"
+LDFLAGS="-z relro -z now -dlsym -rdynamic"
 
 # Flags for C and C++ compilers
 FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -Wno-nested-anon-types -DFORTIFY_SOURCE"
@@ -84,7 +84,7 @@ FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -Wno-nes
 # Link path, e.g. "-L/usr/lib/mylib/"
 LINK_PATH=""
 # Libraries to link, e.g. "-lmylib"
-LIBS="-lIrrlicht -lpthread"
+LIBS="-lIrrlicht -lpthread -ldl"
 # Append these to linker flags, don't change this line
 LDFLAGS="${LDFLAGS} ${LINK_PATH} ${LIBS}"
 
@@ -96,7 +96,7 @@ FLAGS="${FLAGS} ${INCLUDE_PATH}"
 # Dealing with debug mode
 if [[ "${DEBUG}" == "yes" ]]; then
     # If we are debugging, set -g flag and disable optimizations
-    FLAGS="${FLAGS} -g -O0 -DDEBUG_MODE"
+    FLAGS="${FLAGS} -g -O0 -DDEBUG_MODE -fno-inline"
     LDFLAGS="${LDFLAGS} -O0"
 else
     # Othewise, optimizations are enabled
