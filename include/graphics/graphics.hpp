@@ -7,6 +7,7 @@
 
 #include <game/objects/objects.hpp>
 #include <geometry/game_position.hpp>
+#include <util/handle_storage.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <irrlicht.h>
@@ -48,6 +49,11 @@ void graphicsEnablePhysics(scene::ISceneNode* node,
                            const core::vector3df& radius = core::vector3df(10, 10, 10));
 void graphicsDisablePhysics(scene::ISceneNode* node);
 
+void graphicsJump(scene::ISceneNode* node, float jumpSpeed);
+void graphicsStep(scene::ISceneNode* node, float distance);
+void graphicsLookAt(scene::ISceneNode* node, float x, float y, float z);
+void graphicsGetPosition(scene::ISceneNode* node, float& x, float& y, float& z);
+
 // ===== Managing textures =====
 
 /// Load texture and return Irrlicht ITexture* instance for this texture
@@ -65,6 +71,7 @@ void graphicsDraw();
 
 /// Return active ICameraSceneNode pointer
 irr::scene::ICameraSceneNode* graphicsGetCamera();
+irr::scene::ISceneNode* graphicsGetPseudoCamera();
 
 // ===== Managing terrain =====
 
@@ -119,5 +126,26 @@ const IrrKeyboardEventReceiver& getKeyboardEventReceiver();
 
 scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh);
 scene::IMesh* graphicsLoadMesh(const std::wstring& filename);
+
+class DrawablesManager
+{
+public:
+    DrawablesManager() = default;
+    DrawablesManager(const DrawablesManager& other) = delete;
+    DrawablesManager(DrawablesManager&& other) = default;
+    virtual ~DrawablesManager() = default;
+
+    DrawablesManager& operator=(const DrawablesManager& other) = delete;
+    DrawablesManager& operator=(DrawablesManager&& other) = default;
+
+    irr::scene::ISceneNode* access(uint64_t handle);
+    uint64_t track(irr::scene::ISceneNode* drawable);
+    void forget(uint64_t handle);
+
+private:
+    HandleStorage<uint64_t, irr::scene::ISceneNode*> drawables;
+};
+
+extern DrawablesManager drawablesManager;
 
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */

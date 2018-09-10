@@ -9,6 +9,7 @@
 #include <util/util.hpp>
 
 std::atomic<bool> doWeNeedToShutDown(false);
+std::atomic<bool> areWeShuttingDown(false);
 
 void destroy(void)
 {
@@ -18,9 +19,9 @@ void destroy(void)
     funcProvidersCleanup();
     LOG(L"And graphics");
     cleanupGraphics();
-    LOG(L"I'll forget anything!");
-    memoryManager.freeAll();
     LOG(L"I'm dying...");
+    areWeShuttingDown = true;
+
     exit(0);
 }
 

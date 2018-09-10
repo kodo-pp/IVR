@@ -10,15 +10,21 @@
 
 #include <irrlicht.h>
 
-Player::Player(irr::scene::ICameraSceneNode* _camera) : camera(_camera)
+Player::Player(irr::scene::ICameraSceneNode* _camera, irr::scene::ISceneNode* _pseudoCamera)
+        : camera(_camera)
+        , pseudoCamera(_pseudoCamera)
+        , rotation({0, 0, 0})
+        , cachedPosition(_pseudoCamera->getPosition())
 {
 }
 
 void Player::move(double dx, double dz)
 {
+    pseudoCamera->setPosition(pseudoCamera->getPosition() + irr::core::vector3df(dx, 0, dz));
     camera->updateAbsolutePosition();
-    camera->setPosition(camera->getPosition() + irr::core::vector3df(dx, 0, dz));
+    camera->setPosition(cachedPosition);
     camera->updateAbsolutePosition();
+    cachedPosition = pseudoCamera->getPosition();
 }
 
 void Player::moveForward(double delta, double directionOffset)
@@ -35,7 +41,8 @@ void Player::moveForward(double delta, double directionOffset)
 
 static bool checkCameraVerticalOverrotation(const irr::core::vector3df& rot)
 {
-    return -89 <= rot.X && rot.X <= 89;
+    const double eps = 1e-9;
+    return -90 + eps <= rot.X && rot.X <= 90 - eps;
 }
 
 void Player::turn(double dx, double dy)
@@ -44,7 +51,6 @@ void Player::turn(double dx, double dy)
     camera->updateAbsolutePosition();
     auto currentRotation = camera->getRotation();
     if (!checkCameraVerticalOverrotation(currentRotation + irr::core::vector3df(dx, dy, 0))) {
-        LOG("No");
         return;
     }
     camera->setRotation(currentRotation + irr::core::vector3df(dx, dy, 0));
@@ -55,7 +61,7 @@ void Player::turn(double dx, double dy)
 void Player::jump(double speed)
 {
     auto anim = static_cast<irr::scene::ISceneNodeAnimatorCollisionResponse*>(
-            *camera->getAnimators().begin());
+            *pseudoCamera->getAnimators().begin());
     if (!anim->isFalling()) {
         anim->jump(speed);
     }

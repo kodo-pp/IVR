@@ -1,5 +1,5 @@
 #include <cstdlib>
-#include <set>
+#include <unordered_set>
 
 #include <core/memory_manager.hpp>
 
@@ -56,31 +56,7 @@ bool MemoryManager::forget(void* ptr)
     return true;
 }
 
-bool MemoryManager::freePtr(void* ptr)
-{
-    if (ptr == nullptr) {
-        return false;
-    }
-
-    if (!isTracking(ptr)) {
-        return false;
-    }
-
-    free(ptr);
-    forget(ptr);
-    return true;
-}
-
-bool MemoryManager::freeAll()
-{
-    bool success = true;
-    for (auto& ptr : pointersSet) {
-        success = success && freePtr(ptr);
-    }
-    return success;
-}
-
-std::set<void*> MemoryManager::getPointersSet()
+const std::unordered_set<void*>& MemoryManager::getPointersSet()
 {
     return pointersSet;
 }

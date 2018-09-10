@@ -1,6 +1,7 @@
 #include <cstring>
 #include <exception>
 #include <string>
+#include <unordered_map>
 
 #include <log/log.hpp>
 #include <net/socketlib.hpp>
@@ -8,12 +9,45 @@
 
 #include <sys/socket.h>
 
-int sendBuf(int sock, const char* buf, int length)
+std::recursive_mutex netMutex;
+std::unordered_map<int, std::vector<uint8_t>> buffers;
+
+void putBuffer(int sock, const std::vector<uint8_t>& data)
 {
-    int sent = 0;
+    std::lock_guard<decltype(netMutex)> lock(netMutex);
+    if (buffers.count(sock) == 0) {
+        buffers.insert({sock, data});
+    } else {
+        buffers.at(sock).insert(buffers.at(sock).end(), data.begin(), data.end());
+    }
+}
+
+template <typename Iterator>
+void putBuffer(int sock, const Iterator& begin, const Iterator& end)
+{
+    std::lock_guard<decltype(netMutex)> lock(netMutex);
+    if (buffers.count(sock) == 0) {
+        buffers.insert({sock, {}});
+    }
+    buffers.at(sock).insert(buffers.at(sock).end(), begin, end);
+}
+
+void flushBuffer(int sock)
+{
+    std::lock_guard<decltype(netMutex)> lock(netMutex);
+    if (buffers.count(sock) == 0) {
+        throw std::logic_error(std::string("No such socket: ") + std::to_string(sock));
+    }
+    sendBuf(sock, buffers.at(sock).data(), buffers.at(sock).size());
+    buffers.at(sock).clear();
+}
+
+void sendBuf(int sock, const void* buf, size_t length)
+{
+    size_t sent = 0;
     while (sent < length) {
         int remain = length - sent;
-        decltype(buf) data = buf + sent;
+        const void* data = static_cast<const uint8_t*>(buf) + sent;
         int sent_now = send(sock, data, remain, 0);
 
         if (sent_now == -1) {
@@ -22,15 +56,14 @@ int sendBuf(int sock, const char* buf, int length)
         }
         sent += sent_now;
     }
-    return sent;
 }
 
-int recvBuf(int sock, char* buf, int length)
+void recvBuf(int sock, void* buf, size_t length)
 {
-    int received = 0;
+    size_t received = 0;
     while (received < length) {
         int remain = length - received;
-        decltype(buf) data = buf + received;
+        void* data = static_cast<uint8_t*>(buf) + received;
         int received_now = recv(sock, data, remain, 0);
 
         if (received_now == -1) {
@@ -41,7 +74,6 @@ int recvBuf(int sock, char* buf, int length)
         }
         received += received_now;
     }
-    return received;
 }
 
 std::string recvString(int sock)
@@ -59,21 +91,19 @@ std::string recvString(int sock)
     return s;
 }
 
-int sendString(int sock, const std::string& s)
+void sendString(int sock, const std::string& s)
 {
-    auto sent = sendBuf(sock, s.c_str(), s.length() * sizeof(char));
-    sendByte(sock, (uint8_t)0);
-    return sent + 1;
+    putBuffer(sock, s.begin(), s.end());
+    putBuffer(sock, {0});
 }
-int sendFixed(int sock, const std::string& s)
+void sendFixed(int sock, const std::string& s)
 {
-    return sendBuf(sock, s.c_str(), s.length() * sizeof(char));
+    putBuffer(sock, s.begin(), s.end());
 }
 
-void sendByte(int sock, uint8_t byte)
+inline void sendByte(int sock, uint8_t byte)
 {
-    char tmp = static_cast<char>(byte);
-    sendBuf(sock, &tmp, 1);
+    putBuffer(sock, {byte});
 }
 
 uint8_t recvByte(int sock)
@@ -177,4 +207,17 @@ void sendS32(int sock, int32_t v)
 void sendS64(int sock, int64_t v)
 {
     sendU64(sock, static_cast<uint64_t>(v));
+}
+
+void sendBlob(int sock, const std::vector<uint8_t>& blob)
+{
+    sendU64(sock, blob.size());
+    putBuffer(sock, blob);
+}
+std::vector<uint8_t> recvBlob(int sock)
+{
+    uint64_t len = recvU64(sock);
+    std::vector<uint8_t> blob(len);
+    recvBuf(sock, blob.data(), len);
+    return blob;
 }

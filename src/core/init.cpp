@@ -3,6 +3,7 @@
 #include <core/core.hpp>
 #include <core/destroy.hpp>
 #include <core/memory_manager.hpp>
+#include <game/enemy.hpp>
 #include <graphics/graphics.hpp>
 #include <log/log.hpp>
 #include <net/net.hpp>
@@ -21,6 +22,7 @@ void init(std::vector<std::string>& args)
 
     initilaizeCore(args);
     initializeGraphics(args);
+    initializeEnemies();
 
     signal(SIGINT, sigIntHandler);
 }

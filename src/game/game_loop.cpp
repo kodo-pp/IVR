@@ -6,6 +6,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include <core/core.hpp>
+#include <core/dyntype.hpp>
 #include <core/init.hpp>
 #include <game/enemy.hpp>
 #include <game/game_loop.hpp>
@@ -16,6 +18,7 @@
 #include <util/util.hpp>
 #include <world/terrain.hpp>
 
+#include <boost/stacktrace.hpp>
 #include <irrlicht.h>
 #include <unistd.h>
 
@@ -25,6 +28,9 @@ std::atomic<bool> canPlaceObject(true);
 
 // TODO: use TerrainManager or something like that
 std::vector<GameObjCube> placedCubes;
+std::vector<std::pair<std::string, uint64_t>> eachTickFuncs;
+
+static const int desiredFps = 30;
 
 static void processKeys(Player& player)
 {
@@ -48,8 +54,8 @@ static void processKeys(Player& player)
         }
 
         double directionOffset = 0;
-        // TEMP: скорость временно увеличена для удобства тестирования, изначальное значение равно 3
-        double speed = 10;
+        // TODO: Убрать зависимость от fps
+        double speed = 10.0 / desiredFps * 30;
         switch (dx * 10 + dz) {
         case -10 + -1: // back, left
             directionOffset = -0.75 * M_PI;
@@ -87,7 +93,9 @@ static void processKeys(Player& player)
     // Camera movement (vertical)
     {
         if (receiver.isKeyPressed(irr::KEY_SPACE)) {
-            const double jumpHeight = 10.0;
+            // Не спрашивайте, как я до этого дошёл и почему это должно работать
+            // Но оно работает, и высота прыжка почти не зависит от FPS
+            const double jumpHeight = 10.0 / pow(desiredFps, 0.33) * pow(30, 0.33);
             player.jump(jumpHeight);
         }
     }
@@ -108,7 +116,7 @@ static void processKeys(Player& player)
             --dy;
         }
 
-        const double speed = 2.0;
+        const double speed = 2.0 / desiredFps * 30;
         player.turn(speed * dx, speed * dy);
     }
 
@@ -136,7 +144,7 @@ static void processKeys(Player& player)
 
 void gameLoop()
 {
-    Player player(graphicsGetCamera());
+    Player player(graphicsGetCamera(), graphicsGetPseudoCamera());
     graphicsLoadTerrain(0,
                         0,
                         L"textures/terrain/heightmap/heightmap1.png",
@@ -152,7 +160,6 @@ void gameLoop()
     int fpsCounter = 0;
     double oneSecondCounter = 0.0;
 
-    int desiredFps = 30; // Desired, but unreachable in practice
     double timeForFrame = 1.0 / desiredFps;
 
     GameObjCube object = graphicsCreateCube();
@@ -186,7 +193,37 @@ void gameLoop()
 
     double i = 0;
 
+    int counter = 0;
     while (irrDeviceRun()) {
+        size_t idx = 0;
+        std::vector<size_t> toRemove;
+        ++counter;
+        if (counter == desiredFps / 10) {
+            counter = 0;
+            for (const auto& fp : eachTickFuncs) {
+                try {
+                    auto arg = dyntypeNew('L');
+                    *(static_cast<uint64_t*>(arg)) = fp.second;
+                    auto ret = getFuncProvider(getFuncProviderHandle(fp.first))({arg});
+                    if (ret.data.size() != 0) {
+                        LOG("ret.data.size() != 0");
+                    }
+                } catch (const std::exception& e) {
+                    LOG("Exception caught at game_loop(): " << wstring_cast(e.what()));
+                    logStackTrace();
+                    LOG("This funcProvider will be removed from each-tick execution list");
+                    toRemove.push_back(idx);
+                    break;
+                }
+                ++idx;
+            }
+        }
+
+        for (const auto& i : toRemove) {
+            LOG("Removing entry " << i << " from each-tick execution list");
+            eachTickFuncs.erase(eachTickFuncs.begin() + i);
+        }
+        toRemove.clear();
         enemy.ai();
         processKeys(player);
         std::ignore = graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
@@ -225,4 +262,9 @@ void gameLoop()
 
         i += timeForFrame;
     }
+}
+
+void eachTickWithParam(const std::string& name, uint64_t param)
+{
+    eachTickFuncs.emplace_back(name, param);
 }

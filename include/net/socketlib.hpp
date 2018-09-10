@@ -2,14 +2,16 @@
 #define NET_SOCKET_LIB_HPP
 
 #include <string>
+#include <vector>
 
 #include <sys/socket.h>
 
-int sendBuf(int sock, const char* buf, int length);
-int recvBuf(int sock, char* buf, int length);
+void sendBuf(int sock, const void* buf, size_t length);
+void recvBuf(int sock, void* buf, size_t length);
 std::string recvString(int sock);
-int sendString(int sock, const std::string& s);
-int sendFixed(int sock, const std::string& s);
+void sendString(int sock, const std::string& s);
+void sendFixed(int sock, const std::string& s);
+void flushBuffer(int sock);
 
 void sendByte(int sock, uint8_t byte);
 uint8_t recvByte(int sock);
@@ -39,5 +41,8 @@ void sendFloat64(int sock, double v);
 
 float recvFloat32(int sock);
 double recvFloat64(int sock);
+
+void sendBlob(int sock, const std::vector<uint8_t>& blob);
+std::vector<uint8_t> recvBlob(int sock);
 
 #endif /* end of include guard: NET_SOCKET_LIB_HPP */

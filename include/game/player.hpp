@@ -7,7 +7,7 @@
 class Player
 {
 public:
-    Player(irr::scene::ICameraSceneNode* _camera);
+    Player(irr::scene::ICameraSceneNode* _camera, irr::scene::ISceneNode* _pseudoCamera);
     Player(const Player& other) = default;
     Player(Player&& other) = default;
     virtual ~Player() = default;
@@ -26,7 +26,9 @@ public:
 
 private:
     irr::scene::ICameraSceneNode* camera;
+    irr::scene::ISceneNode* pseudoCamera;
     irr::core::vector3df rotation;
+    irr::core::vector3df cachedPosition;
 };
 
 #endif /* end of include guard: INCLUDE_GAME_PLAYER_HPP */

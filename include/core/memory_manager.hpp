@@ -1,29 +1,38 @@
 #ifndef CORE_MEMORY_MANAGER_HPP
 #define CORE_MEMORY_MANAGER_HPP
 
-#include <set>
+#include <cstdlib>
+#include <unordered_set>
 
-/**
- * Позволяет освобождать память по событию
- *
- * Здесь должно быть полное описание класса, но в машине темно, и мне трудно
- * (и лень) писать комментарии
- */
+#include <core/destroy.hpp>
+#include <log/log.hpp>
+
 class MemoryManager
 {
-private:
-    std::set<void*> pointersSet;
-
 public:
-    bool track(void*);      // Начать отслеживать указатель ptr
-    bool isTracking(void*); // Вернуть, отслеживается ли указатель ptr
-    bool forget(void*);     // Перестать отслеживать ptr
+    bool track(void* ptr);
+    bool forget(void* ptr);
+    bool isTracking(void* ptr);
 
-    // не free(void *), чтобы не было путаницы с free() из stdlib
-    bool freePtr(void*); // Освободить и перестать отслеживать указатель ptr
-    bool freeAll(); // Освободить и перестать отслеживать все указатели
+    template <typename T>
+    void deletePtr(void* ptr)
+    {
+        if (areWeShuttingDown) {
+            return;
+        }
+        if (!isTracking(ptr)) {
+            LOG("WARNING: attempted to delete untracked pointer " << ptr);
+            // abort();
+            return;
+        }
+        delete static_cast<T*>(ptr);
+        forget(ptr);
+    }
 
-    std::set<void*> getPointersSet(); // Вернуть std::set отслеживаемых указателей
+    const std::unordered_set<void*>& getPointersSet();
+
+private:
+    std::unordered_set<void*> pointersSet;
 };
 
 extern MemoryManager memoryManager;

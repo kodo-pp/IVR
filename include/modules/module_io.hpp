@@ -3,10 +3,14 @@
 
 #include <cassert>
 #include <string>
+#include <type_traits>
 
 #include <core/core.hpp>
+#include <core/memory_manager.hpp>
+#include <log/log.hpp>
 
-bool readModuleHeader(int sock);
+void readModuleHeader(int sock);
+void readReverseModuleHeader(int sock);
 std::wstring readModuleName(int sock);
 
 void* recvArg(int sock, char spec);
@@ -14,7 +18,7 @@ void sendArg(int sock, void* arg, char spec);
 void freeArg(void* arg, char spec);
 
 template <typename T>
-T getArgument(const std::vector<void*> args, size_t idx)
+T getArgument(const std::vector<void*>& args, size_t idx)
 {
     assert(args.at(idx) != nullptr);
     return *static_cast<T*>(args[idx]);
@@ -30,6 +34,7 @@ void setReturn(FuncResult& res, size_t idx, const T& value)
     res.data[idx]
 #endif
             = static_cast<void*>(new T(value));
+    memoryManager.track(res.data.at(idx));
 }
 
 #endif /* end of include guard: MODULES_MODULE_IO_HPP */

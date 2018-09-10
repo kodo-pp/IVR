@@ -51,6 +51,7 @@ namespace graphics
     gui::IGUIEnvironment* irrGuiEnvironment = nullptr;
     IrrKeyboardEventReceiver irrEventReceiver;
 
+    scene::ISceneNode* pseudoCamera = nullptr;
     scene::ICameraSceneNode* camera = nullptr;
     std::map<std::pair<int64_t, int64_t>, scene::ITerrainSceneNode*> terrainChunks;
     scene::ITerrainSceneNode* rootTerrainSceneNode;
@@ -125,7 +126,6 @@ FuncResult handlerGraphicsRotateObject(const std::vector<void*>& args)
 
     uint64_t objectHandle = getArgument<uint64_t>(args, 0);
 
-    // TODO: make sure these thing are called this way
     double pitch = getArgument<double>(args, 1);
     double roll = getArgument<double>(args, 2);
     double yaw = getArgument<double>(args, 3);
@@ -184,6 +184,63 @@ FuncResult handlerGraphicsAddTexture(const std::vector<void*>& args)
     return ret;
 }
 
+FuncResult handlerGraphicsDrawableAddTexture(const std::vector<void*>& args)
+{
+    if (args.size() != 2) {
+        throw std::logic_error("Wrong number of arguments for handlerGraphicsAddTexture()");
+    }
+
+    FuncResult ret;
+    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
+
+    uint64_t objectHandle = getArgument<uint64_t>(args, 0);
+    uint64_t textureHandle = getArgument<uint64_t>(args, 1);
+
+    auto obj = drawablesManager.access(objectHandle);
+    ITexture* texture = accessTexture(textureHandle);
+
+    LOG(L"Adding texture " << textureHandle << L" to object " << objectHandle);
+
+    obj->setMaterialTexture(0, texture);
+
+    return ret;
+}
+
+scene::ISceneNode* graphicsCreateDrawableCube();
+
+FuncResult handlerCreateDrawableCube(const std::vector<void*>& args)
+{
+    if (args.size() != 0) {
+        throw std::logic_error("Wrong number of arguments for handlerCreateDrawableCube()");
+    }
+
+    FuncResult ret;
+    ret.data.resize(1);
+
+    LOG(L"Creating drawable cube");
+    setReturn<uint64_t>(ret, 0, drawablesManager.track(graphicsCreateDrawableCube()));
+    return ret;
+}
+
+FuncResult handlerDrawableEnablePhysics(const std::vector<void*>& args)
+{
+    if (args.size() != 4) {
+        throw std::logic_error("Wrong number of arguments for handlerDrawableEnablePhysics()");
+    }
+
+    auto drawableHandle = getArgument<uint64_t>(args, 0);
+    auto x = getArgument<float>(args, 1);
+    auto y = getArgument<float>(args, 2);
+    auto z = getArgument<float>(args, 3);
+
+    auto drawable = drawablesManager.access(drawableHandle);
+
+    graphicsEnablePhysics(drawable, {x, y, z});
+
+    FuncResult ret;
+    return ret;
+}
+
 static inline void initializeGraphicsFuncProviders()
 {
     registerFuncProvider(FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
@@ -196,6 +253,16 @@ static inline void initializeGraphicsFuncProviders()
     registerFuncProvider(
             FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture), "s", "L");
     registerFuncProvider(FuncProvider("graphics.texture.add", handlerGraphicsAddTexture), "LL", "");
+    registerFuncProvider(
+            FuncProvider("graphics.texture.addToDrawable", handlerGraphicsDrawableAddTexture),
+            "LL",
+            "");
+    registerFuncProvider(
+            FuncProvider("graphics.drawable.createCube", handlerCreateDrawableCube), "", "L");
+    registerFuncProvider(
+            FuncProvider("graphics.drawable.enablePhysics", handlerDrawableEnablePhysics),
+            "Lfff",
+            "");
 }
 
 void cleanupGraphics()
@@ -254,6 +321,11 @@ static void initializeIrrlicht(UNUSED std::vector<std::string>& args)
         throw std::runtime_error("Failed to create Irrlicht camera");
     }
     graphics::camera->bindTargetAndRotation(true);
+    graphics::pseudoCamera = graphics::irrSceneManager->addEmptySceneNode();
+    if (graphics::pseudoCamera == nullptr) {
+        throw std::runtime_error("Failed to create Irrlicht pseudo-camera");
+    }
+    graphics::pseudoCamera->setPosition(graphics::camera->getPosition());
 
     graphicsInitializeCollisions();
 }
@@ -404,7 +476,7 @@ void graphicsHandleCollisions(scene::ITerrainSceneNode* node)
 
     static_cast<scene::IMetaTriangleSelector*>(
             static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
-                    *graphics::camera->getAnimators().begin())
+                    *graphics::pseudoCamera->getAnimators().begin())
                     ->getWorld())
             ->addTriangleSelector(selector);
     selector->drop();
@@ -419,7 +491,7 @@ void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node)
 
     static_cast<scene::IMetaTriangleSelector*>(
             static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
-                    *graphics::camera->getAnimators().begin())
+                    *graphics::pseudoCamera->getAnimators().begin())
                     ->getWorld())
             ->addTriangleSelector(selector);
     selector->drop();
@@ -434,7 +506,7 @@ void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node)
 
     static_cast<scene::IMetaTriangleSelector*>(
             static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
-                    *graphics::camera->getAnimators().begin())
+                    *graphics::pseudoCamera->getAnimators().begin())
                     ->getWorld())
             ->addTriangleSelector(selector);
     selector->drop();
@@ -470,7 +542,7 @@ void graphicsInitializeCollisions()
 
     auto animator = graphics::irrSceneManager->createCollisionResponseAnimator(
             selector,                    // Triangle selector
-            graphics::camera,            // Affected scene node
+            graphics::pseudoCamera,      // Affected scene node
             core::vector3df(30, 60, 30), // Collision radius
             core::vector3df(0, -20, 0),  // Gravity vector
             core::vector3df(0, 30, 0),   // Ellipsoid translation
@@ -482,13 +554,18 @@ void graphicsInitializeCollisions()
                 "unable to create camera collision animator for terrain scene node");
     }
 
-    graphics::camera->addAnimator(animator);
+    graphics::pseudoCamera->addAnimator(animator);
     animator->drop();
 }
 
 irr::scene::ICameraSceneNode* graphicsGetCamera()
 {
     return graphics::camera;
+}
+
+irr::scene::ISceneNode* graphicsGetPseudoCamera()
+{
+    return graphics::pseudoCamera;
 }
 
 bool irrDeviceRun()
@@ -542,4 +619,49 @@ scene::IMesh* graphicsLoadMesh(const std::wstring& filename)
         throw std::runtime_error("unable to load mesh from file");
     }
     return mesh;
+}
+
+scene::ISceneNode* graphicsCreateDrawableCube()
+{
+    auto node = graphics::irrSceneManager->addCubeSceneNode();
+    if (node == nullptr) {
+        throw std::runtime_error("unable to add cube scene node");
+    }
+    return node;
+}
+
+void graphicsJump(scene::ISceneNode* node, float jumpSpeed)
+{
+    auto list = node->getAnimators();
+    if (list.empty()) {
+        throw std::runtime_error("Physics are disabled for this scene node");
+    }
+
+    auto animator = static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(*list.begin());
+    if (!animator->isFalling()) {
+        animator->jump(jumpSpeed);
+    }
+}
+
+void graphicsStep(scene::ISceneNode* node, float distance)
+{
+    auto direction = node->getRotation().rotationToDirection().normalize();
+    node->setPosition(node->getPosition() + direction * distance);
+}
+
+void graphicsLookAt(scene::ISceneNode* node, float x, float y, float z)
+{
+    core::vector3df src = node->getAbsolutePosition();
+    core::vector3df dst(x, y, z);
+    core::vector3df diff = dst - src;
+    node->setRotation(diff.getHorizontalAngle());
+}
+
+void graphicsGetPosition(scene::ISceneNode* node, float& x, float& y, float& z)
+{
+    std::array<float, 3> arr;
+    node->getPosition().getAs3Values(arr.data());
+    x = arr[0];
+    y = arr[1];
+    z = arr[2];
 }
