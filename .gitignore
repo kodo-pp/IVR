@@ -46,3 +46,4 @@ build.log
 
 *.orig
 vgcore.*
+*.tmp
