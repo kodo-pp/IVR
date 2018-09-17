@@ -18,7 +18,6 @@
 #include <util/util.hpp>
 #include <world/terrain.hpp>
 
-#include <boost/stacktrace.hpp>
 #include <irrlicht.h>
 #include <unistd.h>
 
