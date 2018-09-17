@@ -1,7 +1,8 @@
 #include <log/log.hpp>
 #include <util/util.hpp>
 
-#include <boost/stacktrace.hpp>
+#include <boost/stacktrace/frame.hpp>
+#include <boost/stacktrace/stacktrace.hpp>
 
 void logStackTrace()
 {
