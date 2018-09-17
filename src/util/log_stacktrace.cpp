@@ -1,6 +1,15 @@
 #include <log/log.hpp>
 #include <util/util.hpp>
 
+#ifdef NO_BOOST_STACKTRACE
+void logStackTrace()
+{
+    LOG("Stack trace:");
+    LOG("  <unavailable as boost::stacktrace was disabled at build-time>");
+}
+
+#else
+
 #include <boost/stacktrace/frame.hpp>
 #include <boost/stacktrace/stacktrace.hpp>
 
@@ -12,3 +21,5 @@ void logStackTrace()
                     << frame.address() << ")");
     }
 }
+
+#endif // NO_BOOST_STACKTRACE

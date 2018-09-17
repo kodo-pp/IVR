@@ -16,6 +16,7 @@ if [[ "$1" == "--help" ]]; then
     echo -e "      CUSTOM_LD                - Linker, usually the same as CUSTOM_CXX"
     echo -e "  USE_LTO=[yes/no]             - enable link time optimization (ignored when DEBUG=yes)"
     echo -e "  PROC_COUNT=<num>             - spawn up to <num> parallel processes, set to 1 to disable parallel build"
+    echo -e "  DISABLE_BOOST_STACKTRACE=[yes/no] - disable boost::stacktrace support as it is broken on some machines"
     echo -e ""
     echo -e "Default settings are:"
     echo -e "  DEBUG=no"
@@ -23,6 +24,7 @@ if [[ "$1" == "--help" ]]; then
     echo -e "  CC_TOOLCHAIN=generic"
     echo -e "  LTO=yes"
     echo -e "  PROC_COUNT=4"
+    echo -e "  DISABLE_BOOST_STACKTRACE=no"
     echo -e ""
     echo -e "Exact commands executed are written to build.log"
     exit 1
@@ -80,6 +82,10 @@ LDFLAGS="-z relro -z now -dlsym -rdynamic"
 
 # Flags for C and C++ compilers
 FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -Wno-nested-anon-types -DFORTIFY_SOURCE"
+
+if [[ "${DISABLE_BOOST_STACKTRACE}" == "yes" ]]; then
+    FLAGS+=' -DNO_BOOST_STACKTRACE'
+fi
 
 # Link path, e.g. "-L/usr/lib/mylib/"
 LINK_PATH=""
