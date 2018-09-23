@@ -11,6 +11,7 @@
 #include <core/memory_manager.hpp>
 #include <game/game_loop.hpp>
 #include <graphics/graphics.hpp>
+#include <gui/gui.hpp>
 #include <log/log.hpp>
 #include <net/net.hpp>
 #include <util/handle_storage.hpp>
@@ -34,7 +35,17 @@ int main(int argc, char** argv)
 
         LOG(L"ModBox version " << _PROJECT_VERSION);
         createModuleListenerThread();
-        gameLoop();
+        LOG("Creating draw thread");
+        std::thread gameThread([]() {
+            {
+                GuiItemList testMenu({L"First item", L"Second item", L"Third item"});
+                testMenu.draw({10, 20, 300, 300});
+            }
+            graphicsInitializeCollisions();
+            gameLoop();
+        });
+        drawLoop();
+        gameThread.join();
         destroy();
     } catch (const std::logic_error& e) {
         LOG("Logic error caught in main(): " << wstring_cast(e.what()));

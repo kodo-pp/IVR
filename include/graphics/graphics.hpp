@@ -148,4 +148,9 @@ private:
 
 extern DrawablesManager drawablesManager;
 
+irr::gui::IGUIListBox* createListBox(const std::vector<std::wstring>& strings,
+                                     const core::recti& position);
+
+void graphicsInitializeCollisions();
+
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */

@@ -5,25 +5,20 @@
 #include <string>
 #include <vector>
 
-#include <geometry/geometry.hpp>
-
-// COMBAK: Just a stub because config.hpp is not yet written
-enum ConfigType { CONFIG_STUB };
+#include <irrlicht.h>
 
 /**
  * Represents an abstract GUI element.
- *
- * SHOULD NOT BE INSTANTIATED
  */
 class GuiElement
 {
 public:
-    GuiElement() = delete;
-    virtual ~GuiElement();
-    virtual void draw() = 0;
+    GuiElement() = default;
+    virtual ~GuiElement() = default;
+    virtual void draw(const irr::core::recti& position) = 0;
 
 protected:
-    Rectangle<double> position;
+    irr::core::recti position;
 };
 
 /**
@@ -34,19 +29,28 @@ protected:
 class GuiItemList : public GuiElement
 {
 public:
-    virtual void draw() override;
+    GuiItemList(const std::vector<std::wstring>& _strings);
+    virtual ~GuiItemList();
+
+    virtual void draw(const irr::core::recti& position) override;
     std::wstring getSelectedItem();
     size_t getSelectedItemIndex();
 
 protected:
-    size_t selectedItemIndex;
+    std::vector<std::wstring> strings;
+    irr::gui::IGUIListBox* listbox;
+    ssize_t selectedItemIndex;
 };
 
 class GuiButton : public GuiElement
 {
 public:
-    virtual void draw() override;
+    GuiButton(const std::wstring& _text);
+    virtual void draw(const irr::core::recti& position) override;
     std::wstring getText();
+
+protected:
+    std::wstring text;
 };
 
 // WARNING: 'actions' in class diagram are 'buttons' here
@@ -63,7 +67,7 @@ public:
     // declared as virtual, which is not true in our case.
     // So there will be a separate method to get the result of showing dialog
     // to user.
-    virtual void draw() override;
+    virtual void draw(const irr::core::recti& position) override;
 
     int getResult(); // returns the index of the button pressed or -1 if the dialog
                      // was not shown to user yet
@@ -75,17 +79,6 @@ public:
                                              // CAN be modified
 protected:
     std::vector<std::wstring> buttons;
-};
-
-// WARNING: there is some difference to class diagram
-class GuiConfigWindow : public GuiElement
-{
-public:
-    GuiConfigWindow(std::map<std::wstring, ConfigType> _config);
-
-    virtual void draw() override;
-
-    std::map<std::wstring, std::wstring> getResult();
 };
 
 #endif /* end of include guard: GUI_GUI_HPP */

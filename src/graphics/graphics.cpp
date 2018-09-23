@@ -281,8 +281,8 @@ void initializeGraphics(std::vector<std::string>& args)
 static void initializeIrrlicht(UNUSED std::vector<std::string>& args)
 {
     graphics::irrDevice = irr::createDevice(
-            irr::video::EDT_OPENGL, // Драйвер для рендеринга (здесь OpenGL, но пока
-                                    // программный)
+            irr::video::EDT_SOFTWARE, // Драйвер для рендеринга (здесь OpenGL, но пока
+                                      // программный)
             // (см. http://irrlicht.sourceforge.net/docu/example001.html)
             irr::core::dimension2d<irr::u32>(800,
                                              600), // Размеры окна (не в полноэкранном режиме)
@@ -327,7 +327,7 @@ static void initializeIrrlicht(UNUSED std::vector<std::string>& args)
     }
     graphics::pseudoCamera->setPosition(graphics::camera->getPosition());
 
-    graphicsInitializeCollisions();
+    // graphicsInitializeCollisions();
 }
 
 GameObjCube graphicsCreateCube()
@@ -346,6 +346,7 @@ GameObjCube graphicsCreateCube()
 
 void graphicsDraw()
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     graphics::irrVideoDriver->beginScene(
             true, // Неясно, что это
             true, // Неясно, что это
@@ -377,6 +378,8 @@ void graphicsMoveObject(ISceneNode* obj, double x, double y, double z)
     if (obj == nullptr) {
         return;
     }
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+
     obj->setPosition(core::vector3df(x, y, z));
 }
 void graphicsMoveObject(ISceneNode* obj, const core::vector3df& pos)
@@ -384,6 +387,7 @@ void graphicsMoveObject(ISceneNode* obj, const core::vector3df& pos)
     if (obj == nullptr) {
         return;
     }
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     obj->setPosition(pos);
 }
 void graphicsMoveObject(ISceneNode* obj, const GamePosition& gp)
@@ -391,17 +395,20 @@ void graphicsMoveObject(ISceneNode* obj, const GamePosition& gp)
     if (obj == nullptr) {
         return;
     }
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     obj->setPosition(gp.toIrrVector3df());
 }
 
 void graphicsDeleteObject(GameObject* obj)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     obj->sceneNode()->remove();
     delete obj;
 }
 
 void graphicsRotateObject(ISceneNode* obj, const core::vector3df& rot)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     if (obj == nullptr) {
         return;
     }
@@ -410,6 +417,7 @@ void graphicsRotateObject(ISceneNode* obj, const core::vector3df& rot)
 
 ITexture* graphicsLoadTexture(const std::wstring& textureFileName)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     LOG(L"loading texture: " << textureFileName);
     ITexture* texture = graphics::irrVideoDriver->getTexture(textureFileName.c_str());
     if (texture == nullptr) {
@@ -422,6 +430,7 @@ ITexture* graphicsLoadTexture(const std::wstring& textureFileName)
 
 void graphicsAddTexture(const GameObject& obj, ITexture* tex)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     LOG(L"Adding texture");
     if ((obj.sceneNode() == nullptr) || (tex == nullptr)) {
         LOG(L"Adding texture failed");
@@ -441,6 +450,7 @@ void graphicsLoadTerrain(int64_t off_x,
                          video::ITexture* tex,
                          video::ITexture* detail)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     double irrOffsetX = CHUNK_SIZE_IRRLICHT * off_x;
     double irrOffsetY = CHUNK_SIZE_IRRLICHT * off_y;
     scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
@@ -469,6 +479,7 @@ void graphicsLoadTerrain(int64_t off_x,
 
 void graphicsHandleCollisions(scene::ITerrainSceneNode* node)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     auto selector = graphics::irrSceneManager->createTerrainTriangleSelector(node);
     if (selector == nullptr) {
         throw std::runtime_error("unable to create triangle selector on terrain scene node");
@@ -484,6 +495,7 @@ void graphicsHandleCollisions(scene::ITerrainSceneNode* node)
 
 void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     auto selector = graphics::irrSceneManager->createTriangleSelector(mesh, node);
     if (selector == nullptr) {
         throw std::runtime_error("unable to create triangle selector on mesh scene node");
@@ -499,6 +511,7 @@ void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node)
 
 void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     auto selector = graphics::irrSceneManager->createTriangleSelectorFromBoundingBox(node);
     if (selector == nullptr) {
         throw std::runtime_error("unable to create triangle selector on scene node bounding box");
@@ -514,6 +527,7 @@ void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node)
 
 void graphicsEnablePhysics(scene::ISceneNode* node, const core::vector3df& radius)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     auto animator = graphics::irrSceneManager->createCollisionResponseAnimator(
             graphics::terrainSelector, // Comment to make code autoformatter happy
             node,
@@ -530,11 +544,13 @@ void graphicsEnablePhysics(scene::ISceneNode* node, const core::vector3df& radiu
 
 void graphicsDisablePhysics(scene::ISceneNode* node)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     node->removeAnimators();
 }
 
 void graphicsInitializeCollisions()
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     auto selector = graphics::irrSceneManager->createMetaTriangleSelector();
     if (selector == nullptr) {
         throw std::runtime_error("unable to create meta triangle selector");
@@ -570,6 +586,7 @@ irr::scene::ISceneNode* graphicsGetPseudoCamera()
 
 bool irrDeviceRun()
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     return graphics::irrDevice->run();
 }
 
@@ -605,6 +622,7 @@ std::pair<bool, GamePosition> graphicsGetPlacePosition(const GamePosition& pos,
 
 scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     auto node = graphics::irrSceneManager->addMeshSceneNode(mesh);
     if (node == nullptr) {
         throw std::runtime_error("unable to create mesh scene node");
@@ -614,6 +632,7 @@ scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh)
 
 scene::IMesh* graphicsLoadMesh(const std::wstring& filename)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     auto mesh = graphics::irrSceneManager->getMesh(filename.c_str());
     if (mesh == nullptr) {
         throw std::runtime_error("unable to load mesh from file");
@@ -623,6 +642,7 @@ scene::IMesh* graphicsLoadMesh(const std::wstring& filename)
 
 scene::ISceneNode* graphicsCreateDrawableCube()
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     auto node = graphics::irrSceneManager->addCubeSceneNode();
     if (node == nullptr) {
         throw std::runtime_error("unable to add cube scene node");
@@ -632,6 +652,7 @@ scene::ISceneNode* graphicsCreateDrawableCube()
 
 void graphicsJump(scene::ISceneNode* node, float jumpSpeed)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     auto list = node->getAnimators();
     if (list.empty()) {
         throw std::runtime_error("Physics are disabled for this scene node");
@@ -645,12 +666,14 @@ void graphicsJump(scene::ISceneNode* node, float jumpSpeed)
 
 void graphicsStep(scene::ISceneNode* node, float distance)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     auto direction = node->getRotation().rotationToDirection().normalize();
     node->setPosition(node->getPosition() + direction * distance);
 }
 
 void graphicsLookAt(scene::ISceneNode* node, float x, float y, float z)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     core::vector3df src = node->getAbsolutePosition();
     core::vector3df dst(x, y, z);
     core::vector3df diff = dst - src;
@@ -659,9 +682,21 @@ void graphicsLookAt(scene::ISceneNode* node, float x, float y, float z)
 
 void graphicsGetPosition(scene::ISceneNode* node, float& x, float& y, float& z)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     std::array<float, 3> arr;
     node->getPosition().getAs3Values(arr.data());
     x = arr[0];
     y = arr[1];
     z = arr[2];
+}
+
+irr::gui::IGUIListBox* createListBox(const std::vector<std::wstring>& strings,
+                                     const core::recti& position)
+{
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+    auto listbox = graphics::irrGuiEnvironment->addListBox(position);
+    for (const auto& s : strings) {
+        listbox->addItem(s.c_str());
+    }
+    return listbox;
 }

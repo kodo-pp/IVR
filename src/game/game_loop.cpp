@@ -156,10 +156,6 @@ void gameLoop()
                         graphicsLoadTexture(L"textures/terrain/details2.png"));
     graphicsHandleCollisions(terrainManager.getChunk(0, 0).sceneNode());
     graphicsHandleCollisions(terrainManager.getChunk(1, 0).sceneNode());
-    int fpsCounter = 0;
-    double oneSecondCounter = 0.0;
-
-    double timeForFrame = 1.0 / desiredFps;
 
     GameObjCube object = graphicsCreateCube();
 
@@ -190,10 +186,13 @@ void gameLoop()
     graphicsEnablePhysics(enemy.sceneNode(), {60, 75, 60});
     // graphicsHandleCollisionsMesh(enemyMesh, enemy.sceneNode());
 
-    double i = 0;
-
     int counter = 0;
+    double i = 0;
     while (irrDeviceRun()) {
+        if (doWeNeedToShutDown) {
+            LOG("Shutting down game loop");
+            return;
+        }
         size_t idx = 0;
         std::vector<size_t> toRemove;
         ++counter;
@@ -224,14 +223,35 @@ void gameLoop()
         }
         toRemove.clear();
         enemy.ai();
+
         processKeys(player);
         std::ignore = graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
-        auto timeBefore = std::chrono::high_resolution_clock::now();
-        if (doWeNeedToShutDown) {
-            return;
-        }
         object.setPosition(GamePosition(sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20));
         object.setRotation(i * 100, i * 50, i * 20);
+
+        double timeForFrame = 1.0 / desiredFps;
+        i += timeForFrame;
+        usleep(1000000 / 60);
+    }
+}
+
+void eachTickWithParam(const std::string& name, uint64_t param)
+{
+    eachTickFuncs.emplace_back(name, param);
+}
+
+void drawLoop()
+{
+    int fpsCounter = 0;
+    double oneSecondCounter = 0.0;
+
+    double timeForFrame = 1.0 / desiredFps;
+
+    while (irrDeviceRun()) {
+        if (doWeNeedToShutDown) {
+            LOG("Shutting down draw thread");
+            return;
+        }
 
         {
             std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -239,6 +259,7 @@ void gameLoop()
         }
         ++fpsCounter;
 
+        auto timeBefore = std::chrono::high_resolution_clock::now();
         auto timeAfter = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(timeAfter
                                                                                   - timeBefore);
@@ -258,12 +279,5 @@ void gameLoop()
         auto fullDuration = std::chrono::duration_cast<std::chrono::duration<double>>(timeAfterSleep
                                                                                       - timeBefore);
         oneSecondCounter += fullDuration.count();
-
-        i += timeForFrame;
     }
-}
-
-void eachTickWithParam(const std::string& name, uint64_t param)
-{
-    eachTickFuncs.emplace_back(name, param);
 }
