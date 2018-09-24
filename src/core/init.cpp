@@ -25,4 +25,6 @@ void init(std::vector<std::string>& args)
     initializeEnemies();
 
     signal(SIGINT, sigIntHandler);
+    signal(SIGABRT, sigAbrtHandler);
+    signal(SIGSEGV, sigSegvHandler);
 }

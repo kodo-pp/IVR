@@ -37,12 +37,19 @@ int main(int argc, char** argv)
         createModuleListenerThread();
         LOG("Creating draw thread");
         std::thread gameThread([]() {
-            {
-                GuiItemList testMenu({L"First item", L"Second item", L"Third item"});
-                testMenu.draw({10, 20, 300, 300});
+            try {
+                {
+                    GuiItemList testMenu({L"First item", L"Second item", L"Third item"});
+                    testMenu.draw({10, 20, 300, 300});
+                    LOG("AAA");
+                }
+                LOG("BBB");
+                graphicsInitializeCollisions();
+                LOG("CCC");
+                gameLoop();
+            } catch (const std::exception& e) {
+                LOG("Exception caught at game thread lambda: " << wstring_cast(e.what()));
             }
-            graphicsInitializeCollisions();
-            gameLoop();
         });
         drawLoop();
         gameThread.join();

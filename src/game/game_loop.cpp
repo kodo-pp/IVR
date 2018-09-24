@@ -1,5 +1,6 @@
 #include <chrono>
 #include <cmath>
+#include <future>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -21,6 +22,11 @@
 #include <irrlicht.h>
 #include <unistd.h>
 
+void drawBarrier()
+{
+    addDrawFunction([]() -> void { LOG("--- Draw barrier ---"); }, true);
+}
+
 std::recursive_mutex irrlichtMutex;
 
 std::atomic<bool> canPlaceObject(true);
@@ -28,6 +34,9 @@ std::atomic<bool> canPlaceObject(true);
 // TODO: use TerrainManager or something like that
 std::vector<GameObjCube> placedCubes;
 std::vector<std::pair<std::string, uint64_t>> eachTickFuncs;
+
+std::recursive_mutex drawFunctionsMutex;
+std::vector<std::packaged_task<void()>> drawFunctions;
 
 static const int desiredFps = 30;
 
@@ -154,8 +163,10 @@ void gameLoop()
                         L"textures/terrain/heightmap/heightmap2.png",
                         graphicsLoadTexture(L"textures/terrain/clouds.png"),
                         graphicsLoadTexture(L"textures/terrain/details2.png"));
+    drawBarrier();
     graphicsHandleCollisions(terrainManager.getChunk(0, 0).sceneNode());
     graphicsHandleCollisions(terrainManager.getChunk(1, 0).sceneNode());
+    drawBarrier();
 
     GameObjCube object = graphicsCreateCube();
 
@@ -254,12 +265,25 @@ void drawLoop()
         }
 
         {
+            std::lock_guard<std::recursive_mutex> lock(drawFunctionsMutex);
+            for (auto& func : drawFunctions) {
+                try {
+                    func();
+                } catch (const std::exception& e) {
+                    LOG("draw function: exception: " << wstring_cast(e.what()));
+                    throw e;
+                }
+            }
+            drawFunctions.clear();
+        }
+
+        auto timeBefore = std::chrono::high_resolution_clock::now();
+        {
             std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
             graphicsDraw();
         }
         ++fpsCounter;
 
-        auto timeBefore = std::chrono::high_resolution_clock::now();
         auto timeAfter = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(timeAfter
                                                                                   - timeBefore);

@@ -8,6 +8,8 @@
 #include <net/net.hpp>
 #include <util/util.hpp>
 
+#include <signal.h>
+
 std::atomic<bool> doWeNeedToShutDown(false);
 std::atomic<bool> areWeShuttingDown(false);
 
@@ -29,4 +31,39 @@ void sigIntHandler(UNUSED int signal)
 {
     LOG(L"Wow, you interrupted me! How rude...");
     doWeNeedToShutDown = true;
+}
+
+void sigAbrtHandler(int)
+{
+    static int recursive = 0;
+    if (recursive == 1) {
+        recursive = 2;
+        LOG("Double SIGABRT");
+        raise(SIGKILL);
+    } else if (recursive >= 2) {
+        raise(SIGKILL);
+    }
+    recursive = 1;
+
+    LOG("SIGABRT Caught");
+    logStackTrace();
+    LOG("Raising SIGQUIT");
+    raise(SIGQUIT);
+}
+void sigSegvHandler(int)
+{
+    static int recursive = 0;
+    if (recursive == 1) {
+        recursive = 2;
+        LOG("Double SIGSEGV");
+        raise(SIGKILL);
+    } else if (recursive >= 2) {
+        raise(SIGKILL);
+    }
+    recursive = 1;
+
+    LOG("SIGSEGV Caught");
+    logStackTrace();
+    LOG("Raising SIGQUIT");
+    raise(SIGQUIT);
 }

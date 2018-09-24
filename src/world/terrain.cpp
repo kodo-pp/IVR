@@ -2,12 +2,14 @@
 #include <string>
 
 #include <graphics/graphics.hpp>
+#include <log/log.hpp>
 #include <world/terrain.hpp>
 
 #include <irrlicht.h>
 
 void TerrainManager::loadTerrain(offset_t off_x, offset_t off_y)
 {
+    LOG("TerrainManager @" << this << ": loading terrain at " << off_x << ", " << off_y);
     // STUB
     if (off_x == 0 && off_y == 0) {
         graphicsLoadTerrain(0,
@@ -24,11 +26,12 @@ void TerrainManager::loadTerrain(offset_t off_x, offset_t off_y)
     } else {
         throw std::runtime_error("Invalid chunk position");
     }
-    graphicsHandleCollisions(terrainManager.getChunk(off_x, off_y).sceneNode());
+    graphicsHandleCollisions(getChunk(off_x, off_y).sceneNode());
 }
 
 const Chunk& TerrainManager::getChunk(offset_t off_x, offset_t off_y) const
 {
+    LOG("TerrainManager @" << this << ": getting chunk at " << off_x << ", " << off_y);
     return chunks.at({off_x, off_y});
 }
 Chunk& TerrainManager::getMutableChunk(offset_t off_x, offset_t off_y)
@@ -37,6 +40,7 @@ Chunk& TerrainManager::getMutableChunk(offset_t off_x, offset_t off_y)
 }
 void TerrainManager::addChunk(offset_t off_x, offset_t off_y, const Chunk& chunk)
 {
+    LOG("TerrainManager @" << this << ": adding chunk at " << off_x << ", " << off_y);
     bool newInserted = false;
     std::tie(std::ignore, newInserted) = chunks.insert({{off_x, off_y}, chunk});
     if (!newInserted) {
@@ -47,6 +51,7 @@ void TerrainManager::addChunk(offset_t off_x, offset_t off_y, const Chunk& chunk
 }
 void TerrainManager::addChunk(offset_t off_x, offset_t off_y, Chunk&& chunk)
 {
+    LOG("TerrainManager @" << this << ": adding chunk&& at " << off_x << ", " << off_y);
     bool newInserted = false;
     std::tie(std::ignore, newInserted) = chunks.insert({{off_x, off_y}, chunk});
     if (!newInserted) {
@@ -58,6 +63,7 @@ void TerrainManager::addChunk(offset_t off_x, offset_t off_y, Chunk&& chunk)
 
 void TerrainManager::deleteChunk(offset_t off_x, offset_t off_y)
 {
+    LOG("TerrainManager @" << this << ": deleting chunk at " << off_x << ", " << off_y);
     chunks.erase({off_x, off_y});
 }
 

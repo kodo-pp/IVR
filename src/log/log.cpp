@@ -3,6 +3,7 @@
 #include <codecvt>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <ctime>
 #include <locale>
 #include <mutex>
@@ -37,27 +38,16 @@ static LogStream logStream([]() -> std::wstring {
     // Example:
     // [LOG: 23.11.2039 16:44:37]
     asprintf(&lineBegin,
-             "[LOG: %02d.%02d.%d %02d:%02d:%02d] ",
+             "[LOG: %02d.%02d.%d %02d:%02d:%02d] T~%04u | ",
              tm_now->tm_mday,
              tm_now->tm_mon + 1,
              tm_now->tm_year + 1900,
              tm_now->tm_hour,
              tm_now->tm_min,
-             tm_now->tm_sec);
+             tm_now->tm_sec,
+             (uint)pthread_self() % 10000);
 
-    std::wstring stlLineBegin;
-
-    // Now wee need to convert narrow string to wide one.
-    // lineBegin is guaranted to contain only ASCII characters, so conversion is simple
-    // WARNING: use of pointers is unsafe
-    {
-        char* tmp = lineBegin;
-        while (*tmp != (char)0) {
-            stlLineBegin.push_back(*tmp);
-            ++tmp;
-        }
-    }
-
+    std::wstring stlLineBegin(lineBegin, lineBegin + strlen(lineBegin));
     free(lineBegin);
 
     lbfMutex.lock();

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <core/core.hpp>
+#include <game/game_loop.hpp>
 #include <game/objects/objects.hpp>
 #include <geometry/geometry.hpp>
 #include <graphics/graphics.hpp>
@@ -281,8 +282,8 @@ void initializeGraphics(std::vector<std::string>& args)
 static void initializeIrrlicht(UNUSED std::vector<std::string>& args)
 {
     graphics::irrDevice = irr::createDevice(
-            irr::video::EDT_SOFTWARE, // Драйвер для рендеринга (здесь OpenGL, но пока
-                                      // программный)
+            irr::video::EDT_OPENGL, // Драйвер для рендеринга (здесь OpenGL, но пока
+                                    // программный)
             // (см. http://irrlicht.sourceforge.net/docu/example001.html)
             irr::core::dimension2d<irr::u32>(800,
                                              600), // Размеры окна (не в полноэкранном режиме)
@@ -332,20 +333,25 @@ static void initializeIrrlicht(UNUSED std::vector<std::string>& args)
 
 GameObjCube graphicsCreateCube()
 {
-    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
-    scene::ISceneNode* node = graphics::irrSceneManager->addCubeSceneNode();
-    if (node == nullptr) {
-        // return (ISceneNode*)nullptr;
-        throw std::runtime_error("failed to create a cube scene node");
-    }
+    return addDrawFunction([]() -> GameObjCube {
+        std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
+        scene::ISceneNode* node = graphics::irrSceneManager->addCubeSceneNode();
+        if (node == nullptr) {
+            // return (ISceneNode*)nullptr;
+            throw std::runtime_error("failed to create a cube scene node");
+        }
 
-    node->setMaterialFlag(EMF_LIGHTING, false);
+        node->setMaterialFlag(EMF_LIGHTING, false);
 
-    return GameObjCube(node);
+        return GameObjCube(node);
+    });
 }
 
 void graphicsDraw()
 {
+    // Внимание: эту функцию можно вызывать только из основного потока.
+    // Если кто-то вызовет её из другого потока, случится страшное
+    // (вроде Segfault в glGenTextures, только ещё страшнее)
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     graphics::irrVideoDriver->beginScene(
             true, // Неясно, что это
@@ -375,20 +381,24 @@ void graphicsDraw()
 
 void graphicsMoveObject(ISceneNode* obj, double x, double y, double z)
 {
-    if (obj == nullptr) {
-        return;
-    }
-    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+    return addDrawFunction([=]() {
+        if (obj == nullptr) {
+            return;
+        }
+        std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
 
-    obj->setPosition(core::vector3df(x, y, z));
+        obj->setPosition(core::vector3df(x, y, z));
+    });
 }
 void graphicsMoveObject(ISceneNode* obj, const core::vector3df& pos)
 {
-    if (obj == nullptr) {
-        return;
-    }
-    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-    obj->setPosition(pos);
+    return addDrawFunction([=]() {
+        if (obj == nullptr) {
+            return;
+        }
+        std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+        obj->setPosition(pos);
+    });
 }
 void graphicsMoveObject(ISceneNode* obj, const GamePosition& gp)
 {
@@ -417,28 +427,32 @@ void graphicsRotateObject(ISceneNode* obj, const core::vector3df& rot)
 
 ITexture* graphicsLoadTexture(const std::wstring& textureFileName)
 {
-    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-    LOG(L"loading texture: " << textureFileName);
-    ITexture* texture = graphics::irrVideoDriver->getTexture(textureFileName.c_str());
-    if (texture == nullptr) {
-        LOG(L"Loading texture failed");
-        return nullptr;
-    }
-    LOG(L"Texture loaded successfully");
-    return texture;
+    return addDrawFunction([=]() -> ITexture* {
+        std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+        LOG(L"loading texture: " << textureFileName);
+        ITexture* texture = graphics::irrVideoDriver->getTexture(textureFileName.c_str());
+        if (texture == nullptr) {
+            LOG(L"Loading texture failed");
+            return nullptr;
+        }
+        LOG(L"Texture loaded successfully");
+        return texture;
+    });
 }
 
 void graphicsAddTexture(const GameObject& obj, ITexture* tex)
 {
-    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-    LOG(L"Adding texture");
-    if ((obj.sceneNode() == nullptr) || (tex == nullptr)) {
-        LOG(L"Adding texture failed");
-        return;
-    }
+    return addDrawFunction([=]() {
+        std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+        LOG(L"Adding texture");
+        if ((obj.sceneNode() == nullptr) || (tex == nullptr)) {
+            LOG(L"Adding texture failed");
+            return;
+        }
 
-    obj.sceneNode()->setMaterialTexture(0, tex);
-    LOG(L"Texture added successfully");
+        obj.sceneNode()->setMaterialTexture(0, tex);
+        LOG(L"Texture added successfully");
+    });
 }
 
 // COMBAK: Stub, maybe customize arguments like node position and scale
@@ -450,63 +464,70 @@ void graphicsLoadTerrain(int64_t off_x,
                          video::ITexture* tex,
                          video::ITexture* detail)
 {
-    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-    double irrOffsetX = CHUNK_SIZE_IRRLICHT * off_x;
-    double irrOffsetY = CHUNK_SIZE_IRRLICHT * off_y;
-    scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
-            heightmap.c_str(),                                         // heightmap filename
-            nullptr,                                                   // parent node
-            -1,                                                        // node id
-            core::vector3df(irrOffsetX - 180, -600, irrOffsetY - 200), // position
-            core::vector3df(0.0f, 0.0f, 0.0f),                         // rotation
-            core::vector3df(10.0f, 4.0f, 10.0f),                       // scale
-            video::SColor(255, 255, 255, 255),                         // vertexColor (?)
-            5,                                                         // maxLOD (Level Of Detail)
-            scene::ETPS_17,                                            // patchSize (?)
-            4                                                          // smoothFactor (?)
-    );
-    if (terrain == nullptr) {
-        throw std::runtime_error("unable to create terrain scene node");
-    }
-    terrain->setMaterialFlag(irr::video::EMF_LIGHTING, false);
-    terrain->setMaterialTexture(1, tex);
-    terrain->setMaterialTexture(0, detail);
-    terrain->scaleTexture(1.0f, 20.0f);
+    return addDrawFunction([=]() {
+        std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+        double irrOffsetX = CHUNK_SIZE_IRRLICHT * off_x;
+        double irrOffsetY = CHUNK_SIZE_IRRLICHT * off_y;
+        scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
+                heightmap.c_str(),                                         // heightmap filename
+                nullptr,                                                   // parent node
+                -1,                                                        // node id
+                core::vector3df(irrOffsetX - 180, -600, irrOffsetY - 200), // position
+                core::vector3df(0.0f, 0.0f, 0.0f),                         // rotation
+                core::vector3df(10.0f, 4.0f, 10.0f),                       // scale
+                video::SColor(255, 255, 255, 255),                         // vertexColor (?)
+                5,              // maxLOD (Level Of Detail)
+                scene::ETPS_17, // patchSize (?)
+                4               // smoothFactor (?)
+        );
+        if (terrain == nullptr) {
+            throw std::runtime_error("unable to create terrain scene node");
+        }
+        terrain->setMaterialFlag(irr::video::EMF_LIGHTING, false);
+        terrain->setMaterialTexture(1, tex);
+        terrain->setMaterialTexture(0, detail);
+        terrain->scaleTexture(1.0f, 20.0f);
 
-    Chunk terrainChunk({}, terrain);
-    terrainManager.addChunk(off_x, off_y, std::move(terrainChunk));
+        Chunk terrainChunk({}, terrain);
+        LOG("ASKAJSKAJSKJAS");
+        terrainManager.addChunk(off_x, off_y, std::move(terrainChunk));
+    });
 }
 
 void graphicsHandleCollisions(scene::ITerrainSceneNode* node)
 {
-    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-    auto selector = graphics::irrSceneManager->createTerrainTriangleSelector(node);
-    if (selector == nullptr) {
-        throw std::runtime_error("unable to create triangle selector on terrain scene node");
-    }
+    return addDrawFunction([=]() {
+        std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+        auto selector = graphics::irrSceneManager->createTerrainTriangleSelector(node);
+        if (selector == nullptr) {
+            throw std::runtime_error("unable to create triangle selector on terrain scene node");
+        }
 
-    static_cast<scene::IMetaTriangleSelector*>(
-            static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
-                    *graphics::pseudoCamera->getAnimators().begin())
-                    ->getWorld())
-            ->addTriangleSelector(selector);
-    selector->drop();
+        static_cast<scene::IMetaTriangleSelector*>(
+                static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
+                        *graphics::pseudoCamera->getAnimators().begin())
+                        ->getWorld())
+                ->addTriangleSelector(selector);
+        selector->drop();
+    });
 }
 
 void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node)
 {
-    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-    auto selector = graphics::irrSceneManager->createTriangleSelector(mesh, node);
-    if (selector == nullptr) {
-        throw std::runtime_error("unable to create triangle selector on mesh scene node");
-    }
+    return addDrawFunction([=]() {
+        std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+        auto selector = graphics::irrSceneManager->createTriangleSelector(mesh, node);
+        if (selector == nullptr) {
+            throw std::runtime_error("unable to create triangle selector on mesh scene node");
+        }
 
-    static_cast<scene::IMetaTriangleSelector*>(
-            static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
-                    *graphics::pseudoCamera->getAnimators().begin())
-                    ->getWorld())
-            ->addTriangleSelector(selector);
-    selector->drop();
+        static_cast<scene::IMetaTriangleSelector*>(
+                static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
+                        *graphics::pseudoCamera->getAnimators().begin())
+                        ->getWorld())
+                ->addTriangleSelector(selector);
+        selector->drop();
+    });
 }
 
 void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node)

@@ -76,7 +76,7 @@ shopt -u nocasematch
 # Special for C compiler
 CFLAGS="-std=gnu99"
 # Special for C++ compiler
-CXXFLAGS="-std=gnu++14"
+CXXFLAGS="-std=gnu++17"
 # Special for linker
 LDFLAGS="-z relro -z now -dlsym -rdynamic"
 

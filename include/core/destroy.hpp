@@ -9,5 +9,7 @@ extern std::atomic<bool> areWeShuttingDown;
 
 void destroy(void);
 void sigIntHandler(int);
+void sigAbrtHandler(int);
+void sigSegvHandler(int);
 
 #endif /* end of include guard: CORE_DESTROY_HPP */
