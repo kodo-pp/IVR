@@ -20,7 +20,7 @@ public:
     {
     }
 
-    Handle insert(Value v)
+    Handle insert(const Value& v)
     {
         Handle h = allocateHandle();
         storageMap.insert(std::make_pair(h, v));

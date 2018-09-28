@@ -40,6 +40,7 @@ int main(int argc, char** argv)
             try {
                 {
                     GuiItemList testMenu({L"First item", L"Second item", L"Third item"});
+                    testMenu.setClickHandler([]() { return true; });
                     testMenu.draw({10, 20, 300, 300});
                     LOG("AAA");
                 }

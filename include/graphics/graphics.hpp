@@ -103,17 +103,23 @@ bool irrDeviceRun();
 #define eventType EventType
 // Yeah, now it's much better
 /// Event receiver for keyboard events
-class IrrKeyboardEventReceiver : public irr::IEventReceiver
+class IrrEventReceiver : public irr::IEventReceiver
 {
 public:
-    IrrKeyboardEventReceiver() = default;
-    virtual ~IrrKeyboardEventReceiver() = default;
+    using EventHandlerType = std::function<bool(const irr::SEvent&)>;
+    IrrEventReceiver() = default;
+    virtual ~IrrEventReceiver() = default;
 
     virtual bool onEvent(const irr::SEvent& event) override;
     virtual bool isKeyPressed(irr::EKEY_CODE key) const;
 
+    uint64_t addEventHandler(const EventHandlerType& handler);
+    void deleteEventHandler(uint64_t id);
+
 private:
     std::unordered_set<irr::EKEY_CODE> pressedKeys;
+    HandleStorage<uint64_t, EventHandlerType> eventHandlers;
+    std::recursive_mutex mutex;
 };
 // And... Clean up
 #undef onEvent
@@ -122,7 +128,7 @@ private:
 #undef pressedDown
 #undef eventType
 
-const IrrKeyboardEventReceiver& getKeyboardEventReceiver();
+IrrEventReceiver& getEventReceiver();
 
 scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh);
 scene::IMesh* graphicsLoadMesh(const std::wstring& filename);
@@ -152,5 +158,53 @@ irr::gui::IGUIListBox* createListBox(const std::vector<std::wstring>& strings,
                                      const core::recti& position);
 
 void graphicsInitializeCollisions();
+
+uint64_t addEventHandler(const std::function<bool(const irr::SEvent&)>& callback);
+
+// Это ужасный код, но он поможет при отладке
+static inline std::string getGuiEventDebugName(irr::gui::EGUI_EVENT_TYPE type)
+{
+#define ENTRY(name)                                                                                \
+    case irr::gui::EGET_##name:                                                                    \
+        return "EGET_" #name;
+
+    switch (type) {
+        ENTRY(ELEMENT_FOCUS_LOST);
+        ENTRY(ELEMENT_FOCUSED);
+        ENTRY(ELEMENT_HOVERED);
+        ENTRY(ELEMENT_LEFT);
+        ENTRY(ELEMENT_CLOSED);
+        ENTRY(BUTTON_CLICKED);
+        ENTRY(SCROLL_BAR_CHANGED);
+        ENTRY(CHECKBOX_CHANGED);
+        ENTRY(LISTBOX_CHANGED);
+        ENTRY(LISTBOX_SELECTED_AGAIN);
+        ENTRY(FILE_SELECTED);
+        ENTRY(DIRECTORY_SELECTED);
+        ENTRY(FILE_CHOOSE_DIALOG_CANCELLED);
+        ENTRY(MESSAGEBOX_YES);
+        ENTRY(MESSAGEBOX_NO);
+        ENTRY(MESSAGEBOX_OK);
+        ENTRY(MESSAGEBOX_CANCEL);
+        ENTRY(EDITBOX_ENTER);
+        ENTRY(EDITBOX_CHANGED);
+        ENTRY(EDITBOX_MARKING_CHANGED);
+        ENTRY(TAB_CHANGED);
+        ENTRY(MENU_ITEM_SELECTED);
+        ENTRY(COMBO_BOX_CHANGED);
+        ENTRY(SPINBOX_CHANGED);
+        ENTRY(TABLE_CHANGED);
+        ENTRY(TABLE_HEADER_CHANGED);
+        ENTRY(TABLE_SELECTED_AGAIN);
+        ENTRY(TREEVIEW_NODE_DESELECT);
+        ENTRY(TREEVIEW_NODE_SELECT);
+        ENTRY(TREEVIEW_NODE_EXPAND);
+        ENTRY(TREEVIEW_NODE_COLLAPSE);
+    default:
+        return std::string("Unknown GUI event type ") + std::to_string(type);
+    }
+
+#undef ENTRY
+};
 
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */

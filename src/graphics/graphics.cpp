@@ -21,8 +21,9 @@
 #include <irrlicht.h>
 #include <unistd.h>
 
-bool IrrKeyboardEventReceiver::OnEvent(const irr::SEvent& event)
+bool IrrEventReceiver::OnEvent(const irr::SEvent& event)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     if (event.EventType == irr::EET_KEY_INPUT_EVENT) {
         if (event.KeyInput.PressedDown) {
             pressedKeys.insert(event.KeyInput.Key);
@@ -32,13 +33,29 @@ bool IrrKeyboardEventReceiver::OnEvent(const irr::SEvent& event)
             }
         }
     }
+    for (const auto& handler : eventHandlers) {
+        handler.second(event);
+    }
     return false;
 }
 
-bool IrrKeyboardEventReceiver::isKeyPressed(irr::EKEY_CODE key) const
+bool IrrEventReceiver::isKeyPressed(irr::EKEY_CODE key) const
 {
     return pressedKeys.count(key) > 0;
 }
+
+uint64_t IrrEventReceiver::addEventHandler(const EventHandlerType& handler)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    return eventHandlers.insert(handler);
+}
+
+void IrrEventReceiver::deleteEventHandler(uint64_t id)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    eventHandlers.remove(id);
+}
+
 /**
  * Глобальные переменные, хранящие необходимые объекты для работы с Irrlicht
  *
@@ -50,7 +67,7 @@ namespace graphics
     video::IVideoDriver* irrVideoDriver = nullptr;
     scene::ISceneManager* irrSceneManager = nullptr;
     gui::IGUIEnvironment* irrGuiEnvironment = nullptr;
-    IrrKeyboardEventReceiver irrEventReceiver;
+    IrrEventReceiver irrEventReceiver;
 
     scene::ISceneNode* pseudoCamera = nullptr;
     scene::ICameraSceneNode* camera = nullptr;
@@ -611,7 +628,7 @@ bool irrDeviceRun()
     return graphics::irrDevice->run();
 }
 
-const IrrKeyboardEventReceiver& getKeyboardEventReceiver()
+const IrrEventReceiver& getKeyboardEventReceiver()
 {
     return graphics::irrEventReceiver;
 }
@@ -720,4 +737,9 @@ irr::gui::IGUIListBox* createListBox(const std::vector<std::wstring>& strings,
         listbox->addItem(s.c_str());
     }
     return listbox;
+}
+
+IrrEventReceiver& getEventReceiver()
+{
+    return graphics::irrEventReceiver;
 }

@@ -43,7 +43,7 @@ static const int desiredFps = 30;
 static void processKeys(Player& player)
 {
     // XXX: This is stub, camera movement and rotation should be done by class like Player
-    const IrrKeyboardEventReceiver& receiver = getKeyboardEventReceiver();
+    const IrrEventReceiver& receiver = getEventReceiver();
 
     // Camera movement (horizontal)
     {

@@ -1,6 +1,7 @@
 #ifndef GUI_GUI_HPP
 #define GUI_GUI_HPP
 
+#include <future>
 #include <map>
 #include <string>
 #include <vector>
@@ -32,6 +33,8 @@ public:
     GuiItemList(const std::vector<std::wstring>& _strings);
     virtual ~GuiItemList();
 
+    void setClickHandler(const std::function<bool()>& callback);
+
     virtual void draw(const irr::core::recti& position) override;
     std::wstring getSelectedItem();
     size_t getSelectedItemIndex();
@@ -40,6 +43,11 @@ protected:
     std::vector<std::wstring> strings;
     irr::gui::IGUIListBox* listbox;
     ssize_t selectedItemIndex;
+    uint64_t eventHandlerId;
+    std::function<bool()> clickHandler;
+    std::condition_variable cv;
+    std::mutex cv_mutex;
+    bool closeMenu;
 };
 
 class GuiButton : public GuiElement
