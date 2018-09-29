@@ -1,10 +1,10 @@
 #include <iostream>
 #include <mutex>
 
-#include <graphics/graphics.hpp>
-#include <graphics/texture.hpp>
-#include <log/log.hpp>
-#include <util/handle_storage.hpp>
+#include <modbox/graphics/graphics.hpp>
+#include <modbox/graphics/texture.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/util/handle_storage.hpp>
 
 #include <irrlicht.h>
 

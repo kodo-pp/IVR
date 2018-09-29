@@ -1,10 +1,10 @@
 #include <mutex>
 #include <unordered_map>
 
-#include <game/game_object.hpp>
-#include <graphics/graphics.hpp>
-#include <log/log.hpp>
-#include <util/handle_storage.hpp>
+#include <modbox/game/game_object.hpp>
+#include <modbox/graphics/graphics.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/util/handle_storage.hpp>
 
 HandleStorage<uint64_t, GameObject*> gameObjects;
 std::recursive_mutex gameObjectMutex;

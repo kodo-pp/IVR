@@ -1,11 +1,11 @@
-#include <core/core.hpp>
-#include <game/enemy.hpp>
-#include <game/game_loop.hpp>
-#include <geometry/game_position.hpp>
-#include <geometry/geometry.hpp>
-#include <graphics/graphics.hpp>
-#include <modules/module_io.hpp>
-#include <util/util.hpp>
+#include <modbox/core/core.hpp>
+#include <modbox/game/enemy.hpp>
+#include <modbox/game/game_loop.hpp>
+#include <modbox/geometry/game_position.hpp>
+#include <modbox/geometry/geometry.hpp>
+#include <modbox/graphics/graphics.hpp>
+#include <modbox/modules/module_io.hpp>
+#include <modbox/util/util.hpp>
 
 #include <boost/lexical_cast.hpp>
 

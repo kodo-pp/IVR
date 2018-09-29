@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include <game/game_object.hpp>
-#include <graphics/graphics.hpp>
+#include <modbox/game/game_object.hpp>
+#include <modbox/graphics/graphics.hpp>
 
 class SolidObjectPart : public GameObject
 {

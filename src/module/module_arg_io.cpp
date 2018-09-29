@@ -2,10 +2,10 @@
 #include <stdexcept>
 #include <string>
 
-#include <log/log.hpp>
-#include <modules/module_io.hpp>
-#include <net/socketlib.hpp>
-#include <util/util.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/modules/module_io.hpp>
+#include <modbox/net/socketlib.hpp>
+#include <modbox/util/util.hpp>
 
 void readModuleHeader(int sock)
 {

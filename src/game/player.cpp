@@ -1,12 +1,12 @@
 #include <cmath>
 #include <tuple>
 
-#include <game/player.hpp>
-#include <geometry/game_position.hpp>
-#include <geometry/geometry.hpp>
-#include <graphics/graphics.hpp>
-#include <log/log.hpp>
-#include <misc/irrvec.hpp>
+#include <modbox/game/player.hpp>
+#include <modbox/geometry/game_position.hpp>
+#include <modbox/geometry/geometry.hpp>
+#include <modbox/graphics/graphics.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/misc/irrvec.hpp>
 
 #include <irrlicht.h>
 

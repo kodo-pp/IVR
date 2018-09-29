@@ -4,8 +4,8 @@
 #include <cstdlib>
 #include <unordered_set>
 
-#include <core/destroy.hpp>
-#include <log/log.hpp>
+#include <modbox/core/destroy.hpp>
+#include <modbox/log/log.hpp>
 
 class MemoryManager
 {

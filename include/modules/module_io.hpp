@@ -5,9 +5,9 @@
 #include <string>
 #include <type_traits>
 
-#include <core/core.hpp>
-#include <core/memory_manager.hpp>
-#include <log/log.hpp>
+#include <modbox/core/core.hpp>
+#include <modbox/core/memory_manager.hpp>
+#include <modbox/log/log.hpp>
 
 void readModuleHeader(int sock);
 void readReverseModuleHeader(int sock);

@@ -6,17 +6,17 @@
 #include <unordered_set>
 #include <vector>
 
-#include <core/core.hpp>
-#include <game/game_loop.hpp>
-#include <game/objects/objects.hpp>
-#include <geometry/geometry.hpp>
-#include <graphics/graphics.hpp>
-#include <graphics/texture.hpp>
-#include <log/log.hpp>
-#include <misc/irrvec.hpp>
-#include <modules/module_io.hpp>
-#include <util/util.hpp>
-#include <world/terrain.hpp>
+#include <modbox/core/core.hpp>
+#include <modbox/game/game_loop.hpp>
+#include <modbox/game/objects/objects.hpp>
+#include <modbox/geometry/geometry.hpp>
+#include <modbox/graphics/graphics.hpp>
+#include <modbox/graphics/texture.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/misc/irrvec.hpp>
+#include <modbox/modules/module_io.hpp>
+#include <modbox/util/util.hpp>
+#include <modbox/world/terrain.hpp>
 
 #include <irrlicht.h>
 #include <unistd.h>

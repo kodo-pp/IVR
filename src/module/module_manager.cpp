@@ -1,6 +1,6 @@
 #include <unordered_map>
 
-#include <modules/module_manager.hpp>
+#include <modbox/modules/module_manager.hpp>
 
 static std::unordered_map<std::thread::id, ModuleWorker&> moduleWorkers;
 

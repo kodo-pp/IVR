@@ -3,7 +3,7 @@
 
 #include <unordered_set>
 
-#include <gui/gui.hpp>
+#include <modbox/gui/gui.hpp>
 
 /**
  * Manages GUI elements

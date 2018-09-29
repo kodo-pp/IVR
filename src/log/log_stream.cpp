@@ -2,7 +2,7 @@
 #include <iostream>
 #include <mutex>
 
-#include <log/log.hpp>
+#include <modbox/log/log.hpp>
 
 LogStream::LogStream(const std::function<std::wstring()>& _lineBeginnerFunc) :
         lineBeginnerFunc(_lineBeginnerFunc),

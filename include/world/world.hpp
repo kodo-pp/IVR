@@ -5,8 +5,8 @@
 #include <set>
 #include <string>
 
-#include <geometry/game_position.hpp>
-#include <world/chunk.hpp>
+#include <modbox/geometry/game_position.hpp>
+#include <modbox/world/chunk.hpp>
 
 using WorldId = std::wstring;
 using Seed = uint32_t; // XXX: maybe change to something different

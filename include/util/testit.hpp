@@ -4,8 +4,8 @@
 #include <cstdlib>
 #include <iostream>
 
-#include <log/log.hpp>
-#include <util/util.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/util/util.hpp>
 
 #ifdef DEBUG_MODE
 static int _testit_failed = 0;

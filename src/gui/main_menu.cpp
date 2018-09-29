@@ -1,9 +1,9 @@
 #include <unordered_map>
 
-#include <game/game_loop.hpp>
-#include <graphics/graphics.hpp>
-#include <gui/main_menu.hpp>
-#include <log/log.hpp>
+#include <modbox/game/game_loop.hpp>
+#include <modbox/graphics/graphics.hpp>
+#include <modbox/gui/main_menu.hpp>
+#include <modbox/log/log.hpp>
 
 template <typename K, typename V>
 static std::vector<K> mapKeys(const std::unordered_map<K, V>& mp)
@@ -24,15 +24,17 @@ MainMenu::MainMenu(const std::unordered_map<std::wstring, std::function<void()>>
 
 void MainMenu::show()
 {
-    setAimVisible(false);
-    itemList.draw({0, 0, 400, 300});
-    std::wstring selected = itemList.getSelectedItem();
-    if (actions.count(selected) == 0) {
-        throw std::logic_error("Inexistent main menu item selected");
+    while (true) {
+        setAimVisible(false);
+        itemList.draw({0, 0, 400, 300});
+        std::wstring selected = itemList.getSelectedItem();
+        if (actions.count(selected) == 0) {
+            throw std::logic_error("Inexistent main menu item selected");
+        }
+        setVisible(false);
+        actions.at(selected)();
+        setVisible(true);
     }
-    setVisible(false);
-    actions.at(selected)();
-    setVisible(true);
 }
 
 void MainMenu::setVisible(bool visible)
@@ -41,5 +43,11 @@ void MainMenu::setVisible(bool visible)
         setAimVisible(false);
     }
     std::lock_guard<std::recursive_mutex> lock(getIrrlichtMutex());
-    itemList.setVisible(visible);
+    LOG("MainMenu: setting visibility: " << visible);
+    if (!visible) {
+        itemList.hide();
+    } else {
+        itemList.show();
+    }
+    LOG("MainMenu: successfully set visibility: " << visible);
 }

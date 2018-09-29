@@ -1,7 +1,7 @@
 #include <tuple>
 
-#include <geometry/game_position.hpp>
-#include <world/terrain.hpp>
+#include <modbox/geometry/game_position.hpp>
+#include <modbox/world/terrain.hpp>
 
 GamePosition::GamePosition(double _x, double _y, double _z) : x(_x), y(_y), z(_z)
 {

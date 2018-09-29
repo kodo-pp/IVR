@@ -1,6 +1,6 @@
 #include <cmath>
 
-#include <geometry/geometry.hpp>
+#include <modbox/geometry/geometry.hpp>
 
 double getAzimuth(double /*unused*/, double y, double /*unused*/)
 {

@@ -3,13 +3,13 @@
 
 #include <string>
 
-#include <geometry/game_position.hpp>
+#include <modbox/geometry/game_position.hpp>
 
 // XXX: очередной костыль
 //#include <graphics/graphics.hpp>
 #include <mutex>
 
-#include <modules/module.hpp>
+#include <modbox/modules/module.hpp>
 
 #include <irrlicht.h>
 

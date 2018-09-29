@@ -1,4 +1,4 @@
-#include <modules/module.hpp>
+#include <modbox/modules/module.hpp>
 
 #include <unistd.h>
 

@@ -39,7 +39,8 @@ public:
     std::wstring getSelectedItem();
     size_t getSelectedItemIndex();
 
-    virtual void setVisible(bool newVisible);
+    virtual void hide();
+    virtual void show();
 
 protected:
     std::vector<std::wstring> strings;
@@ -50,8 +51,8 @@ protected:
     std::condition_variable cv;
     std::mutex cv_mutex;
     bool closeMenu;
-
     bool isVisible;
+    irr::core::recti position;
 };
 
 class GuiButton : public GuiElement

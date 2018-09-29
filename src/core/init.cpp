@@ -1,12 +1,12 @@
 #include <iostream>
 
-#include <core/core.hpp>
-#include <core/destroy.hpp>
-#include <core/memory_manager.hpp>
-#include <game/enemy.hpp>
-#include <graphics/graphics.hpp>
-#include <log/log.hpp>
-#include <net/net.hpp>
+#include <modbox/core/core.hpp>
+#include <modbox/core/destroy.hpp>
+#include <modbox/core/memory_manager.hpp>
+#include <modbox/game/enemy.hpp>
+#include <modbox/graphics/graphics.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/net/net.hpp>
 
 #include <signal.h>
 #include <unistd.h>

@@ -4,10 +4,10 @@
 #include <stdexcept>
 #include <string>
 
-#include <core/dyntype.hpp>
-#include <core/memory_manager.hpp>
-#include <log/log.hpp>
-#include <util/util.hpp>
+#include <modbox/core/dyntype.hpp>
+#include <modbox/core/memory_manager.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/util/util.hpp>
 
 void* _dyntypeNew(char type)
 {

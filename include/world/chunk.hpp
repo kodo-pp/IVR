@@ -6,9 +6,9 @@
 #include <utility>
 #include <vector>
 
-#include <game/enemy.hpp>
-#include <game/game_object.hpp>
-#include <geometry/game_position.hpp>
+#include <modbox/game/enemy.hpp>
+#include <modbox/game/game_object.hpp>
+#include <modbox/geometry/game_position.hpp>
 
 #include <irrlicht.h>
 

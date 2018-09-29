@@ -1,4 +1,4 @@
-#include <game/ai.hpp>
+#include <modbox/game/ai.hpp>
 
 static GamePosition defaultAiFunc()
 {

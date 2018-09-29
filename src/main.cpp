@@ -5,18 +5,19 @@
 #include <string>
 #include <vector>
 
-#include <core/core.hpp>
-#include <core/destroy.hpp>
-#include <core/init.hpp>
-#include <core/memory_manager.hpp>
-#include <game/game_loop.hpp>
-#include <graphics/graphics.hpp>
-#include <gui/gui.hpp>
-#include <gui/main_menu.hpp>
-#include <log/log.hpp>
-#include <net/net.hpp>
-#include <util/handle_storage.hpp>
-#include <util/util.hpp>
+#include <modbox/core/core.hpp>
+#include <modbox/core/destroy.hpp>
+#include <modbox/core/init.hpp>
+#include <modbox/core/memory_manager.hpp>
+#include <modbox/core/virtual_module.hpp>
+#include <modbox/game/game_loop.hpp>
+#include <modbox/graphics/graphics.hpp>
+#include <modbox/gui/gui.hpp>
+#include <modbox/gui/main_menu.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/net/net.hpp>
+#include <modbox/util/handle_storage.hpp>
+#include <modbox/util/util.hpp>
 
 #include <signal.h>
 #include <sys/types.h>
@@ -36,7 +37,7 @@ int main(int argc, char** argv)
 
         LOG(L"ModBox version " << _PROJECT_VERSION);
         createModuleListenerThread();
-        LOG("Creating draw thread");
+        LOG("Creating game thread");
         std::thread gameThread([]() {
             try {
                 MainMenu mainMenu({{L"Singleplayer",
@@ -45,8 +46,20 @@ int main(int argc, char** argv)
                                         graphicsInitializeCollisions();
                                         gameLoop();
                                     }},
+
+                                   {L"Load test virtual module",
+                                    []() {
+                                        auto x = new VirtualModule(
+                                                "modules/test_virtual_module/libtestvmodule.so");
+                                        x->spawnModuleThread();
+                                    }},
+
                                    {L"Quit", []() { destroy(); }}});
-                mainMenu.show();
+                try {
+                    mainMenu.show();
+                } catch (const std::exception& e) {
+                    LOG("AAA: " << wstring_cast(e.what()));
+                }
             } catch (const std::exception& e) {
                 LOG("Exception caught at game thread lambda: " << wstring_cast(e.what()));
             }

@@ -7,17 +7,17 @@
 #include <unordered_set>
 #include <vector>
 
-#include <core/core.hpp>
-#include <core/dyntype.hpp>
-#include <core/init.hpp>
-#include <game/enemy.hpp>
-#include <game/game_loop.hpp>
-#include <game/player.hpp>
-#include <game/solid_object.hpp>
-#include <graphics/graphics.hpp>
-#include <log/log.hpp>
-#include <util/util.hpp>
-#include <world/terrain.hpp>
+#include <modbox/core/core.hpp>
+#include <modbox/core/dyntype.hpp>
+#include <modbox/core/init.hpp>
+#include <modbox/game/enemy.hpp>
+#include <modbox/game/game_loop.hpp>
+#include <modbox/game/player.hpp>
+#include <modbox/game/solid_object.hpp>
+#include <modbox/graphics/graphics.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/util/util.hpp>
+#include <modbox/world/terrain.hpp>
 
 #include <irrlicht.h>
 #include <unistd.h>

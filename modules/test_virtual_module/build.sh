@@ -4,20 +4,18 @@
 
 if [[ "$1" == "--help" ]]; then
     echo -e "Usage: $0 [--help]"
-    echo -e "Build ModBox from its source, assuming that all dependencies are already installed."
+    echo -e "Build test vitual module for ModBox."
     echo -e ""
     echo -e "You can pass the following environmental variables to this script:"
-    echo -e "  DEBUG=[yes/no]               - build a debug (= yes) or release (= no) version of ModBox"
+    echo -e "  DEBUG=[yes/no]               - build a debug (= yes) or release (= no) version of module"
     echo -e "  FORCE_REBUILD=[yes/no]       - force rebuilding all sources (= yes) or only changed ones (= no)"
-    echo -e "  CC_TOOLCHAIN=[gcc/clang/custom/generic] - toolchain used to build ModBox"
+    echo -e "  CC_TOOLCHAIN=[gcc/clang/custom/generic] - toolchain used to build module"
     echo -e "    (if CC_TOOLCHAIN=custom)"
     echo -e "      CUSTOM_CC                - C compiler"
     echo -e "      CUSTOM_CXX               - C++ compiler"
     echo -e "      CUSTOM_LD                - Linker, usually the same as CUSTOM_CXX"
     echo -e "  USE_LTO=[yes/no]             - enable link time optimization (ignored when DEBUG=yes)"
     echo -e "  PROC_COUNT=<num>             - spawn up to <num> parallel processes, set to 1 to disable parallel build"
-    echo -e "  DISABLE_BOOST_STACKTRACE=[yes/no] - disable boost::stacktrace support as it is broken on some machines"
-    echo -e "  BUILD_VMODULES=[yes/no]      - build virtual modules along with main ModBox executable"
     echo -e ""
     echo -e "Default settings are:"
     echo -e "  DEBUG=no"
@@ -25,26 +23,13 @@ if [[ "$1" == "--help" ]]; then
     echo -e "  CC_TOOLCHAIN=generic"
     echo -e "  LTO=yes"
     echo -e "  PROC_COUNT=4"
-    echo -e "  DISABLE_BOOST_STACKTRACE=no"
-    echo -e "  BUILD_VMODULES=no"
     echo -e ""
     echo -e "Exact commands executed are written to build.log"
     exit 1
 fi
 
-if [[ "${BUILD_VMODULES}" == "yes" ]]; then
-    vmodules=(modules/*)
-    for vmod in "${vmodules[@]}"; do
-        (
-            echo "=== Building vmodule ${vmod} ==="
-            cd "${vmod}"
-            ./build.sh
-        )
-    done
-fi
-
-# Executable file name
-exec_name="main"
+# Shared object file name
+so_name="libtestvmodule.so"
 
 # Level of optimization, ignored when environment variable 'DEBUG' is set to 'yes'
 optimization_level=2
@@ -91,14 +76,10 @@ CFLAGS="-std=gnu99"
 # Special for C++ compiler
 CXXFLAGS="-std=gnu++17"
 # Special for linker
-LDFLAGS="-z relro -z now -dlsym -rdynamic"
+LDFLAGS="-shared"
 
 # Flags for C and C++ compilers
-FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -Wno-nested-anon-types -DFORTIFY_SOURCE"
-
-if [[ "${DISABLE_BOOST_STACKTRACE}" == "yes" ]]; then
-    FLAGS+=' -DNO_BOOST_STACKTRACE'
-fi
+FLAGS="-Wall -Wextra -pedantic -DFORTIFY_SOURCE -fPIC"
 
 # Link path, e.g. "-L/usr/lib/mylib/"
 LINK_PATH=""
@@ -122,10 +103,6 @@ else
     LDFLAGS="${LDFLAGS} ${OPT_FLAGS}"
     FLAGS="${FLAGS} ${OPT_FLAGS}"
 fi
-
-# Project version
-project_version="$(cat version.txt)"
-FLAGS="${FLAGS} -D_PROJECT_VERSION=\"$project_version\""
 
 # Append ${FLAGS} to CFLAGS and CXXFLAGS, don't change these lines
 # All changes of FLAGS variable below these lines will be ignored
@@ -163,9 +140,6 @@ function dump_command() {
         ;;
     link)
         echo -ne '\e[1;35m[LINK]  \e[0m' >&2
-        ;;
-    strip)
-        echo -ne '\e[1;36m[STRIP] \e[0m' >&2
         ;;
     esac
 
@@ -270,10 +244,5 @@ done
 # Then we add all files to the build queue and build them
 thread_pool_run ${PROC_COUNT:-4} ${sources}
 
-# And finally link all our object files to one big executable file
-run_command link "${LD}" ${objects} ${LDFLAGS} -o "${exec_name}"
-
-# Strip the resulting file if we don't want to debug it
-if [[ "${DEBUG}" != "yes" ]]; then
-    run_command strip strip --strip-all "${exec_name}"
-fi
+# And finally link all our object files to one big shared object
+run_command link "${LD}" ${objects} ${LDFLAGS} -o "${so_name}"

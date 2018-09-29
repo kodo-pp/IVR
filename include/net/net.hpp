@@ -3,7 +3,7 @@
 
 #include <thread>
 
-#include <modules/module.hpp>
+#include <modbox/modules/module.hpp>
 
 #include <sys/socket.h>
 #include <sys/types.h>

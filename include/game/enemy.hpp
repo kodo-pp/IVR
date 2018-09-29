@@ -4,8 +4,8 @@
 #include <functional>
 #include <unordered_map>
 
-#include <game/ai.hpp>
-#include <geometry/game_position.hpp>
+#include <modbox/game/ai.hpp>
+#include <modbox/geometry/game_position.hpp>
 
 using EnemyId = uint64_t;
 

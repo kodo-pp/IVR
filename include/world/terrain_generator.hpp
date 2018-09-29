@@ -4,8 +4,8 @@
 #include <map>
 #include <set>
 
-#include <geometry/game_position.hpp>
-#include <world/world.hpp>
+#include <modbox/geometry/game_position.hpp>
+#include <modbox/world/world.hpp>
 
 class TerrainGenerator
 {

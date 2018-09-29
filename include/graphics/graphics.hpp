@@ -5,9 +5,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include <game/objects/objects.hpp>
-#include <geometry/game_position.hpp>
-#include <util/handle_storage.hpp>
+#include <modbox/game/objects/objects.hpp>
+#include <modbox/geometry/game_position.hpp>
+#include <modbox/util/handle_storage.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <irrlicht.h>

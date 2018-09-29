@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_map>
 
-#include <gui/gui.hpp>
+#include <modbox/gui/gui.hpp>
 
 class MainMenu
 {

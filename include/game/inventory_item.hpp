@@ -1,7 +1,7 @@
 #ifndef GAME_INVENTORY_ITEM_HPP
 #define GAME_INVENTORY_ITEM_HPP
 
-#include <game/game_object.hpp>
+#include <modbox/game/game_object.hpp>
 
 class InventoryItem : public GameObject
 {

@@ -1,8 +1,8 @@
 #ifndef INCLUDE_GAME_PLAYER_HPP
 #define INCLUDE_GAME_PLAYER_HPP
 
-#include <geometry/game_position.hpp>
-#include <graphics/graphics.hpp>
+#include <modbox/geometry/game_position.hpp>
+#include <modbox/graphics/graphics.hpp>
 
 class Player
 {

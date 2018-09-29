@@ -1,12 +1,12 @@
 #include <thread>
 
-#include <core/core.hpp>
-#include <core/init.hpp>
-#include <core/memory_manager.hpp>
-#include <graphics/graphics.hpp>
-#include <log/log.hpp>
-#include <net/net.hpp>
-#include <util/util.hpp>
+#include <modbox/core/core.hpp>
+#include <modbox/core/init.hpp>
+#include <modbox/core/memory_manager.hpp>
+#include <modbox/graphics/graphics.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/net/net.hpp>
+#include <modbox/util/util.hpp>
 
 #include <signal.h>
 

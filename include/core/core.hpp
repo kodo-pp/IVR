@@ -7,8 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include <core/dyntype.hpp>
-#include <util/util.hpp>
+#include <modbox/core/dyntype.hpp>
+#include <modbox/util/util.hpp>
 
 // === Type definitions ===
 

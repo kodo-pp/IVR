@@ -10,14 +10,14 @@
 #include <utility>
 #include <vector>
 
-#include <core/core.hpp>
-#include <core/dyntype.hpp>
-#include <log/log.hpp>
-#include <misc/die.hpp>
-#include <modules/module_io.hpp>
-#include <modules/module_manager.hpp>
-#include <util/handle_storage.hpp>
-#include <util/util.hpp>
+#include <modbox/core/core.hpp>
+#include <modbox/core/dyntype.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/misc/die.hpp>
+#include <modbox/modules/module_io.hpp>
+#include <modbox/modules/module_manager.hpp>
+#include <modbox/util/handle_storage.hpp>
+#include <modbox/util/util.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>

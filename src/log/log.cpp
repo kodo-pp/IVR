@@ -8,7 +8,7 @@
 #include <locale>
 #include <mutex>
 
-#include <log/log.hpp>
+#include <modbox/log/log.hpp>
 
 static std::recursive_mutex lbfMutex;
 std::recursive_mutex logMutex;

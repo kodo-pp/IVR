@@ -1,4 +1,4 @@
-#include <game/objects/cube.hpp>
+#include <modbox/game/objects/cube.hpp>
 
 GameObjCube::GameObjCube(ISceneNode* node)
 {

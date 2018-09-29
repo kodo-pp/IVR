@@ -1,7 +1,7 @@
-#include <graphics/graphics.hpp>
-#include <gui/gui.hpp>
-#include <log/log.hpp>
-#include <util/util.hpp>
+#include <modbox/graphics/graphics.hpp>
+#include <modbox/gui/gui.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/util/util.hpp>
 
 GuiItemList::GuiItemList(const std::vector<std::wstring>& _strings)
         : strings(_strings)
@@ -9,9 +9,30 @@ GuiItemList::GuiItemList(const std::vector<std::wstring>& _strings)
         , selectedItemIndex(-1)
         , clickHandler([]() { return false; })
         , closeMenu(false)
-        , isVisible(true)
+        , isVisible(false)
 {
     LOG("GuiItemList created");
+}
+
+void GuiItemList::setClickHandler(const std::function<bool()>& callback)
+{
+    clickHandler = callback;
+}
+
+void GuiItemList::draw(const irr::core::recti& position)
+{
+    this->position = position;
+    show();
+    std::unique_lock<std::mutex> cv_lock(cv_mutex);
+    cv.wait(cv_lock, [this]() { return closeMenu; });
+}
+
+void GuiItemList::show()
+{
+    LOG("showing GuiItemList");
+    if (isVisible) {
+        return;
+    }
     eventHandlerId = getEventReceiver().addEventHandler([this](const irr::SEvent& event) -> bool {
         // If this is not a GUI event, skip it
         if (event.EventType != irr::EET_GUI_EVENT) {
@@ -33,19 +54,13 @@ GuiItemList::GuiItemList(const std::vector<std::wstring>& _strings)
         }
         return true;
     });
-}
-
-void GuiItemList::setClickHandler(const std::function<bool()>& callback)
-{
-    clickHandler = callback;
-}
-
-void GuiItemList::draw(const irr::core::recti& position)
-{
+    LOG("EvH id = " << eventHandlerId);
+    selectedItemIndex = -1;
+    isVisible = true;
+    closeMenu = false;
     listbox = createListBox(strings, position);
-    std::unique_lock<std::mutex> cv_lock(cv_mutex);
-    cv.wait(cv_lock, [this]() { return closeMenu; });
 }
+
 std::wstring GuiItemList::getSelectedItem()
 {
     return strings.at(getSelectedItemIndex());
@@ -70,41 +85,16 @@ GuiItemList::~GuiItemList()
     LOG("GuiItemList removed");
 }
 
-void GuiItemList::setVisible(bool newVisible)
+void GuiItemList::hide()
 {
-    if (isVisible == newVisible) {
+    if (!isVisible) {
         return;
     }
-    if (newVisible) {
-        // show
-        listbox = createListBox(strings, position);
-        eventHandlerId = getEventReceiver().addEventHandler(
-                [this](const irr::SEvent& event) -> bool {
-                    // If this is not a GUI event, skip it
-                    if (event.EventType != irr::EET_GUI_EVENT) {
-                        return false;
-                    }
-                    // If it has nothing to do with out listbox, skip it too
-                    if (event.GUIEvent.Caller != listbox) {
-                        return false;
-                    }
+    isVisible = false;
 
-                    if (event.GUIEvent.EventType == irr::gui::EGET_LISTBOX_CHANGED
-                        || event.GUIEvent.EventType == irr::gui::EGET_LISTBOX_SELECTED_AGAIN) {
-                        // Clicked
-                        closeMenu = clickHandler();
-                        std::unique_lock<std::mutex> cv_lock(cv_mutex);
-                        cv_lock.unlock();
-                        cv.notify_one();
-                        cv_lock.lock();
-                    }
-                    return true;
-                });
-    } else {
-        // hide
-        getEventReceiver().deleteEventHandler(eventHandlerId);
-        listbox->remove();
-        listbox = nullptr;
-        LOG("ItemList hidden");
-    }
+    // hide
+    getEventReceiver().deleteEventHandler(eventHandlerId);
+    listbox->remove();
+    listbox = nullptr;
+    LOG("ItemList hidden");
 }

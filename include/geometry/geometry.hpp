@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include <geometry/game_position.hpp>
+#include <modbox/geometry/game_position.hpp>
 
 #include <irrlicht.h>
 

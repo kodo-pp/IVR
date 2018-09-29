@@ -1,9 +1,9 @@
 #include <sstream>
 #include <string>
 
-#include <graphics/graphics.hpp>
-#include <log/log.hpp>
-#include <world/terrain.hpp>
+#include <modbox/graphics/graphics.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/world/terrain.hpp>
 
 #include <irrlicht.h>
 

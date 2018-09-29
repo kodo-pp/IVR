@@ -6,15 +6,15 @@
 #include <thread>
 #include <unordered_set>
 
-#include <core/memory_manager.hpp>
-#include <log/log.hpp>
-#include <misc/die.hpp>
-#include <modules/module.hpp>
-#include <modules/module_io.hpp>
-#include <modules/module_manager.hpp>
-#include <net/net.hpp>
-#include <net/socketlib.hpp>
-#include <util/util.hpp>
+#include <modbox/core/memory_manager.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/misc/die.hpp>
+#include <modbox/modules/module.hpp>
+#include <modbox/modules/module_io.hpp>
+#include <modbox/modules/module_manager.hpp>
+#include <modbox/net/net.hpp>
+#include <modbox/net/socketlib.hpp>
+#include <modbox/util/util.hpp>
 
 #include <netinet/in.h>
 #include <sys/signal.h>

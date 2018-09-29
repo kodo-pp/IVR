@@ -1,9 +1,9 @@
 #include <cstring>
 #include <type_traits>
 
-#include <misc/type_assertions.hpp>
-#include <net/socketlib.hpp>
-#include <util/util.hpp>
+#include <modbox/misc/type_assertions.hpp>
+#include <modbox/net/socketlib.hpp>
+#include <modbox/util/util.hpp>
 
 // Floats are guaranted to be 4-bytes long, and doubles are 8-bytes, thanks to
 // misc/type_assertions.hpp

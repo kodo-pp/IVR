@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include <modules/stdmodlib.hpp>
+#include <modbox/modules/stdmodlib.hpp>
 
 class StdModLibManager
 {

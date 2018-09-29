@@ -1,5 +1,5 @@
-#include <log/log.hpp>
-#include <util/util.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/util/util.hpp>
 
 #ifdef NO_BOOST_STACKTRACE
 void logStackTrace()

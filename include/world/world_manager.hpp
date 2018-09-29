@@ -3,7 +3,7 @@
 
 #include <unordered_map>
 
-#include <world/world.hpp>
+#include <modbox/world/world.hpp>
 
 // WARNING: in UML class diagram this class is named WorldsManager (with 's')
 // Here it was renamed to WorldManager (w/o 's')

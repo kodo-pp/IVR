@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 
-#include <modules/module.hpp>
+#include <modbox/modules/module.hpp>
 
 // TODO: make this a separate header file
 using Version = std::vector<int>;

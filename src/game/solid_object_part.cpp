@@ -1,4 +1,4 @@
-#include <game/solid_object.hpp>
+#include <modbox/game/solid_object.hpp>
 
 SolidObjectPart::SolidObjectPart()
 {

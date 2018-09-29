@@ -7,9 +7,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include <core/core.hpp>
-#include <modules/module.hpp>
-#include <util/handle_storage.hpp>
+#include <modbox/core/core.hpp>
+#include <modbox/modules/module.hpp>
+#include <modbox/util/handle_storage.hpp>
 
 // TEMP: maybe we should change it to something more complex
 using ModuleMessage = std::wstring;

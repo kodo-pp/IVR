@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include <game/enemy.hpp>
-#include <world/chunk.hpp>
+#include <modbox/game/enemy.hpp>
+#include <modbox/world/chunk.hpp>
 
 #include <irrlicht.h>
 

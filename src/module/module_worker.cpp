@@ -3,12 +3,12 @@
 #include <string>
 #include <vector>
 
-#include <core/core.hpp>
-#include <log/log.hpp>
-#include <modules/module_io.hpp>
-#include <modules/module_manager.hpp>
-#include <net/socketlib.hpp>
-#include <util/util.hpp>
+#include <modbox/core/core.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/modules/module_io.hpp>
+#include <modbox/modules/module_manager.hpp>
+#include <modbox/net/socketlib.hpp>
+#include <modbox/util/util.hpp>
 
 #include <sys/socket.h>
 #include <unistd.h>

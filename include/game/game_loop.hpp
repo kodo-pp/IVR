@@ -8,9 +8,9 @@
 #include <type_traits>
 #include <vector>
 
-#include <core/destroy.hpp>
-#include <log/log.hpp>
-#include <util/util.hpp>
+#include <modbox/core/destroy.hpp>
+#include <modbox/log/log.hpp>
+#include <modbox/util/util.hpp>
 
 void drawBarrier();
 

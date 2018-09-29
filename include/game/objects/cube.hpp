@@ -1,7 +1,7 @@
 #ifndef GAME_OBJECTS_CUBE_HPP
 #define GAME_OBJECTS_CUBE_HPP
 
-#include <game/game_object.hpp>
+#include <modbox/game/game_object.hpp>
 
 class GameObjCube : public GameObject
 {

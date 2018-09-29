@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <unordered_set>
 
-#include <core/memory_manager.hpp>
+#include <modbox/core/memory_manager.hpp>
 
 /**
  * Добавляет укаатель во множество отслеживаемых
