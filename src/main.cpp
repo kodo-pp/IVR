@@ -41,6 +41,7 @@ int main(int argc, char** argv)
             try {
                 MainMenu mainMenu({{L"Singleplayer",
                                     []() {
+                                        setAimVisible(true);
                                         graphicsInitializeCollisions();
                                         gameLoop();
                                     }},

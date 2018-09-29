@@ -207,4 +207,6 @@ static inline std::string getGuiEventDebugName(irr::gui::EGUI_EVENT_TYPE type)
 #undef ENTRY
 };
 
+void setAimVisible(bool visible);
+
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */

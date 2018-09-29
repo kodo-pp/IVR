@@ -77,8 +77,14 @@ namespace graphics
     scene::IMetaTriangleSelector* terrainSelector;
 
     std::atomic<bool> hasCollision(false);
+    std::atomic<bool> aimVisible(false);
 
 } // namespace graphics
+
+void setAimVisible(bool visible)
+{
+    graphics::aimVisible = visible;
+}
 
 static void initializeIrrlicht(std::vector<std::string>& args);
 
@@ -383,15 +389,17 @@ void graphicsDraw()
 
     graphics::irrGuiEnvironment->drawAll();
     graphics::irrSceneManager->drawAll();
-    core::recti viewport = graphics::irrVideoDriver->getViewPort();
-    auto lt = viewport.getCenter() - irr::core::vector2di(10, 10);
-    auto rb = viewport.getCenter() + irr::core::vector2di(10);
-    if (graphics::hasCollision) {
-        graphics::irrVideoDriver->draw2DRectangle(video::SColor(180, 0, 255, 0),
-                                                  core::recti(lt, rb));
-    } else {
-        graphics::irrVideoDriver->draw2DRectangle(video::SColor(180, 255, 0, 0),
-                                                  core::recti(lt, rb));
+    if (graphics::aimVisible) {
+        core::recti viewport = graphics::irrVideoDriver->getViewPort();
+        auto lt = viewport.getCenter() - irr::core::vector2di(10, 10);
+        auto rb = viewport.getCenter() + irr::core::vector2di(10);
+        if (graphics::hasCollision) {
+            graphics::irrVideoDriver->draw2DRectangle(video::SColor(180, 0, 255, 0),
+                                                      core::recti(lt, rb));
+        } else {
+            graphics::irrVideoDriver->draw2DRectangle(video::SColor(180, 255, 0, 0),
+                                                      core::recti(lt, rb));
+        }
     }
     graphics::irrVideoDriver->endScene();
 }
