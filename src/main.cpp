@@ -12,6 +12,7 @@
 #include <game/game_loop.hpp>
 #include <graphics/graphics.hpp>
 #include <gui/gui.hpp>
+#include <gui/main_menu.hpp>
 #include <log/log.hpp>
 #include <net/net.hpp>
 #include <util/handle_storage.hpp>
@@ -38,16 +39,13 @@ int main(int argc, char** argv)
         LOG("Creating draw thread");
         std::thread gameThread([]() {
             try {
-                {
-                    GuiItemList testMenu({L"First item", L"Second item", L"Third item"});
-                    testMenu.setClickHandler([]() { return true; });
-                    testMenu.draw({10, 20, 300, 300});
-                    LOG("AAA");
-                }
-                LOG("BBB");
-                graphicsInitializeCollisions();
-                LOG("CCC");
-                gameLoop();
+                MainMenu mainMenu({{L"Singleplayer",
+                                    []() {
+                                        graphicsInitializeCollisions();
+                                        gameLoop();
+                                    }},
+                                   {L"Quit", []() { destroy(); }}});
+                mainMenu.show();
             } catch (const std::exception& e) {
                 LOG("Exception caught at game thread lambda: " << wstring_cast(e.what()));
             }

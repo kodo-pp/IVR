@@ -40,6 +40,15 @@ std::vector<std::packaged_task<void()>> drawFunctions;
 
 static const int desiredFps = 30;
 
+std::recursive_mutex& getDrawFunctionsMutex()
+{
+    return drawFunctionsMutex;
+}
+std::recursive_mutex& getIrrlichtMutex()
+{
+    return irrlichtMutex;
+}
+
 static void processKeys(Player& player)
 {
     // XXX: This is stub, camera movement and rotation should be done by class like Player
@@ -200,10 +209,6 @@ void gameLoop()
     int counter = 0;
     double i = 0;
     while (irrDeviceRun()) {
-        if (doWeNeedToShutDown) {
-            LOG("Shutting down game loop");
-            return;
-        }
         size_t idx = 0;
         std::vector<size_t> toRemove;
         ++counter;
@@ -244,6 +249,7 @@ void gameLoop()
         i += timeForFrame;
         usleep(1000000 / 60);
     }
+    destroy();
 }
 
 void eachTickWithParam(const std::string& name, uint64_t param)
@@ -304,4 +310,5 @@ void drawLoop()
                                                                                       - timeBefore);
         oneSecondCounter += fullDuration.count();
     }
+    destroy();
 }

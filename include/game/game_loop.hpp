@@ -8,10 +8,14 @@
 #include <type_traits>
 #include <vector>
 
+#include <core/destroy.hpp>
 #include <log/log.hpp>
 #include <util/util.hpp>
 
 void drawBarrier();
+
+std::recursive_mutex& getDrawFunctionsMutex();
+std::recursive_mutex& getIrrlichtMutex();
 
 template <typename F>
 auto addDrawFunction(const F& func, bool barrier = false) -> decltype(func())

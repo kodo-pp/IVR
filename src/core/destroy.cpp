@@ -15,22 +15,15 @@ std::atomic<bool> areWeShuttingDown(false);
 
 void destroy(void)
 {
-    LOG(L"I will kill... client threads!");
-    joinModuleListenerThread();
-    LOG(L"No more functions");
-    funcProvidersCleanup();
-    LOG(L"And graphics");
-    cleanupGraphics();
-    LOG(L"I'm dying...");
-    areWeShuttingDown = true;
-
+    // Just shut down
+    LOG("Shutting down");
     exit(0);
 }
 
 void sigIntHandler(UNUSED int signal)
 {
     LOG(L"Wow, you interrupted me! How rude...");
-    doWeNeedToShutDown = true;
+    destroy();
 }
 
 void sigAbrtHandler(int)
