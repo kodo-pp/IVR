@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <modbox/core/destroy.hpp>
+#include <modbox/util/util.hpp>
 
 extern std::recursive_mutex logMutex;
 
@@ -61,8 +62,8 @@ public:
 
 LogStream& operator<<(LogStream&, LogStreamSpecial);
 
-template <class T>
-LogStream& operator<<(LogStream& logStream, T data)
+template <typename T>
+LogStream& operator<<(LogStream& logStream, const T& data)
 {
     auto streamsVec = logStream.getStreamsVec();
     for (auto& streamPtr : streamsVec) {
@@ -76,6 +77,11 @@ LogStream& operator<<(LogStream& logStream, T data)
         logStream.beginLine(false);
     }
     return logStream;
+}
+
+static inline LogStream& operator<<(LogStream& logStream, const std::string& data)
+{
+    return logStream << wstring_cast(data);
 }
 
 LogStream& getLogStream();

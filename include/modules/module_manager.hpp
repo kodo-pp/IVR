@@ -59,12 +59,12 @@ public:
     void work();
     void please_work() noexcept;
 
-    std::pair<uint64_t, std::function<FuncResult(const std::vector<void*>&)>>
+    std::pair<uint64_t, std::function<FuncResult(const std::vector<std::string>&)>>
     registerModuleFuncProvider(const std::string& name, std::string argTypes, std::string retTypes);
-    std::vector<void*> runModuleFunc(uint64_t id,
-                                     const std::string& argTypes,
-                                     const std::string& retTypes,
-                                     const std::vector<void*> arguments);
+    std::vector<std::string> runModuleFunc(uint64_t id,
+                                           const std::string& argTypes,
+                                           const std::string& retTypes,
+                                           const std::vector<std::string> arguments);
 
 private:
     mutable std::mutex reverseMutex;

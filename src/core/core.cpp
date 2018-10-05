@@ -40,8 +40,9 @@ FuncProvider::FuncProvider() = default;
 
 // AWW, this codestyle is awful. TODO: make it look beautiful
 // Command-and-function constructor
-FuncProvider::FuncProvider(const std::string& _command,
-                           const std::function<struct FuncResult(const std::vector<void*>&)>& _func)
+FuncProvider::FuncProvider(
+        const std::string& _command,
+        const std::function<struct FuncResult(const std::vector<std::string>&)>& _func)
         : command(_command), func(_func)
 {
 }
@@ -52,7 +53,7 @@ FuncProvider::~FuncProvider()
 }
 
 // operator()
-FuncResult FuncProvider::operator()(const std::vector<void*>& args) const
+FuncResult FuncProvider::operator()(const std::vector<std::string>& args) const
 {
     return func(args);
 }
@@ -69,7 +70,7 @@ static void initializeFuncProviderMap(UNUSED std::vector<std::string>& args)
     // Reserve the null handle
     auto handle = funcProviderStorage.insert(
             {FuncProvider("RESERVED",
-                          FuncProvider::func_type([](const std::vector<void*>&) -> FuncResult {
+                          FuncProvider::func_type([](const std::vector<std::string>&) -> FuncResult {
                               throw std::logic_error("zero FuncProvider called");
                           })),
              "",
@@ -142,28 +143,6 @@ void funcProvidersCleanup()
         funcProviderStorage.remove(i.second);
     }
     funcProviderMap.clear();
-}
-
-ModuleClassMemberData::ModuleClassMemberData(const ModuleClassMemberData& other)
-        : type(other.type), value(other.value), referenceCount(other.referenceCount)
-{
-    (*referenceCount)++;
-}
-ModuleClassMemberData::~ModuleClassMemberData()
-{
-    (*referenceCount)--;
-    if (*referenceCount <= 0) {
-        dyntypeDelete(value, type);
-    }
-}
-
-ModuleClassMemberData& ModuleClassMemberData::operator=(const ModuleClassMemberData& other)
-{
-    type = other.type;
-    value = other.value;
-    referenceCount = other.referenceCount;
-    (*referenceCount)++;
-    return *this;
 }
 
 ModuleClass::ModuleClass(const std::unordered_map<std::string, ModuleClassMember>& _members,
@@ -239,49 +218,8 @@ std::vector<uint8_t> moduleClassBlobifyMembers(uint64_t objectHandle)
         }
         blob.push_back(static_cast<uint8_t>(kv.second.type));
         blob.push_back(0);
-        std::string enc;
-        switch (kv.second.type) {
-        case 'b':
-            enc = std::to_string(kv.second.get<int8_t>());
-            break;
-        case 'B':
-            enc = std::to_string(kv.second.get<uint8_t>());
-            break;
-        case 'h':
-            enc = std::to_string(kv.second.get<int16_t>());
-            break;
-        case 'H':
-            enc = std::to_string(kv.second.get<uint16_t>());
-            break;
-        case 'i':
-            enc = std::to_string(kv.second.get<int32_t>());
-            break;
-        case 'I':
-            enc = std::to_string(kv.second.get<uint32_t>());
-            break;
-        case 'l':
-            enc = std::to_string(kv.second.get<int64_t>());
-            break;
-        case 'L':
-            enc = std::to_string(kv.second.get<uint64_t>());
-            break;
-        case 'f':
-            enc = std::to_string(kv.second.get<float>());
-            break;
-        case 'F':
-            enc = std::to_string(kv.second.get<double>());
-            break;
-        case 's':
-            enc = kv.second.get<std::string>();
-            break;
-        case 'w':
-            enc = bytes_pack(kv.second.get<std::wstring>());
-            break;
-        case 'o':
-            throw std::runtime_error("Blob as member is not implemented");
-        default:
-            throw std::logic_error("blobify: unknown type");
-        }
+        std::string enc = kv.second.get<std::string>();
+
         blob.reserve(blob.size() + enc.length() + 1);
         for (char c : enc) {
             blob.push_back(static_cast<uint8_t>(c));
@@ -320,49 +258,7 @@ void moduleClassUnblobifyMembers(uint64_t objectHandle, const std::vector<uint8_
             }
             std::string name = namet;
             name.pop_back();
-            char type = namet.back();
-            switch (type) {
-            case 'b':
-                instance.members.at(name).set(boost::lexical_cast<int8_t>(enc));
-                break;
-            case 'B':
-                instance.members.at(name).set(boost::lexical_cast<uint8_t>(enc));
-                break;
-            case 'h':
-                instance.members.at(name).set(boost::lexical_cast<int16_t>(enc));
-                break;
-            case 'H':
-                instance.members.at(name).set(boost::lexical_cast<uint16_t>(enc));
-                break;
-            case 'i':
-                instance.members.at(name).set(boost::lexical_cast<int32_t>(enc));
-                break;
-            case 'I':
-                instance.members.at(name).set(boost::lexical_cast<uint32_t>(enc));
-                break;
-            case 'l':
-                instance.members.at(name).set(boost::lexical_cast<int64_t>(enc));
-                break;
-            case 'L':
-                instance.members.at(name).set(boost::lexical_cast<uint64_t>(enc));
-                break;
-            case 'f':
-                instance.members.at(name).set(boost::lexical_cast<float>(enc));
-                break;
-            case 'F':
-                instance.members.at(name).set(boost::lexical_cast<double>(enc));
-                break;
-            case 's':
-                instance.members.at(name).set<std::string>(enc);
-                break;
-            case 'w':
-                instance.members.at(name).set<std::wstring>(wstringUnpack(enc));
-                break;
-            case 'o':
-                throw std::runtime_error("Blob as member is not implemented");
-            default:
-                throw std::logic_error("blobify: unknown type");
-            }
+            instance.members.at(name).set(enc);
         }
     } catch (const std::out_of_range& e) {
         throw std::runtime_error("Malformed blobified member diff");
@@ -393,45 +289,26 @@ std::tuple<std::string, std::string, std::string> moduleClassBindMethod(const st
     registerFuncProvider(
             FuncProvider(
                     funcName,
-                    [className, funcProvider](std::vector<void*> args) -> FuncResult {
+                    [className, funcProvider](std::vector<std::string> args) -> FuncResult {
                         try {
-                            // Create a blob
-                            auto* blob = static_cast<std::vector<uint8_t>*>(dyntypeNew('o'));
-
                             // Get data
                             uint64_t objectHandle = getArgument<uint64_t>(args, 0);
-                            auto encoded = moduleClassBlobifyMembers(objectHandle);
-
-                            // Put data into blob
-                            blob->swap(encoded);
+                            std::vector<uint8_t> blob = moduleClassBlobifyMembers(objectHandle);
 
                             // Add blob to arguments
-                            args.emplace(args.begin() + 1, static_cast<void*>(blob));
+                            args.emplace(args.begin() + 1, DyntypeCaster<std::string>::get(blob));
 
                             // Call FuncProvider
                             FuncResult res = funcProvider(args);
 
-                            // Delete unneeded blob
-                            // dyntypeDelete(blob, 'o');
-                            // WHY
-                            // THE
-                            // ...
-                            // IT
-                            // DELETES
-                            // RETURNED
-                            // BLOB?
-                            // [HACK] OK, just leave it commented out
-
                             // Get return blob
-                            auto retBlob = static_cast<std::vector<uint8_t>*>(res.data.front());
+                            auto retBlob = DyntypeCaster<std::vector<uint8_t>>::get(
+                                    res.data.front());
 
                             std::cerr << std::endl;
 
                             // Unpack it
-                            moduleClassUnblobifyMembers(objectHandle, *retBlob);
-
-                            // Delete it
-                            dyntypeDelete(retBlob, 'o');
+                            moduleClassUnblobifyMembers(objectHandle, retBlob);
 
                             // And remove it from return vector
                             res.data.erase(res.data.begin());
@@ -448,7 +325,7 @@ std::tuple<std::string, std::string, std::string> moduleClassBindMethod(const st
     return {funcName, argTypes, retTypes};
 }
 
-FuncResult handlerAddModuleClass(const std::vector<void*>& args)
+FuncResult handlerAddModuleClass(const std::vector<std::string>& args)
 {
     if (args.size() != 4) {
         throw std::logic_error("Wrong number of arguments for handlerAddModuleClass()");
@@ -492,7 +369,7 @@ FuncResult handlerAddModuleClass(const std::vector<void*>& args)
 }
 
 // void handlerRemoveModuleClass(const std::string& name);
-FuncResult handlerInstantiateModuleClass(const std::vector<void*>& args)
+FuncResult handlerInstantiateModuleClass(const std::vector<std::string>& args)
 {
     if (args.size() != 1) {
         throw std::logic_error("Wrong number of arguments for handlerInstantiateModuleClass()");
@@ -506,7 +383,7 @@ FuncResult handlerInstantiateModuleClass(const std::vector<void*>& args)
     return ret;
 }
 
-FuncResult handlerGetModuleClassMethod(const std::vector<void*>& args)
+FuncResult handlerGetModuleClassMethod(const std::vector<std::string>& args)
 {
     if (args.size() != 2) {
         throw std::logic_error("Wrong number of arguments for handlerGetModuleClassMethod()");
@@ -527,78 +404,45 @@ FuncResult handlerGetModuleClassMethod(const std::vector<void*>& args)
     return ret;
 }
 
-#define HANDLER_MODCLASS_ACCESSOR(typeWord, typeNameCxx, typeChar)                                 \
-    FuncResult handlerModuleClassSet##typeWord(const std::vector<void*>& args)                     \
-    {                                                                                              \
-        if (args.size() != 3) {                                                                    \
-            throw std::logic_error("Wrong number of arguments for handlerModuleClassSet" #typeWord \
-                                   "()");                                                          \
-        }                                                                                          \
-        FuncResult ret;                                                                            \
-        auto instanceHandle = getArgument<uint64_t>(args, 0);                                      \
-        auto memberName = getArgument<std::string>(args, 1);                                       \
-        auto value = getArgument<typeNameCxx>(args, 2);                                            \
-                                                                                                   \
-        auto& tmp = moduleClassInstances.mutableAccess(instanceHandle);                            \
-        auto& tmp2 = tmp.members.at(memberName);                                                   \
-        auto& tmp3 = tmp2.get<typeNameCxx>();                                                      \
-        tmp3 = value;                                                                              \
-        return ret;                                                                                \
-    }                                                                                              \
-                                                                                                   \
-    FuncResult handlerModuleClassGet##typeWord(const std::vector<void*>& args)                     \
-    {                                                                                              \
-        if (args.size() != 2) {                                                                    \
-            throw std::logic_error("Wrong number of arguments for handlerModuleClassGet" #typeWord \
-                                   "()");                                                          \
-        }                                                                                          \
-        FuncResult ret;                                                                            \
-        ret.data.resize(1);                                                                        \
-        auto instanceHandle = getArgument<uint64_t>(args, 0);                                      \
-        auto memberName = getArgument<std::string>(args, 1);                                       \
-                                                                                                   \
-        typeNameCxx value = moduleClassInstances.access(instanceHandle)                            \
-                                    .members.at(memberName)                                        \
-                                    .get<typeNameCxx>();                                           \
-                                                                                                   \
-        setReturn<typeNameCxx>(ret, 0, value);                                                     \
-        return ret;                                                                                \
+FuncResult handlerModuleClassSet(const std::vector<std::string>& args)
+{
+    if (args.size() != 3) {
+        throw std::logic_error("Wrong number of arguments for handlerModuleClassSet()");
     }
+    FuncResult ret;
+    auto instanceHandle = getArgument<uint64_t>(args, 0);
+    auto memberName = getArgument<std::string>(args, 1);
+    auto value = getArgument<std::string>(args, 2);
 
-// Здесь можно было бы написать шаблон...
-// Но я уже написал макрос
+    auto& tmp = moduleClassInstances.mutableAccess(instanceHandle);
+    auto& tmp2 = tmp.members.at(memberName);
+    tmp2.set(value);
+    return ret;
+}
 
-HANDLER_MODCLASS_ACCESSOR(String, std::string, 's')
-HANDLER_MODCLASS_ACCESSOR(Int8, int8_t, 'b')
-HANDLER_MODCLASS_ACCESSOR(Int16, int16_t, 'h')
-HANDLER_MODCLASS_ACCESSOR(Int32, int32_t, 'i')
-HANDLER_MODCLASS_ACCESSOR(Int64, int64_t, 'l')
-HANDLER_MODCLASS_ACCESSOR(UInt8, uint8_t, 'B')
-HANDLER_MODCLASS_ACCESSOR(UInt16, uint16_t, 'H')
-HANDLER_MODCLASS_ACCESSOR(UInt32, uint32_t, 'I')
-HANDLER_MODCLASS_ACCESSOR(UInt64, uint64_t, 'L')
-HANDLER_MODCLASS_ACCESSOR(Float32, float, 'f')
-HANDLER_MODCLASS_ACCESSOR(Float64, double, 'F')
-HANDLER_MODCLASS_ACCESSOR(WideString, std::wstring, 'w')
-HANDLER_MODCLASS_ACCESSOR(Blob, std::vector<uint8_t>, 'o')
-#undef HANDLER_MODCLASS_ACCESSOR
+FuncResult handlerModuleClassGet(const std::vector<std::string>& args)
+{
+    if (args.size() != 2) {
+        throw std::logic_error("Wrong number of arguments for handlerModuleClassGet()");
+    }
+    FuncResult ret;
+    ret.data.resize(1);
+    auto instanceHandle = getArgument<uint64_t>(args, 0);
+    auto memberName = getArgument<std::string>(args, 1);
 
-#define HANDLER_MODCLASS_ACCESSOR_REGISTER(typeWord, typeChar)                                     \
-    registerFuncProvider(                                                                          \
-            FuncProvider("core.class.instance.set" #typeWord, handlerModuleClassSet##typeWord),    \
-            "Ls" #typeChar,                                                                        \
-            "");                                                                                   \
-    registerFuncProvider(                                                                          \
-            FuncProvider("core.class.instance.get" #typeWord, handlerModuleClassGet##typeWord),    \
-            "Ls",                                                                                  \
-            #typeChar)
+    std::string value
+            = moduleClassInstances.access(instanceHandle).members.at(memberName).get<std::string>();
+
+    setReturn(ret, 0, value);
+    return ret;
+}
 
 ModuleWorker& getCurrentModuleWorker()
 {
     return moduleManager.getModuleWorkerByThreadId(std::this_thread::get_id());
 }
 
-FuncResult handlerRegisterModuleFuncProvider(const std::vector<void*>& args)
+FuncResult handlerRegisterModuleFuncProvider(const std::vector<std::string>& args)
 {
     if (args.size() != 3) {
         throw std::logic_error(
@@ -623,7 +467,7 @@ ModuleClassInstance& getModuleClassInstance(uint64_t handle)
     return moduleClassInstances.mutableAccess(handle);
 }
 
-FuncResult handlerClassNop(UNUSED const std::vector<void*>& args)
+FuncResult handlerClassNop(UNUSED const std::vector<std::string>& args)
 {
     FuncResult res;
     res.data.resize(1);
@@ -643,19 +487,9 @@ static void initializeCoreFuncProviders()
     registerFuncProvider(
             FuncProvider("core.class.getMethod", handlerGetModuleClassMethod), "ss", "sss");
     registerFuncProvider(FuncProvider("core.class.nop", handlerClassNop), "Lo", "o");
-    HANDLER_MODCLASS_ACCESSOR_REGISTER(String, s);
-    HANDLER_MODCLASS_ACCESSOR_REGISTER(Int8, b);
-    HANDLER_MODCLASS_ACCESSOR_REGISTER(Int16, h);
-    HANDLER_MODCLASS_ACCESSOR_REGISTER(Int32, i);
-    HANDLER_MODCLASS_ACCESSOR_REGISTER(Int64, l);
-    HANDLER_MODCLASS_ACCESSOR_REGISTER(UInt8, B);
-    HANDLER_MODCLASS_ACCESSOR_REGISTER(UInt16, H);
-    HANDLER_MODCLASS_ACCESSOR_REGISTER(UInt32, I);
-    HANDLER_MODCLASS_ACCESSOR_REGISTER(UInt64, L);
-    HANDLER_MODCLASS_ACCESSOR_REGISTER(Float32, f);
-    HANDLER_MODCLASS_ACCESSOR_REGISTER(Float64, F);
-    HANDLER_MODCLASS_ACCESSOR_REGISTER(WideString, w);
-    HANDLER_MODCLASS_ACCESSOR_REGISTER(Blob, o);
+
+    registerFuncProvider(FuncProvider("core.class.instance.set", handlerModuleClassSet), "Lss", "");
+    registerFuncProvider(FuncProvider("core.class.instance.get", handlerModuleClassGet), "Ls", "s");
 }
 
 #undef HANDLER_MODCLASS_ACCESSOR_REGISTER

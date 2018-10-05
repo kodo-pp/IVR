@@ -113,7 +113,7 @@ Enemy& EnemyManager::mutableAccessEnemy(EnemyId id)
 EnemyManager enemyManager;
 
 // TODO: переместить в другое место
-FuncResult handlerEachTickWithHandle(const std::vector<void*>& args)
+FuncResult handlerEachTickWithHandle(const std::vector<std::string>& args)
 {
     if (args.size() != 2) {
         throw std::logic_error("Invalid number of arguments for handlerEnemySyncDrawable");
@@ -126,7 +126,7 @@ FuncResult handlerEachTickWithHandle(const std::vector<void*>& args)
     return ret;
 }
 
-FuncResult handlerEnemyProcessAi(const std::vector<void*>& args)
+FuncResult handlerEnemyProcessAi(const std::vector<std::string>& args)
 {
     if (args.size() != 1) {
         throw std::logic_error("Invalid number of arguments for handlerEnemyProcessAi");
@@ -140,7 +140,6 @@ FuncResult handlerEnemyProcessAi(const std::vector<void*>& args)
             getFuncProviderHandle(moduleClass.methods.at("ai").name));
     FuncResult result = funcProvider(args);
     auto action = getArgument<std::string>(result.data, 0);
-    dyntypeDelete(result.data.at(0), 's');
 
     std::vector<std::string> split;
     boost::algorithm::split(split, action, [](char c) { return c == ';'; });

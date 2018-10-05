@@ -88,7 +88,7 @@ void setAimVisible(bool visible)
 
 static void initializeIrrlicht(std::vector<std::string>& args);
 
-FuncResult handlerGraphicsCreateCube(UNUSED const std::vector<void*>& args)
+FuncResult handlerGraphicsCreateCube(UNUSED const std::vector<std::string>& args)
 {
     FuncResult ret;
     ret.data.resize(1);
@@ -102,7 +102,7 @@ FuncResult handlerGraphicsCreateCube(UNUSED const std::vector<void*>& args)
     return ret;
 }
 
-FuncResult handlerGraphicsMoveObject(const std::vector<void*>& args)
+FuncResult handlerGraphicsMoveObject(const std::vector<std::string>& args)
 {
     if (args.size() != 4) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsMoveObject()");
@@ -122,7 +122,7 @@ FuncResult handlerGraphicsMoveObject(const std::vector<void*>& args)
     return ret;
 }
 
-FuncResult handlerGraphicsDeleteObject(const std::vector<void*>& args)
+FuncResult handlerGraphicsDeleteObject(const std::vector<std::string>& args)
 {
     if (args.size() != 1) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsDeleteObject()");
@@ -139,7 +139,7 @@ FuncResult handlerGraphicsDeleteObject(const std::vector<void*>& args)
     return ret;
 }
 
-FuncResult handlerGraphicsRotateObject(const std::vector<void*>& args)
+FuncResult handlerGraphicsRotateObject(const std::vector<std::string>& args)
 {
     if (args.size() != 4) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsRotateObject()");
@@ -162,7 +162,7 @@ FuncResult handlerGraphicsRotateObject(const std::vector<void*>& args)
 
 extern std::recursive_mutex irrlichtMutex;
 
-FuncResult handlerGraphicsLoadTexture(const std::vector<void*>& args)
+FuncResult handlerGraphicsLoadTexture(const std::vector<std::string>& args)
 {
     std::lock_guard<std::recursive_mutex> irrlock(irrlichtMutex);
     if (args.size() != 1) {
@@ -186,7 +186,7 @@ FuncResult handlerGraphicsLoadTexture(const std::vector<void*>& args)
     return ret;
 }
 
-FuncResult handlerGraphicsAddTexture(const std::vector<void*>& args)
+FuncResult handlerGraphicsAddTexture(const std::vector<std::string>& args)
 {
     if (args.size() != 2) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsAddTexture()");
@@ -208,7 +208,7 @@ FuncResult handlerGraphicsAddTexture(const std::vector<void*>& args)
     return ret;
 }
 
-FuncResult handlerGraphicsDrawableAddTexture(const std::vector<void*>& args)
+FuncResult handlerGraphicsDrawableAddTexture(const std::vector<std::string>& args)
 {
     if (args.size() != 2) {
         throw std::logic_error("Wrong number of arguments for handlerGraphicsAddTexture()");
@@ -232,7 +232,7 @@ FuncResult handlerGraphicsDrawableAddTexture(const std::vector<void*>& args)
 
 scene::ISceneNode* graphicsCreateDrawableCube();
 
-FuncResult handlerCreateDrawableCube(const std::vector<void*>& args)
+FuncResult handlerCreateDrawableCube(const std::vector<std::string>& args)
 {
     if (args.size() != 0) {
         throw std::logic_error("Wrong number of arguments for handlerCreateDrawableCube()");
@@ -246,7 +246,7 @@ FuncResult handlerCreateDrawableCube(const std::vector<void*>& args)
     return ret;
 }
 
-FuncResult handlerDrawableEnablePhysics(const std::vector<void*>& args)
+FuncResult handlerDrawableEnablePhysics(const std::vector<std::string>& args)
 {
     if (args.size() != 4) {
         throw std::logic_error("Wrong number of arguments for handlerDrawableEnablePhysics()");

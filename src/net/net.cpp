@@ -139,7 +139,7 @@ static void moduleListenerThreadFunc()
 
         // Модули, которые уже подключились к первому сокету, но ещё не подключились ко второму
         // Ключ - имя модуля, значение - сокет
-        std::unordered_map<std::wstring, int> pendingModules;
+        std::unordered_map<std::string, int> pendingModules;
 
         while (true) {
             // TODO: переписать с асинхронным IO или потоками
@@ -181,8 +181,8 @@ static void moduleListenerThreadFunc()
             pendingModules.erase(reverseModuleName);
             // И запускаем moduleWorker
             LOG(L"Spawning client thread");
-            createModuleServerThread(Module(
-                    mainModuleSocket, reverseModuleSocket, reverseModuleName, 42, L"<unset>"));
+            createModuleServerThread(
+                    Module(mainModuleSocket, reverseModuleSocket, reverseModuleName));
         }
     } catch (std::exception& e) {
         LOG(L"FATAL error (at " __FILE__ "): " << wstring_cast(e.what()));

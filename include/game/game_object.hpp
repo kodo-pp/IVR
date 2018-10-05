@@ -28,9 +28,8 @@ class GameObject
 {
 public:
     GameObject();
-    GameObject(const GameObject&); // copy c-tor
-    GameObject(GameObject&&);      // move c-tor
-    GameObject(std::wstring);
+    GameObject(const GameObject&) = default;
+    GameObject(GameObject&&) = default;
     GameObject(ISceneNode*);
     virtual ~GameObject();
 
@@ -38,12 +37,11 @@ public:
     void setPosition(const GamePosition& newPosition);
     void setRotation(double, double, double);
 
-    GameObject& operator=(const GameObject&);
-    GameObject& operator=(GameObject&&);
+    GameObject& operator=(const GameObject&) = default;
+    GameObject& operator=(GameObject&&) = default;
 
     ISceneNode* sceneNode() const;
     GameObjectId getId() const;
-    ModuleId getProvidingModule() const;
 
     bool getPhysicsEnabled();
     void setPhysicsEnabled(bool value);
@@ -52,7 +50,6 @@ protected:
     bool physicsEnabled;
     GamePosition position;
     GameObjectId id;
-    ModuleId providingModule;
 
     ISceneNode* _sceneNode;
 };

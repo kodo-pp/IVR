@@ -29,41 +29,6 @@ GameObject::GameObject() : physicsEnabled(false)
 {
 }
 
-// TODO: replace copy-paste driven programming with using copy-and-swap idiom
-
-GameObject::GameObject(const GameObject& other)
-{
-    _sceneNode = other.sceneNode();
-    position = other.getPosition();
-    providingModule = other.getProvidingModule();
-    id = other.getId();
-}
-
-GameObject::GameObject(GameObject&& other)
-{
-    std::swap(_sceneNode, other._sceneNode);
-    std::swap(position, other.position);
-    std::swap(providingModule, other.providingModule);
-    std::swap(id, other.id);
-}
-
-GameObject& GameObject::operator=(const GameObject& other)
-{
-    _sceneNode = other.sceneNode();
-    position = other.getPosition();
-    providingModule = other.getProvidingModule();
-    id = other.getId();
-    return *this;
-}
-
-GameObject& GameObject::operator=(GameObject&& other)
-{
-    std::swap(_sceneNode, other._sceneNode);
-    std::swap(position, other.position);
-    std::swap(providingModule, other.providingModule);
-    std::swap(id, other.id);
-    return *this;
-}
 /*
 GameObject::GameObject(std::wstring meshFilename) {
     _sceneNode = graphicsCreateObject(meshFilename);
@@ -86,11 +51,6 @@ GameObjectId GameObject::getId() const
 {
     return id;
 }
-ModuleId GameObject::getProvidingModule() const
-{
-    return providingModule;
-}
-
 void GameObject::setPosition(const GamePosition& newPosition)
 {
     position = newPosition;

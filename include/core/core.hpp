@@ -16,7 +16,7 @@ using ArgsSpec = std::string;
 
 struct FuncResult
 {
-    std::vector<void*> data;
+    std::vector<std::string> data;
 };
 
 // === FuncProvider definition ===
@@ -24,12 +24,12 @@ struct FuncResult
 class FuncProvider
 {
 public:
-    using func_type = std::function<FuncResult(const std::vector<void*>&)>;
+    using func_type = std::function<FuncResult(const std::vector<std::string>&)>;
 
     FuncProvider();
-    FuncProvider(const std::string&, const func_type&);
+    FuncProvider(const std::string& name, const func_type& args);
     std::string getCommand() const;
-    FuncResult operator()(const std::vector<void*>&) const;
+    FuncResult operator()(const std::vector<std::string>& args) const;
     ~FuncProvider();
 
 private:
@@ -39,14 +39,12 @@ private:
 
 // === Initialization function ===
 
-void initilaizeCore(std::vector<std::string>&);
+void initilaizeCore(std::vector<std::string>& args);
 
 // === Working with FuncProviders ===
 
-void registerFuncProvider(const FuncProvider&, ArgsSpec, ArgsSpec);
-
+void registerFuncProvider(const FuncProvider& provider, ArgsSpec args, ArgsSpec ret);
 uint64_t getFuncProviderHandle(const std::string& command);
-
 const FuncProvider& getFuncProvider(uint64_t handle);
 ArgsSpec getArgsSpec(uint64_t handle);
 ArgsSpec getRetSpec(uint64_t handle);
@@ -91,83 +89,41 @@ struct TypeChar
         static constexpr char value = c;                                                           \
     }
 
-TYPECHAR(int8_t, 'b');
-TYPECHAR(int16_t, 'h');
-TYPECHAR(int32_t, 'i');
-TYPECHAR(int64_t, 'l');
-TYPECHAR(uint8_t, 'B');
-TYPECHAR(uint16_t, 'H');
-TYPECHAR(uint32_t, 'I');
-TYPECHAR(uint64_t, 'L');
-TYPECHAR(float, 'f');
-TYPECHAR(double, 'F');
+TYPECHAR(int64_t, 'i');
+TYPECHAR(uint64_t, 'u');
+TYPECHAR(double, 'f');
 TYPECHAR(std::string, 's');
-// TYPECHAR(std::string, 'o'); // TODO: blob
-TYPECHAR(std::wstring, 'w');
+TYPECHAR(std::vector<uint8_t>, 'b');
 
 #undef TYPECHAR
 
 struct ModuleClassMemberData
 {
     template <typename T>
-    explicit ModuleClassMemberData(T* val) : referenceCount(std::make_shared<size_t>(1))
+    explicit ModuleClassMemberData(const T& val)
     {
+        value = DyntypeCaster<std::string>::get(val);
         type = TypeChar<T>::value;
-        if (type == '?') {
-            throw std::runtime_error("Unknown type");
-        }
-        value = val;
-    }
-    template <typename T>
-    explicit ModuleClassMemberData(const T& val) : referenceCount(std::make_shared<size_t>(1))
-    {
-        type = TypeChar<T>::value;
-        if (type == '?') {
-            throw std::runtime_error("Unknown type");
-        }
-        value = new T(val);
-    }
-    explicit ModuleClassMemberData(char _type) : referenceCount(std::make_shared<size_t>(1))
-    {
-        type = _type;
-        if (type == '?') {
-            throw std::runtime_error("Unknown type");
-        }
-        value = dyntypeNew(type);
     }
 
-    // TODO: Написать move-конструктор и оператор присваивания
-    // Пока они =delete, т.к. дефолтные приводят к Segfault
-
-    ModuleClassMemberData(const ModuleClassMemberData& other);
-    ModuleClassMemberData(ModuleClassMemberData&& other) = delete;
+    ModuleClassMemberData(const ModuleClassMemberData& other) = default;
+    ModuleClassMemberData(ModuleClassMemberData&& other) = default;
     virtual ~ModuleClassMemberData();
 
     ModuleClassMemberData& operator=(const ModuleClassMemberData& other);
     ModuleClassMemberData& operator=(ModuleClassMemberData&& other) = delete;
 
     char type;
-    void* value;
+    std::string value;
     template <typename T>
-    T& get()
-    {
-        if (type != TypeChar<T>::value) {
-            logStackTrace();
-            throw std::runtime_error(std::string("Type mismatch(get): expected ")
-                                     + TypeChar<T>::value + ", got " + type);
-        } else {
-            return *static_cast<T*>(value);
-        }
-    }
-    template <typename T>
-    const T& get() const
+    const T get() const
     {
         if (type != TypeChar<T>::value) {
             logStackTrace();
             throw std::runtime_error(std::string("Type mismatch(get const): expected ")
                                      + TypeChar<T>::value + ", got " + type);
         } else {
-            return *static_cast<T*>(value);
+            return DyntypeCaster<T>::get(value);
         }
     }
     template <typename T>
@@ -178,11 +134,9 @@ struct ModuleClassMemberData
             throw std::runtime_error(std::string("Type mismatch(set): expected ")
                                      + TypeChar<T>::value + ", got " + type);
         } else {
-            *static_cast<T*>(value) = x;
+            value = DyntypeCaster<std::string>::get(x);
         }
     }
-
-    mutable std::shared_ptr<size_t> referenceCount;
 };
 
 struct ModuleClassInstance
