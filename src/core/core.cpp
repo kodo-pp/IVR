@@ -25,10 +25,7 @@
 // === Static variables ===
 
 // Map: command -> handle
-std::unordered_map<std::string, uint64_t> funcProviderMap;
-
-// Storage of FuncProvider handles
-HandleStorage<uint64_t, std::tuple<FuncProvider, ArgsSpec, ArgsSpec>> funcProviderStorage;
+std::unordered_map<std::string, std::tuple<FuncProvider, ArgsSpec, ArgsSpec>> funcProviderMap;
 
 // Mutex protecting the access to FuncProvider functions
 static std::recursive_mutex funcProviderMutex;
@@ -65,26 +62,10 @@ std::string FuncProvider::getCommand() const
 
 // === Initialization functions ===
 
-static void initializeFuncProviderMap(UNUSED std::vector<std::string>& args)
-{
-    // Reserve the null handle
-    auto handle = funcProviderStorage.insert(
-            {FuncProvider("RESERVED",
-                          FuncProvider::func_type([](const std::vector<std::string>&) -> FuncResult {
-                              throw std::logic_error("zero FuncProvider called");
-                          })),
-             "",
-             ""});
-    if (handle != 0ULL) {
-        throw std::logic_error("zero FuncProvider handle is not zero");
-    }
-}
-
 static void initializeCoreFuncProviders();
 
-void initilaizeCore(std::vector<std::string>& args)
+void initilaizeCore(UNUSED std::vector<std::string>& args)
 {
-    initializeFuncProviderMap(args);
     initializeCoreFuncProviders();
 }
 
@@ -100,49 +81,42 @@ void registerFuncProvider(const FuncProvider& prov, ArgsSpec argsSpec, ArgsSpec 
     }
 
     LOG(L"Registering func provider for '" << wstring_cast(command) << L"'");
-    auto handle = funcProviderStorage.insert({prov, argsSpec, retSpec});
-    funcProviderMap.insert({command, handle});
+    funcProviderMap.insert({command, {prov, argsSpec, retSpec}});
     LOG(L"Successfully registered FuncProvider for " << wstring_cast(command));
 }
 
-uint64_t getFuncProviderHandle(const std::string& command)
-{
-    try {
-        return funcProviderMap.at(command);
-    } catch (const std::out_of_range& e) {
-        throw std::runtime_error(std::string("No such FuncProvider: ") + command);
-    }
-}
-const FuncProvider& getFuncProvider(uint64_t handle)
+const FuncProvider& getFuncProvider(const std::string& command)
 {
     std::lock_guard<std::recursive_mutex> lock(funcProviderMutex);
     try {
-        return std::get<0>(funcProviderStorage.access(handle));
+        return std::get<0>(funcProviderMap.at(command));
     } catch (const std::out_of_range& e) {
-        throw std::runtime_error(std::string("No such FuncProvider handle: ")
-                                 + std::to_string(handle));
+        throw std::runtime_error("No such FuncProvider: " + command);
     }
 }
 
-ArgsSpec getArgsSpec(uint64_t handle)
+ArgsSpec getArgsSpec(const std::string& command)
 {
     std::lock_guard<std::recursive_mutex> lock(funcProviderMutex);
-    return std::get<1>(funcProviderStorage.access(handle));
+    try {
+        return std::get<1>(funcProviderMap.at(command));
+    } catch (const std::out_of_range& e) {
+        throw std::runtime_error("No such FuncProvider: " + command);
+    }
 }
 
-ArgsSpec getRetSpec(uint64_t handle)
+ArgsSpec getRetSpec(const std::string& command)
 {
     std::lock_guard<std::recursive_mutex> lock(funcProviderMutex);
-    return std::get<2>(funcProviderStorage.access(handle));
+    try {
+        return std::get<2>(funcProviderMap.at(command));
+    } catch (const std::out_of_range& e) {
+        throw std::runtime_error("No such FuncProvider: " + command);
+    }
 }
 
 void funcProvidersCleanup()
 {
-    std::lock_guard<std::recursive_mutex> lock(funcProviderMutex);
-    for (const auto& i : funcProviderMap) {
-        funcProviderStorage.remove(i.second);
-    }
-    funcProviderMap.clear();
 }
 
 ModuleClass::ModuleClass(const std::unordered_map<std::string, ModuleClassMember>& _members,
@@ -168,7 +142,7 @@ ModuleClassInstance::ModuleClassInstance(const std::string& _className) : classN
     const auto& memberDecls = getModuleClass(className).members;
     members.reserve(memberDecls.size());
     for (const auto& kv : memberDecls) {
-        members.insert({kv.first, ModuleClassMemberData(kv.second.type)});
+        members.insert({kv.first, ModuleClassMemberData(std::string(1, kv.second.type))});
     }
 }
 
@@ -270,21 +244,23 @@ std::tuple<std::string, std::string, std::string> moduleClassBindMethod(const st
                                                                         std::string argTypes,
                                                                         std::string retTypes)
 {
+    LOG("bind method: classname '" << className << "', command '" << command << "', args '"
+                                   << argTypes << "', rets '" << retTypes << "'");
     std::lock_guard<std::recursive_mutex> lock(moduleClassMutex);
     static uint64_t counter = 1;
     std::string funcName = "core.class.__bound__.";
     funcName += std::to_string(counter);
 
-    if (argTypes.substr(0, 2) != "Lo") {
+    if (argTypes.substr(0, 2) != "ub") {
         throw std::runtime_error("Method cannot be bound: invalid arguments type");
     }
     argTypes.erase(1, 1);
-    if (retTypes.substr(0, 1) != "o") {
+    if (retTypes.substr(0, 1) != "b") {
         throw std::runtime_error("Method cannot be bound: invalid return type");
     }
     retTypes.erase(0, 1);
 
-    auto& funcProvider = getFuncProvider(getFuncProviderHandle(command));
+    auto& funcProvider = getFuncProvider(command);
 
     registerFuncProvider(
             FuncProvider(
@@ -416,7 +392,7 @@ FuncResult handlerModuleClassSet(const std::vector<std::string>& args)
 
     auto& tmp = moduleClassInstances.mutableAccess(instanceHandle);
     auto& tmp2 = tmp.members.at(memberName);
-    tmp2.set(value);
+    tmp2.genericSet(value);
     return ret;
 }
 
@@ -449,16 +425,14 @@ FuncResult handlerRegisterModuleFuncProvider(const std::vector<std::string>& arg
                 "Invalid number of arguments for handlerRegisterModuleFuncProvider()");
     }
     FuncResult result;
-    result.data.resize(1);
 
     const std::string& fpname = getArgument<std::string>(args, 0);
     std::string fpargs = getArgument<std::string>(args, 1);
     std::string fpret = getArgument<std::string>(args, 2);
 
     ModuleWorker& worker = getCurrentModuleWorker();
-    auto pair = worker.registerModuleFuncProvider(fpname, fpargs, fpret);
-    registerFuncProvider(FuncProvider(fpname, pair.second), fpargs, fpret);
-    setReturn(result, 0, pair.first);
+    auto func = worker.registerModuleFuncProvider(fpname, fpargs, fpret);
+    registerFuncProvider(FuncProvider(fpname, func), fpargs, fpret);
     return result;
 }
 
@@ -479,17 +453,21 @@ static void initializeCoreFuncProviders()
 {
     registerFuncProvider(FuncProvider("core.class.add", handlerAddModuleClass), "ssss", "");
     registerFuncProvider(
-            FuncProvider("core.class.instantiate", handlerInstantiateModuleClass), "s", "L");
+            FuncProvider("core.class.instantiate", handlerInstantiateModuleClass), "s", "u");
     registerFuncProvider(
             FuncProvider("core.funcProvider.register", handlerRegisterModuleFuncProvider),
             "sss",
-            "L");
+            "");
     registerFuncProvider(
             FuncProvider("core.class.getMethod", handlerGetModuleClassMethod), "ss", "sss");
-    registerFuncProvider(FuncProvider("core.class.nop", handlerClassNop), "Lo", "o");
+    registerFuncProvider(FuncProvider("core.class.nop", handlerClassNop), "ub", "b");
 
-    registerFuncProvider(FuncProvider("core.class.instance.set", handlerModuleClassSet), "Lss", "");
-    registerFuncProvider(FuncProvider("core.class.instance.get", handlerModuleClassGet), "Ls", "s");
+    registerFuncProvider(FuncProvider("core.class.instance.set", handlerModuleClassSet), "uss", "");
+    registerFuncProvider(FuncProvider("core.class.instance.get", handlerModuleClassGet), "us", "s");
 }
 
-#undef HANDLER_MODCLASS_ACCESSOR_REGISTER
+void ModuleClassMemberData::genericSet(const std::string& x)
+{
+    LOG("ModuleClassMemberData::genericSet(" << x << ") @ '" << type << "'");
+    value = x;
+}

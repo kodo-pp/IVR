@@ -136,8 +136,7 @@ FuncResult handlerEnemyProcessAi(const std::vector<std::string>& args)
     auto instanceHandle = getArgument<uint64_t>(args, 0);
     auto& instance = getModuleClassInstance(instanceHandle);
     const auto& moduleClass = getModuleClass(instance.className);
-    const auto& funcProvider = getFuncProvider(
-            getFuncProviderHandle(moduleClass.methods.at("ai").name));
+    const auto& funcProvider = getFuncProvider(moduleClass.methods.at("ai").name);
     FuncResult result = funcProvider(args);
     auto action = getArgument<std::string>(result.data, 0);
 
@@ -187,13 +186,13 @@ FuncResult handlerEnemyProcessAi(const std::vector<std::string>& args)
 void initializeEnemies()
 {
     registerFuncProvider(
-            FuncProvider("core.eachTickWithHandle", handlerEachTickWithHandle), "sL", "");
-    registerFuncProvider(FuncProvider("enemy.processAi", handlerEnemyProcessAi), "L", "");
+            FuncProvider("core.eachTickWithHandle", handlerEachTickWithHandle), "si", "");
+    registerFuncProvider(FuncProvider("enemy.processAi", handlerEnemyProcessAi), "u", "");
     addModuleClass("graphics.Drawable",
-                   ModuleClass({{"model", {'L'}}}, {}, "graphics.Drawable", ""));
+                   ModuleClass({{"model", {'u'}}}, {}, "graphics.Drawable", ""));
     addModuleClass("game.Enemy",
-                   ModuleClass({{"x", {'F'}}, {"y", {'F'}}, {"z", {'F'}}, {"hp", {'F'}}},
-                               {{"ai", {"core.class.nop", "Lo", "os"}}},
+                   ModuleClass({{"x", {'f'}}, {"y", {'f'}}, {"z", {'f'}}, {"hp", {'f'}}},
+                               {{"ai", {"core.class.nop", "ub", "bs"}}},
                                "game.Enemy",
                                "graphics.Drawable"));
 }

@@ -186,8 +186,7 @@ static void moduleListenerThreadFunc()
         }
     } catch (std::exception& e) {
         LOG(L"FATAL error (at " __FILE__ "): " << wstring_cast(e.what()));
-        LOG(L"Exiting");
-        exit(1);
+        destroy();
     }
 }
 

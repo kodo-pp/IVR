@@ -217,7 +217,7 @@ void gameLoop()
             for (const auto& fp : eachTickFuncs) {
                 try {
                     auto arg = DyntypeCaster<std::string>::get(fp.second);
-                    auto ret = getFuncProvider(getFuncProviderHandle(fp.first))({arg});
+                    auto ret = getFuncProvider(fp.first)({arg});
                     if (ret.data.size() != 0) {
                         LOG("ret.data.size() != 0");
                     }

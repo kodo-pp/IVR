@@ -47,36 +47,11 @@ void ModuleWorker::work()
     LOG(L"Module '" << module.getName() << L"' connected");
 
     while (true) {
-        // Receive command from module
-        uint64_t handle = DyntypeCaster<uint64_t>::get(recvString(sock));
-
-        if (handle == 0) /* Null handle - intended to find handle for a command */ {
-            std::string cmd = recvString(sock);
-            try {
-                uint64_t responseHandle = getFuncProviderHandle(cmd);
-                sendString(sock, DyntypeCaster<std::string>::get(responseHandle));
-            } catch (const std::out_of_range& e) {
-                sendString(sock, "0");
-            }
-            flushBuffer(sock);
-            continue;
-        } else if (handle == RESERVED_FP_HANDLE) {
-            std::string internal_cmd = recvString(sock);
-            if (internal_cmd == "exit") {
-                LOG("exiting");
-                sendString(sock, "exited");
-                flushBuffer(sock);
-                return;
-            } else {
-                sendError(sock, std::string("invalid internal command: ") + internal_cmd);
-            }
-        }
+        std::string command = recvString(sock);
 
         // Prepare to run it
-        FuncProvider prov;
-        prov = getFuncProvider(handle);
-
-        ArgsSpec argsSpec = getArgsSpec(handle);
+        FuncProvider prov = getFuncProvider(command);
+        ArgsSpec argsSpec = getArgsSpec(command);
 
         // Read its arguments
         std::vector<std::string> args;
@@ -91,14 +66,15 @@ void ModuleWorker::work()
             result = prov(args);
         } catch (const std::exception& e) {
             LOG("ModuleWorker: exception caught: " << e.what());
-            sendError(sock, e.what());
+            sendString(sock, "1");
+            sendString(sock, e.what());
             continue;
         }
 
         sendString(sock, "0");
 
         // Send result back
-        ArgsSpec retSpec = getRetSpec(handle);
+        ArgsSpec retSpec = getRetSpec(command);
         for (size_t i = 0; i < retSpec.length(); ++i) {
             sendString(sock, result.data.at(i));
         }
@@ -108,7 +84,7 @@ void ModuleWorker::work()
     LOG(L"Exiting module worker");
 }
 
-std::vector<std::string> ModuleWorker::runModuleFunc(uint64_t id,
+std::vector<std::string> ModuleWorker::runModuleFunc(const std::string& command,
                                                      const std::string& argTypes,
                                                      const std::string& retTypes,
                                                      const std::vector<std::string> arguments)
@@ -123,7 +99,7 @@ std::vector<std::string> ModuleWorker::runModuleFunc(uint64_t id,
         std::lock_guard<std::mutex> lock(reverseMutex);
         int sock = module.getReverseSocket();
 
-        sendString(sock, DyntypeCaster<std::string>::get(id));
+        sendString(sock, command);
         for (size_t i = 0; i < argTypes.length(); ++i) {
             sendString(sock, arguments.at(i));
         }
@@ -148,15 +124,15 @@ std::vector<std::string> ModuleWorker::runModuleFunc(uint64_t id,
     }
 }
 
-std::pair<uint64_t, std::function<FuncResult(const std::vector<std::string>&)>>
-ModuleWorker::registerModuleFuncProvider(const std::string& name,
-                                         std::string argTypes,
-                                         std::string retTypes)
+std::function<FuncResult(const std::vector<std::string>&)> ModuleWorker::registerModuleFuncProvider(
+        const std::string& name,
+        std::string argTypes,
+        std::string retTypes)
 {
-    uint64_t handle = moduleFuncs.insert(name);
-    return {handle, [handle, argTypes, retTypes, this](const std::vector<std::string> args) {
-                FuncResult result;
-                result.data = runModuleFunc(handle, argTypes, retTypes, args);
-                return result;
-            }};
+    moduleFuncs.insert(name);
+    return [name, argTypes, retTypes, this](const std::vector<std::string> args) {
+        FuncResult result;
+        result.data = runModuleFunc(name, argTypes, retTypes, args);
+        return result;
+    };
 }

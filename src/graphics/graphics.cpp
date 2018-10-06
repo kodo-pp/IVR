@@ -267,25 +267,25 @@ FuncResult handlerDrawableEnablePhysics(const std::vector<std::string>& args)
 
 static inline void initializeGraphicsFuncProviders()
 {
-    registerFuncProvider(FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "L");
+    registerFuncProvider(FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "u");
     registerFuncProvider(
-            FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "LFFF", "");
+            FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "ufff", "");
     registerFuncProvider(
-            FuncProvider("graphics.rotateObject", handlerGraphicsRotateObject), "LFFF", "");
+            FuncProvider("graphics.rotateObject", handlerGraphicsRotateObject), "ufff", "");
     registerFuncProvider(
-            FuncProvider("graphics.deleteObject", handlerGraphicsDeleteObject), "L", "");
+            FuncProvider("graphics.deleteObject", handlerGraphicsDeleteObject), "u", "");
     registerFuncProvider(
-            FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture), "s", "L");
-    registerFuncProvider(FuncProvider("graphics.texture.add", handlerGraphicsAddTexture), "LL", "");
+            FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture), "s", "u");
+    registerFuncProvider(FuncProvider("graphics.texture.add", handlerGraphicsAddTexture), "uu", "");
     registerFuncProvider(
             FuncProvider("graphics.texture.addToDrawable", handlerGraphicsDrawableAddTexture),
-            "LL",
+            "uu",
             "");
     registerFuncProvider(
-            FuncProvider("graphics.drawable.createCube", handlerCreateDrawableCube), "", "L");
+            FuncProvider("graphics.drawable.createCube", handlerCreateDrawableCube), "", "u");
     registerFuncProvider(
             FuncProvider("graphics.drawable.enablePhysics", handlerDrawableEnablePhysics),
-            "Lfff",
+            "ufff",
             "");
 }
 

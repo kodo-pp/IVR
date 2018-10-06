@@ -44,10 +44,9 @@ void initilaizeCore(std::vector<std::string>& args);
 // === Working with FuncProviders ===
 
 void registerFuncProvider(const FuncProvider& provider, ArgsSpec args, ArgsSpec ret);
-uint64_t getFuncProviderHandle(const std::string& command);
-const FuncProvider& getFuncProvider(uint64_t handle);
-ArgsSpec getArgsSpec(uint64_t handle);
-ArgsSpec getRetSpec(uint64_t handle);
+const FuncProvider& getFuncProvider(const std::string& command);
+ArgsSpec getArgsSpec(const std::string& command);
+ArgsSpec getRetSpec(const std::string& command);
 
 void funcProvidersCleanup();
 
@@ -102,13 +101,14 @@ struct ModuleClassMemberData
     template <typename T>
     explicit ModuleClassMemberData(const T& val)
     {
+        static_assert(TypeChar<T>::value != '?');
         value = DyntypeCaster<std::string>::get(val);
         type = TypeChar<T>::value;
     }
 
     ModuleClassMemberData(const ModuleClassMemberData& other) = default;
     ModuleClassMemberData(ModuleClassMemberData&& other) = default;
-    virtual ~ModuleClassMemberData();
+    virtual ~ModuleClassMemberData() = default;
 
     ModuleClassMemberData& operator=(const ModuleClassMemberData& other);
     ModuleClassMemberData& operator=(ModuleClassMemberData&& other) = delete;
@@ -137,6 +137,8 @@ struct ModuleClassMemberData
             value = DyntypeCaster<std::string>::get(x);
         }
     }
+
+    void genericSet(const std::string& x);
 };
 
 struct ModuleClassInstance

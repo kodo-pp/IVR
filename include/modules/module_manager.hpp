@@ -5,6 +5,7 @@
 #include <string>
 #include <thread>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include <modbox/core/core.hpp>
@@ -59,9 +60,11 @@ public:
     void work();
     void please_work() noexcept;
 
-    std::pair<uint64_t, std::function<FuncResult(const std::vector<std::string>&)>>
-    registerModuleFuncProvider(const std::string& name, std::string argTypes, std::string retTypes);
-    std::vector<std::string> runModuleFunc(uint64_t id,
+    std::function<FuncResult(const std::vector<std::string>&)> registerModuleFuncProvider(
+            const std::string& name,
+            std::string argTypes,
+            std::string retTypes);
+    std::vector<std::string> runModuleFunc(const std::string& id,
                                            const std::string& argTypes,
                                            const std::string& retTypes,
                                            const std::vector<std::string> arguments);
@@ -69,7 +72,7 @@ public:
 private:
     mutable std::mutex reverseMutex;
     mutable std::recursive_mutex mainMutex;
-    HandleStorage<uint64_t, std::string> moduleFuncs;
+    std::unordered_set<std::string> moduleFuncs;
     Module module;
 };
 

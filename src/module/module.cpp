@@ -18,8 +18,6 @@ void Module::cleanup() noexcept
 
 Module::~Module()
 {
-    close(mainSocket);
-    close(reverseSocket);
 }
 
 std::string Module::getName() const
