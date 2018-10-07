@@ -125,6 +125,7 @@ ModuleClass::ModuleClass(const std::unordered_map<std::string, ModuleClassMember
                          const std::string& parent)
         : parentClassName(parent), members(_members), methods(_methods)
 {
+    LOG("ModuleClass::ModuleClass(" << className << ") <- " << parentClassName);
     if (!parent.empty()) {
         const auto& parentClass = getModuleClass(parent);
         members.insert(parentClass.members.begin(), parentClass.members.end());
@@ -135,6 +136,10 @@ ModuleClass::ModuleClass(const std::unordered_map<std::string, ModuleClassMember
         std::tie(method.name, method.arguments_type, method.return_type) = moduleClassBindMethod(
                 className, method.name, method.arguments_type, method.return_type);
     }
+
+    for (const auto& [k, v] : members) {
+        LOG("member: " << k << ": " << v.type);
+    }
 }
 
 ModuleClassInstance::ModuleClassInstance(const std::string& _className) : className(_className)
@@ -142,7 +147,7 @@ ModuleClassInstance::ModuleClassInstance(const std::string& _className) : classN
     const auto& memberDecls = getModuleClass(className).members;
     members.reserve(memberDecls.size());
     for (const auto& kv : memberDecls) {
-        members.insert({kv.first, ModuleClassMemberData(std::string(1, kv.second.type))});
+        members.insert({kv.first, ModuleClassMemberData(kv.second.type)});
     }
 }
 
@@ -192,7 +197,7 @@ std::vector<uint8_t> moduleClassBlobifyMembers(uint64_t objectHandle)
         }
         blob.push_back(static_cast<uint8_t>(kv.second.type));
         blob.push_back(0);
-        std::string enc = kv.second.get<std::string>();
+        std::string enc = kv.second.genericGet();
 
         blob.reserve(blob.size() + enc.length() + 1);
         for (char c : enc) {
@@ -232,7 +237,7 @@ void moduleClassUnblobifyMembers(uint64_t objectHandle, const std::vector<uint8_
             }
             std::string name = namet;
             name.pop_back();
-            instance.members.at(name).set(enc);
+            instance.members.at(name).genericSet(enc);
         }
     } catch (const std::out_of_range& e) {
         throw std::runtime_error("Malformed blobified member diff");
@@ -470,4 +475,9 @@ void ModuleClassMemberData::genericSet(const std::string& x)
 {
     LOG("ModuleClassMemberData::genericSet(" << x << ") @ '" << type << "'");
     value = x;
+}
+
+std::string ModuleClassMemberData::genericGet() const
+{
+    return DyntypeCaster<std::string>::get(value);
 }

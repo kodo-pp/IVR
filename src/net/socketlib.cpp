@@ -88,13 +88,11 @@ std::string recvString(int sock)
         }
         s += c;
     }
-    LOG("recvString: " << sock << ", '" << s << "'");
     return s;
 }
 
 void sendString(int sock, const std::string& s)
 {
-    LOG("sendString: " << sock << ", '" << s << "'");
     putBuffer(sock, s.begin(), s.end());
     putBuffer(sock, {0});
 }

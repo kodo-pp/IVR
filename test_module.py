@@ -11,11 +11,17 @@ import threading
 import traceback
 
 VERBOSE = True
+VERY_VERBOSE = False
 
 def vlog(text):
     if VERBOSE:
         print(text)
-    sys.stdout.flush()
+        sys.stdout.flush()
+
+def vvlog(text):
+    if VERY_VERBOSE:
+        print(text)
+        sys.stdout.flush()
 
 # Netcat module taken from here: https://gist.github.com/leonjza/f35a7252babdf77c8421
 # and slightly modified
@@ -105,21 +111,21 @@ class Modcat(Netcat):
         self.write(b'ModBox/r')
 
     def read_str(self):
-        vlog('{}: Reading string...'.format(id(self)))
+        vvlog('{}: Reading string...'.format(id(self)))
         s = self.read_until(b'\x00')[:-1].decode()
-        vlog('{}: Reading string: "{}"'.format(id(self), s))
+        vvlog('{}: Reading string: "{}"'.format(id(self), s))
         return s
 
     def write_str(self, s):
         if s is None:
             raise Exception('Attempted to send a None value')
-        vlog('{}: Writing string: "{}"'.format(id(self), s))
+        vvlog('{}: Writing string: "{}"'.format(id(self), s))
         s = str(s)
         s += '\x00'
         self.write(bytes(s, 'ascii'))
 
     def unblobify(self, blob):
-        vlog('unblobify: {}'.format(repr(blob)))
+        vvlog('unblobify: {}'.format(repr(blob)))
         split_blob = blob.split(b'\x00')
 
         # Костыль № 9124721
@@ -134,7 +140,7 @@ class Modcat(Netcat):
         return members
 
     def send_arg(self, arg, tp):
-        vlog('send_arg: self = {}, arg = {}, tp = {}'.format(id(self), arg, tp))
+        vvlog('send_arg: self = {}, arg = {}, tp = {}'.format(id(self), arg, tp))
         if tp in 'iufs':
             self.write_str(arg)
         elif tp == 'b':
@@ -159,7 +165,7 @@ class Modcat(Netcat):
         for name, (type, value) in values.items():
             blob += bytes(name, 'utf-8') + bytes(type, 'utf-8') + b'\x00'
             blob += self.type_encode(value, type) + b'\x00'
-        vlog('blobify: {}'.format(repr(blob)))
+        vvlog('blobify: {}'.format(repr(blob)))
         return blob
 
     def invoke(self, func, ls, args, ret):
@@ -204,10 +210,8 @@ class Modcat(Netcat):
                     # Receive function arguments
                     args = [self.recv_arg(type) for type in arg_types]
 
-                    vlog("calling func")
                     # Call the function
                     ret = func(*args)
-                    vlog("called")
                 except BaseException as e:
                     # Something has gone wrong, exit code is not 0
                     print('Exception at module function:')

@@ -10,6 +10,8 @@
 #include <modbox/core/dyntype.hpp>
 #include <modbox/util/util.hpp>
 
+#include <log/log.hpp>
+
 // === Type definitions ===
 
 using ArgsSpec = std::string;
@@ -98,9 +100,15 @@ TYPECHAR(std::vector<uint8_t>, 'b');
 
 struct ModuleClassMemberData
 {
+    ModuleClassMemberData(char t)
+    {
+        type = t;
+    }
+
     template <typename T>
     explicit ModuleClassMemberData(const T& val)
     {
+        LOG("ModuleClassMemberData::ModuleClassMemberData(" << val << "): " << TypeChar<T>::value);
         static_assert(TypeChar<T>::value != '?');
         value = DyntypeCaster<std::string>::get(val);
         type = TypeChar<T>::value;
@@ -116,7 +124,7 @@ struct ModuleClassMemberData
     char type;
     std::string value;
     template <typename T>
-    const T get() const
+    T get() const
     {
         if (type != TypeChar<T>::value) {
             logStackTrace();
@@ -126,6 +134,9 @@ struct ModuleClassMemberData
             return DyntypeCaster<T>::get(value);
         }
     }
+
+    std::string genericGet() const;
+
     template <typename T>
     void set(const T& x)
     {
