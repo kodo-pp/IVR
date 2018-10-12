@@ -6,7 +6,7 @@
 VirtualModuleManager vmodManager;
 
 VirtualModule::VirtualModule(const std::string& name)
-        : dso(vmodManager.findModule(name)), module(-1, -1, name, {})
+        : dso("modules/virtual/" + name + "/module.so"), module(-1, -1, name, {})
 {
 }
 

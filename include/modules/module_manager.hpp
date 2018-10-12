@@ -41,8 +41,8 @@ public:
     void loadModule(const std::string& moduleName, const std::vector<std::string>& args = {});
 
 protected:
-    void loadPlainModule(const std::string& moduleName);
-    void loadVirtualModule(const std::string& moduleName);
+    void loadPlainModule(const std::string& moduleName, std::vector<std::string> args);
+    void loadVirtualModule(const std::string& moduleName, const std::vector<std::string>& args);
     std::unordered_map<std::string, Module> modules;
 };
 

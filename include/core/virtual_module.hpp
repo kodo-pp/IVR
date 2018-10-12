@@ -28,18 +28,7 @@ private:
 class VirtualModuleManager
 {
 public:
-    void load(const std::string& vmodName);
-    VirtualModule& get(const std::string& vmodName);
-    const VirtualModule& get(const std::string& vmodName) const;
-
-private:
-    std::unordered_map<std::string, VirtualModule> modules;
-};
-
-class VirtualModuleManager
-{
-public:
-    VirtualModuleManager();
+    VirtualModuleManager() = default;
     VirtualModuleManager(const VirtualModuleManager& other) = delete;
     VirtualModuleManager(VirtualModuleManager&& other) = default;
     virtual ~VirtualModuleManager() = default;

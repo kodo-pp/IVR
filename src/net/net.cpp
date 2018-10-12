@@ -188,13 +188,16 @@ static void moduleListenerThreadFunc()
 
             // TODO: dependencies
             createModuleServerThread(
-                    Module(mainModuleSocket, reverseModuleSocket, reverseModuleName));
-            dependencies.reserve(dependenciesCount);
-            for (uint64_t i = 0; i < dependenciesCount; ++i) {
-                dependencies.emplace_back(recvString(mainModuleSocket));
-            }
-            createModuleServerThread(
-                    Module(mainModuleSocket, reverseModuleSocket, reverseModuleName, dependencies));
+                    Module(mainModuleSocket, reverseModuleSocket, reverseModuleName, {}));
+
+            // COMBAK: old code
+            // dependencies.reserve(dependenciesCount);
+            // for (uint64_t i = 0; i < dependenciesCount; ++i) {
+            //     dependencies.emplace_back(recvString(mainModuleSocket));
+            // }
+            // createModuleServerThread(
+            //         Module(mainModuleSocket, reverseModuleSocket, reverseModuleName,
+            //         dependencies));
         }
     } catch (std::exception& e) {
         LOG(L"FATAL error (at " __FILE__ "): " << wstring_cast(e.what()));

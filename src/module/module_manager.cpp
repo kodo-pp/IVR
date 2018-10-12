@@ -35,22 +35,22 @@ void ModuleManager::unregisterModule(const std::string& moduleName)
     modules.erase(moduleName);
 }
 
-void ModuleManager::loadModule(const std::string& moduleName)
+void ModuleManager::loadModule(const std::string& moduleName, const std::vector<std::string>& args)
 {
     // Validate module name
     if (!std::regex_match(moduleName, std::regex("[a-zA-Z0-9][a-zA-Z0-9_-]*"))) {
         throw std::runtime_error("Invalid module name: " + moduleName);
     }
-    if (access(("modules/virtual/" + moduleName + "/start").c_str(), R_OK | X_OK)) {
-        loadVirtualModule(moduleName);
+    if (access(("modules/virtual/" + moduleName + "/module.so").c_str(), R_OK)) {
+        loadVirtualModule(moduleName, args);
     } else if (access(("modules/plain/" + moduleName + "/start").c_str(), R_OK | X_OK)) {
-        loadPlainModule(moduleName);
+        loadPlainModule(moduleName, args);
     } else {
         throw std::runtime_error("No such module: " + moduleName);
     }
 }
 
-void ModuleManager::loadPlainModule(const std::string& moduleName)
+void ModuleManager::loadPlainModule(const std::string& moduleName, std::vector<std::string> args)
 {
     LOG("Loading plain module: " << moduleName);
     // TODO: add manifest file or something like that
@@ -63,17 +63,27 @@ void ModuleManager::loadPlainModule(const std::string& moduleName)
         LOG("fork() failed: " << strerror(errno));
         throw std::runtime_error("fork() failed: " + std::string(strerror(errno)));
     } else if (pid == 0) {
+        std::vector<char*> raw_argv;
+        raw_argv.reserve(args.size() + 1);
+        for (const std::string& arg : args) {
+            // Надеюсь, оно не упадёт из-за этого
+            raw_argv.emplace_back(const_cast<char*>(arg.c_str()));
+        }
+        raw_argv.emplace_back(nullptr);
+
         // Child process
-        execl(modulePath.c_str(), "start", nullptr);
+        execv(modulePath.c_str(), raw_argv.data());
     } else {
         // Parent process
         LOG("Child process [" << pid << "] created successfully");
     }
 }
 
-void ModuleManager::loadVirtualModule(const std::string& moduleName)
+void ModuleManager::loadVirtualModule(const std::string& moduleName,
+                                      const std::vector<std::string>& args)
 {
     LOG("Loading virtual module: " << moduleName);
+    vmodManager.loadModule(moduleName, args);
 }
 
 ModuleManager moduleManager;
