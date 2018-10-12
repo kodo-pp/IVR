@@ -35,14 +35,13 @@ public:
                               std::thread::id threadId = std::this_thread::get_id());
     ModuleWorker& getModuleWorkerByThreadId(std::thread::id threadId);
 
-    // void loadModule(ModuleId id);
-    // void unloadModule(ModuleId id);
+    void registerModule(const Module& module);
+    void unregisterModule(const std::string& moduleName);
 
-    // void sendModuleMessage(ModuleId moduleId, ModuleMessage message);
-    // ModuleMessage receiveModuleMessage(ModuleId moduleId, ModuleMessage message);
+    void loadModule(const std::string& moduleName, const std::vector<std::string>& args = {});
 
 protected:
-    // std::unordered_map<ModuleId, Module> modules;
+    std::unordered_map<std::string, Module> modules;
 };
 
 class ModuleWorker

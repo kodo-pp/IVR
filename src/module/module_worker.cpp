@@ -15,9 +15,11 @@
 
 ModuleWorker::ModuleWorker(Module&& _module) : module(_module)
 {
+    moduleManager.registerModule(module);
 }
 ModuleWorker::~ModuleWorker()
 {
+    moduleManager.unregisterModule(module.getName());
 }
 
 void ModuleWorker::please_work() noexcept

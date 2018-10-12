@@ -17,12 +17,10 @@ Dso::Dso(const std::string& _filename) : filename(_filename)
         LOG("Failed to load shared object: " << err);
         throw std::runtime_error(std::string("Failed to load shared object: ") + err);
     }
-    LOG("... successfully");
 }
 
 Dso::~Dso()
 {
-    LOG("DELETING Dso " << dso_handle);
     logStackTrace();
     dlclose(dso_handle);
     LOG("Dso deleted");

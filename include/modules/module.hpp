@@ -4,11 +4,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
-
-// enum is useless in this case as we should support any programming language,
-// which may be not listed in this enum
-using ModuleLanguage = std::wstring;
-using ModuleId = uint64_t;
+#include <vector>
 
 /**
  * Represents a module
@@ -19,42 +15,29 @@ class Module
 public:
     Module(int _mainSocket,
            int _reverseSocket,
-           const std::wstring& _name,
-           ModuleId _id,
-           const ModuleLanguage& _language);
+           const std::string& _name,
+           const std::vector<std::string>& _dependencies);
     Module(const Module& other);
     Module(Module&& other) = default;
 
-    Module& operator=(const Module& other); //
+    Module& operator=(const Module& other);
     Module& operator=(Module&& other) = default;
 
     // Закрыть все сокеты
     void cleanup() noexcept;
 
-    // Эту работу выполняет moduleListenerThread (и ModuleWorker)
-    // void load();
-    // void unload();
-
-    ModuleId getModuleId() const;
-    // Not sure if id should be a constant, so no setModuleId() yet
-
-    std::wstring getName() const;
-    void setName(const std::wstring& newName);
-
-    std::wstring getExecutableFileName() const;
-    void setExecutableFileName(const std::wstring& newExecFileName);
+    std::string getName() const;
 
     int getMainSocket() const;
     int getReverseSocket() const;
 
+    std::vector<std::string> getDependencies() const;
+
 protected:
     int mainSocket;
     int reverseSocket;
-    ModuleId id;
-    std::wstring name;
-    std::wstring executableFileName;
-    ModuleLanguage language; // Programming language, not sure how it'll be used,
-                             // maybe in automatic setup of necessary tools
+    std::string name;
+    std::vector<std::string> dependencies;
     mutable std::recursive_mutex mtx;
 };
 
