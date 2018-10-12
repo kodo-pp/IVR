@@ -36,14 +36,11 @@ public:
                               std::thread::id threadId = std::this_thread::get_id());
     ModuleWorker& getModuleWorkerByThreadId(std::thread::id threadId);
 
-    // void loadModule(ModuleId id);
-    // void unloadModule(ModuleId id);
-
-    // void sendModuleMessage(ModuleId moduleId, ModuleMessage message);
-    // ModuleMessage receiveModuleMessage(ModuleId moduleId, ModuleMessage message);
+    void loadModule(const std::string& moduleName);
 
 protected:
-    // std::unordered_map<ModuleId, Module> modules;
+    void loadPlainModule(const std::string& moduleName);
+    void loadVirtualModule(const std::string& moduleName);
 };
 
 class ModuleWorker

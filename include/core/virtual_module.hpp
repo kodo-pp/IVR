@@ -8,7 +8,7 @@
 class VirtualModule
 {
 public:
-    VirtualModule(const std::string& path);
+    explicit VirtualModule(const std::string& path);
     VirtualModule(const VirtualModule& other) = delete;
     VirtualModule(VirtualModule&& other) = default;
     virtual ~VirtualModule() = default;
@@ -20,6 +20,17 @@ public:
 
 private:
     Dso dso;
+};
+
+class VirtualModuleManager
+{
+public:
+    void load(const std::string& vmodName);
+    VirtualModule& get(const std::string& vmodName);
+    const VirtualModule& get(const std::string& vmodName) const;
+
+private:
+    std::unordered_map<std::string, VirtualModule> modules;
 };
 
 #endif /* end of include guard: CORE_VIRTUAL_MODULE_HPP */
