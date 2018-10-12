@@ -23,12 +23,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-struct FuncResult* testFunc(const std::vector<void*>& args)
-{
-    assert(!args.empty());
-    return (struct FuncResult*)args[0];
-}
-
 int main(int argc, char** argv)
 {
     try {

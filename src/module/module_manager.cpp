@@ -1,6 +1,7 @@
 #include <regex>
 #include <unordered_map>
 
+#include <modbox/core/virtual_module.hpp>
 #include <modbox/modules/module_manager.hpp>
 
 #include <spawn.h>
@@ -17,6 +18,24 @@ void ModuleManager::registerModuleWorker(ModuleWorker& worker, std::thread::id t
 {
     moduleWorkers.insert({threadId, worker});
 }
+
+
+void ModuleManager::registerModule(const Module& module)
+{
+    if (modules.count(module.getName()) > 0) {
+        throw std::runtime_error("Tried to register already registered module '" + module.getName()
+                                 + "'");
+    }
+    modules.insert({module.getName(), module});
+}
+void ModuleManager::unregisterModule(const std::string& moduleName)
+{
+    if (modules.count(moduleName) == 0) {
+        throw std::runtime_error("Tried to unregister not registered module '" + moduleName + "'");
+    }
+    modules.erase(moduleName);
+}
+
 
 void ModuleManager::loadModule(const std::string& moduleName)
 {
@@ -58,5 +77,7 @@ void ModuleManager::loadVirtualModule(const std::string& moduleName)
 {
     LOG("Loading virtual module: " << moduleName);
 }
+
+
 
 ModuleManager moduleManager;

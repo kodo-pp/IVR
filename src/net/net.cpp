@@ -150,7 +150,8 @@ static void moduleListenerThreadFunc()
             sendFixed(mainClientSocket, std::string("ModBox/M"));
             flushBuffer(mainClientSocket);
             readModuleHeader(mainClientSocket);
-            auto moduleName = readModuleName(mainClientSocket);
+            std::string moduleName = recvString(mainClientSocket);
+
             // Запоминаем, что он подключился к основному порту
             pendingModules.insert({moduleName, mainClientSocket});
 
@@ -160,7 +161,7 @@ static void moduleListenerThreadFunc()
             sendFixed(reverseClientSocket, std::string("ModBox/R"));
             flushBuffer(reverseClientSocket);
             readReverseModuleHeader(reverseClientSocket);
-            auto reverseModuleName = readModuleName(reverseClientSocket);
+            std::string reverseModuleName = recvString(reverseClientSocket);
             // Смотрим, подключился ли он к основному порту
             if (pendingModules.count(reverseModuleName) == 0) {
                 // Если нет, то что-то тут не так. Надо придумать защиту от дурака,
@@ -179,10 +180,21 @@ static void moduleListenerThreadFunc()
             int mainModuleSocket = pendingModules.at(reverseModuleName);
             int reverseModuleSocket = reverseClientSocket;
             pendingModules.erase(reverseModuleName);
+
+            // Получаем список зависимостей
+
             // И запускаем moduleWorker
             LOG(L"Spawning client thread");
+            
+            // TODO: dependencies
             createModuleServerThread(
                     Module(mainModuleSocket, reverseModuleSocket, reverseModuleName));
+            dependencies.reserve(dependenciesCount);
+            for (uint64_t i = 0; i < dependenciesCount; ++i) {
+                dependencies.emplace_back(recvString(mainModuleSocket));
+            }
+            createModuleServerThread(
+                    Module(mainModuleSocket, reverseModuleSocket, reverseModuleName, dependencies));
         }
     } catch (std::exception& e) {
         LOG(L"FATAL error (at " __FILE__ "): " << wstring_cast(e.what()));
