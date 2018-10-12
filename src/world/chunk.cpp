@@ -1,10 +1,10 @@
 #include <utility>
+
 #include <modbox/world/chunk.hpp>
 
 Chunk::Chunk(std::unordered_map<GameObjectId, GameObject> _objects,
-             irr::scene::ITerrainSceneNode* _terrain) :
-        terrain(_terrain),
-        objects(std::move(_objects))
+             irr::scene::ITerrainSceneNode* _terrain)
+        : terrain(_terrain), objects(std::move(_objects))
 {
 }
 

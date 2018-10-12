@@ -20,18 +20,18 @@ template <typename T>
 class Rectangle
 {
 public:
-    explicit Rectangle(T _left, T _top, T _right, T _bottom) :
-            left(std::min(_left, _right)),
-            top(std::min(_top, _bottom)),
-            right(std::max(_left, _right)),
-            bottom(std::max(_top, _bottom))
+    explicit Rectangle(T _left, T _top, T _right, T _bottom)
+            : left(std::min(_left, _right))
+            , top(std::min(_top, _bottom))
+            , right(std::max(_left, _right))
+            , bottom(std::max(_top, _bottom))
     {
     }
-    explicit Rectangle(std::pair<T, T> left_top, std::pair<T, T> right_bottom) :
-            left(std::min(left_top.first, left_top.second)),
-            top(std::min(left_top.first, left_top.second)),
-            right(std::max(right_bottom.first, right_bottom.second)),
-            bottom(std::max(right_bottom.first, right_bottom.second))
+    explicit Rectangle(std::pair<T, T> left_top, std::pair<T, T> right_bottom)
+            : left(std::min(left_top.first, left_top.second))
+            , top(std::min(left_top.first, left_top.second))
+            , right(std::max(right_bottom.first, right_bottom.second))
+            , bottom(std::max(right_bottom.first, right_bottom.second))
     {
     }
     T height()

@@ -19,7 +19,6 @@ void ModuleManager::registerModuleWorker(ModuleWorker& worker, std::thread::id t
     moduleWorkers.insert({threadId, worker});
 }
 
-
 void ModuleManager::registerModule(const Module& module)
 {
     if (modules.count(module.getName()) > 0) {
@@ -35,7 +34,6 @@ void ModuleManager::unregisterModule(const std::string& moduleName)
     }
     modules.erase(moduleName);
 }
-
 
 void ModuleManager::loadModule(const std::string& moduleName)
 {
@@ -77,7 +75,5 @@ void ModuleManager::loadVirtualModule(const std::string& moduleName)
 {
     LOG("Loading virtual module: " << moduleName);
 }
-
-
 
 ModuleManager moduleManager;

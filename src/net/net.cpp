@@ -185,7 +185,7 @@ static void moduleListenerThreadFunc()
 
             // И запускаем moduleWorker
             LOG(L"Spawning client thread");
-            
+
             // TODO: dependencies
             createModuleServerThread(
                     Module(mainModuleSocket, reverseModuleSocket, reverseModuleName));

@@ -15,28 +15,28 @@ public:
     Module(int _mainSocket, int _reverseSocket, const std::string& _name);
            const std::string& _name,
            const std::vector<std::string>& _dependencies);
-    Module(const Module& other);
-    Module(Module&& other) = default;
-    virtual ~Module();
+           Module(const Module& other);
+           Module(Module&& other) = default;
+           virtual ~Module();
 
-    Module& operator=(const Module& other) = default;
-    Module& operator=(Module&& other) = default;
+           Module& operator=(const Module& other) = default;
+           Module& operator=(Module&& other) = default;
 
-    void cleanup() noexcept;
+           void cleanup() noexcept;
 
-    std::string getName() const;
+           std::string getName() const;
 
-    int getMainSocket() const;
-    int getReverseSocket() const;
+           int getMainSocket() const;
+           int getReverseSocket() const;
 
-    std::vector<std::string> getDependencies() const;
+           std::vector<std::string> getDependencies() const;
 
-protected:
-    int mainSocket;
-    int reverseSocket;
-    std::string name;
-    std::vector<std::string> dependencies;
-    mutable std::recursive_mutex mtx;
+       protected:
+           int mainSocket;
+           int reverseSocket;
+           std::string name;
+           std::vector<std::string> dependencies;
+           mutable std::recursive_mutex mtx;
 };
 
 #endif /* end of include guard: MODULES_MODULE_HPP */
