@@ -51,7 +51,7 @@ void joinModuleListenerThread()
     // I would port ModBox on Windows... At least I hope MinGW/Cygwin has done most
     // of this work already.
 
-    // Join is a better solution, but it is hharder to implement as we need
+    // Join is a better solution, but it is harder to implement as we need
     // to signal the thread to terminate. Now we just detach it and then it
     // is killed by exit_group(2).
     moduleListenerThread->detach();

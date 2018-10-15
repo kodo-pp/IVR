@@ -12,16 +12,22 @@ import traceback
 
 VERBOSE = True
 VERY_VERBOSE = False
+module_name = 'Python test module'
+
+def get_log_time():
+    return time.strftime('%02d.%02m.%Y %02H:%02M:%02S')
+
+def log(text):
+    print("[MODLOG ({}) {}] ".format(module_name, get_log_time()) + text)
+    sys.stdout.flush()
 
 def vlog(text):
     if VERBOSE:
-        print(text)
-        sys.stdout.flush()
+        log(text)
 
 def vvlog(text):
     if VERY_VERBOSE:
-        print(text)
-        sys.stdout.flush()
+        log(text)
 
 # Netcat module taken from here: https://gist.github.com/leonjza/f35a7252babdf77c8421
 # and slightly modified
@@ -48,7 +54,11 @@ class Netcat:
     def read_until(self, data):
         """ Read data into the buffer until we have data """
         while not data in self.buff:
-            self.buff += self.socket.recv(1024)
+            received = self.socket.recv(1024)
+            if len(received) == 0:
+                self.socket.close()
+                raise IOError('Connection closed')
+            self.buff += received
         pos = self.buff.find(data)
         rval = self.buff[:pos + len(data)]
         self.buff = self.buff[pos + len(data):]
@@ -214,7 +224,7 @@ class Modcat(Netcat):
                     ret = func(*args)
                 except BaseException as e:
                     # Something has gone wrong, exit code is not 0
-                    print('Exception at module function:')
+                    log('Exception at module function:')
                     traceback.print_exc()
                     self.write_str(1)
                     continue
@@ -224,7 +234,7 @@ class Modcat(Netcat):
                 for type, val in zip(ret_types, ret):
                     self.send_arg(val, type)
         except BaseException as e:
-            print('Exception occured at serve_func: ' + str(e))
+            log('Exception occured at serve_func: ' + str(e))
             return
 
     def spawn_serving_thread(self):
@@ -256,11 +266,10 @@ def main():
         nc = Modcat('localhost', 44145)
         rnc = Modcat('localhost', 54144)
     except ConnectionRefusedError as e:
-        print('Unable to connect to host: {}'.format(e))
+        log('Unable to connect to host: {}'.format(e))
         exit(1)
     nc.recv_header()
     nc.send_header()
-    module_name = 'Python test module'
     nc.write_str(module_name)
 
     rnc.recv_reverse_header()
@@ -287,7 +296,7 @@ def main():
     [status] = nc.invoke('_exit', [], '', 's')
 
     if status == 'exited':
-        print('Exited normally')
+        log('Exited normally')
         exit(0)
     else:
         raise Exception('Unknown exit status: "{}"'.format(status))

@@ -286,7 +286,7 @@ std::tuple<std::string, std::string, std::string> moduleClassBindMethod(const st
                             auto retBlob = DyntypeCaster<std::vector<uint8_t>>::get(
                                     res.data.front());
 
-                            std::cerr << std::endl;
+                            // std::cerr << std::endl;
 
                             // Unpack it
                             moduleClassUnblobifyMembers(objectHandle, retBlob);
