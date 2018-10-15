@@ -36,6 +36,8 @@ public:
     Dso& operator=(const Dso& other) = delete;
     Dso& operator=(Dso&& other) = default;
 
+    std::string getFilename() const;
+
 private:
     std::string filename;
     void* dso_handle;

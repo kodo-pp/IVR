@@ -43,16 +43,18 @@ int main(int argc, char** argv)
 
                                    {L"Load test virtual module",
                                     []() {
-                                        auto x = new VirtualModule(
-                                                "modules/test_virtual_module/libtestvmodule.so");
-                                        x->spawnModuleThread();
+                                        try {
+                                            vmodManager.loadModule("test_virtual_module");
+                                        } catch (const std::exception& e) {
+                                            LOG("Failed to load virtual module: " << e.what());
+                                        }
                                     }},
 
                                    {L"Quit", []() { destroy(); }}});
                 try {
                     mainMenu.show();
                 } catch (const std::exception& e) {
-                    LOG("AAA: " << wstring_cast(e.what()));
+                    LOG("Exception caught while showing main menu: " << wstring_cast(e.what()));
                 }
             } catch (const std::exception& e) {
                 LOG("Exception caught at game thread lambda: " << wstring_cast(e.what()));

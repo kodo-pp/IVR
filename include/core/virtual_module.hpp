@@ -9,10 +9,10 @@
 class VirtualModule
 {
 public:
-    explicit VirtualModule(const std::string& path);
+    explicit VirtualModule(const std::string& path, const std::string& name);
     VirtualModule(const VirtualModule& other) = delete;
     VirtualModule(VirtualModule&& other) = default;
-    virtual ~VirtualModule() = default;
+    virtual ~VirtualModule();
 
     VirtualModule& operator=(const VirtualModule& other) = delete;
     VirtualModule& operator=(VirtualModule&& other) = default;
@@ -41,8 +41,9 @@ public:
     bool isModuleLoaded(const std::string& name) const;
     std::string findModule(const std::string& name) const;
 
+    void triggerModuleUnloadThreadUnsafe(const std::string& moduleName);
+
 private:
-    const std::vector<std::string> moduleSearchPath = {"modules", "/usr/share/modbox/modules"};
     std::unordered_map<std::string, VirtualModule> modules;
     mutable std::recursive_mutex mutex;
 };

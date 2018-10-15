@@ -29,7 +29,7 @@ if [[ "$1" == "--help" ]]; then
 fi
 
 # Shared object file name
-so_name="libtestvmodule.so"
+so_name="module.so"
 
 # Level of optimization, ignored when environment variable 'DEBUG' is set to 'yes'
 optimization_level=2

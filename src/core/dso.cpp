@@ -21,7 +21,15 @@ Dso::Dso(const std::string& _filename) : filename(_filename)
 
 Dso::~Dso()
 {
-    logStackTrace();
-    dlclose(dso_handle);
-    LOG("Dso deleted");
+    if (filename != "") {
+        // dlclose(dso_handle);
+        LOG("Dso deleted");
+    } else {
+        LOG("Dso deleted (not open)");
+    }
+}
+
+std::string Dso::getFilename() const
+{
+    return filename;
 }
