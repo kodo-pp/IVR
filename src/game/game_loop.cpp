@@ -22,11 +22,6 @@
 #include <irrlicht.h>
 #include <unistd.h>
 
-void drawBarrier()
-{
-    addDrawFunction([]() -> void { LOG("--- Draw barrier ---"); }, true);
-}
-
 std::recursive_mutex irrlichtMutex;
 
 std::atomic<bool> canPlaceObject(true);
@@ -161,17 +156,18 @@ static void processKeys(Player& player)
 
 void gameLoop()
 {
+    LOG("aaa");
     Player player(graphicsGetCamera(), graphicsGetPseudoCamera());
-    graphicsLoadTerrain(0,
-                        0,
-                        L"textures/terrain/heightmap/heightmap1.png",
-                        graphicsLoadTexture(L"textures/terrain/clouds.png"),
-                        graphicsLoadTexture(L"textures/terrain/details1.png"));
-    graphicsLoadTerrain(1,
-                        0,
-                        L"textures/terrain/heightmap/heightmap2.png",
-                        graphicsLoadTexture(L"textures/terrain/clouds.png"),
-                        graphicsLoadTexture(L"textures/terrain/details2.png"));
+    LOG("bbb");
+    terrainManager.loadTerrain(0, 0);
+    LOG("ccc");
+    terrainManager.loadTerrain(0, 1);
+    terrainManager.loadTerrain(0, 2);
+    terrainManager.loadTerrain(0, 3);
+    terrainManager.loadTerrain(1, 0);
+    terrainManager.loadTerrain(1, 1);
+    terrainManager.loadTerrain(1, 2);
+    terrainManager.loadTerrain(1, 3);
     drawBarrier();
     graphicsHandleCollisions(terrainManager.getChunk(0, 0).sceneNode());
     graphicsHandleCollisions(terrainManager.getChunk(1, 0).sceneNode());

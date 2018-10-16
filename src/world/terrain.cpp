@@ -11,22 +11,29 @@ void TerrainManager::loadTerrain(offset_t off_x, offset_t off_y)
 {
     LOG("TerrainManager @" << this << ": loading terrain at " << off_x << ", " << off_y);
     // STUB
-    if (off_x == 0 && off_y == 0) {
-        graphicsLoadTerrain(0,
-                            0,
-                            L"textures/terrain/heightmap/heightmap1.png",
-                            graphicsLoadTexture(L"textures/terrain/clouds.png"),
-                            graphicsLoadTexture(L"textures/terrain/details1.png"));
-    } else if (off_x == 1 && off_y == 0) {
-        graphicsLoadTerrain(1,
-                            0,
-                            L"textures/terrain/heightmap/heightmap2.png",
-                            graphicsLoadTexture(L"textures/terrain/clouds.png"),
-                            graphicsLoadTexture(L"textures/terrain/details2.png"));
-    } else {
-        throw std::runtime_error("Invalid chunk position");
-    }
+    // if (off_x == 0 && off_y == 0) {
+    //     graphicsLoadTerrain(0,
+    //                         0,
+    //                         L"textures/terrain/heightmap/heightmap1.png",
+    //                         graphicsLoadTexture(L"textures/terrain/clouds.png"),
+    //                         graphicsLoadTexture(L"textures/terrain/details1.png"));
+    // } else if (off_x == 1 && off_y == 0) {
+    //     graphicsLoadTerrain(1,
+    //                         0,
+    //                         L"textures/terrain/heightmap/heightmap2.png",
+    //                         graphicsLoadTexture(L"textures/terrain/clouds.png"),
+    //                         graphicsLoadTexture(L"textures/terrain/details2.png"));
+    // } else {
+    //     throw std::runtime_error("Invalid chunk position");
+    // }
+    graphicsLoadTerrain(off_x,
+                        off_y,
+                        L"textures/terrain/heightmap/hm.png",
+                        nullptr,
+                        graphicsLoadTexture(L"textures/terrain/details1.png"));
+    drawBarrier();
     graphicsHandleCollisions(getChunk(off_x, off_y).sceneNode());
+    LOG("TerrainManager::loadTerrain(" << off_x << ", " << off_y << ") finished");
 }
 
 const Chunk& TerrainManager::getChunk(offset_t off_x, offset_t off_y) const

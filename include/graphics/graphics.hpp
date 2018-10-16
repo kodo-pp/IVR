@@ -16,6 +16,8 @@ using namespace irr;
 using namespace scene;
 using namespace video;
 
+void drawBarrier();
+
 // ===== Initialization and cleanup =====
 
 /// Initialize graphical engine and related data structures

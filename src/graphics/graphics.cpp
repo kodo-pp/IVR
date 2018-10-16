@@ -21,6 +21,11 @@
 #include <irrlicht.h>
 #include <unistd.h>
 
+void drawBarrier()
+{
+    addDrawFunction([]() -> void { LOG("--- Draw barrier ---"); }, true);
+}
+
 bool IrrEventReceiver::OnEvent(const irr::SEvent& event)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
@@ -497,7 +502,7 @@ void graphicsLoadTerrain(int64_t off_x,
                 heightmap.c_str(),                                         // heightmap filename
                 nullptr,                                                   // parent node
                 -1,                                                        // node id
-                core::vector3df(irrOffsetX - 180, -600, irrOffsetY - 200), // position
+                core::vector3df(irrOffsetX - 180, -650, irrOffsetY - 200), // position
                 core::vector3df(0.0f, 0.0f, 0.0f),                         // rotation
                 core::vector3df(10.0f, 4.0f, 10.0f),                       // scale
                 video::SColor(255, 255, 255, 255),                         // vertexColor (?)
