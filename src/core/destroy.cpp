@@ -9,6 +9,7 @@
 #include <modbox/util/util.hpp>
 
 #include <signal.h>
+#include <unistd.h>
 
 std::atomic<bool> doWeNeedToShutDown(false);
 std::atomic<bool> areWeShuttingDown(false);
@@ -17,7 +18,8 @@ void destroy(void)
 {
     // Just shut down
     LOG("Shutting down");
-    exit(0);
+    // exit(0);
+    _exit(0);
 }
 
 void sigIntHandler(UNUSED int signal)

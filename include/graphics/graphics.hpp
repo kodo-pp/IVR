@@ -211,4 +211,6 @@ static inline std::string getGuiEventDebugName(irr::gui::EGUI_EVENT_TYPE type)
 
 void setAimVisible(bool visible);
 
+void graphicsModifyTerrain(ITerrainSceneNode* terrain, int start, int end, double delta);
+
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */

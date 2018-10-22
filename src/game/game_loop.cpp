@@ -156,11 +156,8 @@ static void processKeys(Player& player)
 
 void gameLoop()
 {
-    LOG("aaa");
     Player player(graphicsGetCamera(), graphicsGetPseudoCamera());
-    LOG("bbb");
     terrainManager.loadTerrain(0, 0);
-    LOG("ccc");
     terrainManager.loadTerrain(0, 1);
     terrainManager.loadTerrain(0, 2);
     terrainManager.loadTerrain(0, 3);
@@ -196,11 +193,9 @@ void gameLoop()
             enemyMesh, graphicsLoadTexture(L"textures/mobs/test_mob.png"), {60, 60, 60});
     terrainManager.trackMob(enemyId);
     Enemy& enemy = enemyManager.mutableAccessEnemy(enemyId);
-    // enemy.sceneNode()->setScale({20, 20, 20});
     enemy.sceneNode()->setMaterialFlag(EMF_LIGHTING, false);
     enemy.sceneNode()->setPosition({240, 240, 240});
     graphicsEnablePhysics(enemy.sceneNode(), {60, 75, 60});
-    // graphicsHandleCollisionsMesh(enemyMesh, enemy.sceneNode());
 
     int counter = 0;
     double i = 0;
@@ -236,6 +231,10 @@ void gameLoop()
         enemy.ai();
 
         processKeys(player);
+
+        // Just a test
+        graphicsModifyTerrain(terrainManager.getMutableChunk(1, 0).sceneNode(), 0, 5000, 0.1);
+
         std::ignore = graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
         object.setPosition(GamePosition(sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20));
         object.setRotation(i * 100, i * 50, i * 20);

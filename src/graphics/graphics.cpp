@@ -519,45 +519,56 @@ void graphicsLoadTerrain(int64_t off_x,
         terrain->scaleTexture(1.0f, 20.0f);
 
         Chunk terrainChunk({}, terrain);
-        LOG("ASKAJSKAJSKJAS");
         terrainManager.addChunk(off_x, off_y, std::move(terrainChunk));
     });
 }
 
+static std::unordered_map<scene::ISceneNode*, scene::ITriangleSelector*> triangleSelectors;
+
 void graphicsHandleCollisions(scene::ITerrainSceneNode* node)
 {
-    return addDrawFunction([=]() {
-        std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-        auto selector = graphics::irrSceneManager->createTerrainTriangleSelector(node);
-        if (selector == nullptr) {
-            throw std::runtime_error("unable to create triangle selector on terrain scene node");
-        }
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+    auto selector = graphics::irrSceneManager->createTerrainTriangleSelector(node);
+    if (selector == nullptr) {
+        throw std::runtime_error("unable to create triangle selector on terrain scene node");
+    }
 
-        static_cast<scene::IMetaTriangleSelector*>(
-                static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
-                        *graphics::pseudoCamera->getAnimators().begin())
-                        ->getWorld())
-                ->addTriangleSelector(selector);
-        selector->drop();
-    });
+    triangleSelectors.insert({node, selector});
+
+    static_cast<scene::IMetaTriangleSelector*>(
+            static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
+                    *graphics::pseudoCamera->getAnimators().begin())
+                    ->getWorld())
+            ->addTriangleSelector(selector);
+    selector->drop();
+}
+
+void graphicsStopHandlingCollisions(scene::ITerrainSceneNode* node)
+{
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+
+    auto metaSelector = static_cast<scene::IMetaTriangleSelector*>(
+            static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
+                    *graphics::pseudoCamera->getAnimators().begin())
+                    ->getWorld());
+    metaSelector->removeTriangleSelector(triangleSelectors.at(node));
 }
 
 void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node)
 {
-    return addDrawFunction([=]() {
-        std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-        auto selector = graphics::irrSceneManager->createTriangleSelector(mesh, node);
-        if (selector == nullptr) {
-            throw std::runtime_error("unable to create triangle selector on mesh scene node");
-        }
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+    auto selector = graphics::irrSceneManager->createTriangleSelector(mesh, node);
+    if (selector == nullptr) {
+        throw std::runtime_error("unable to create triangle selector on mesh scene node");
+    }
+    triangleSelectors.insert({node, selector});
 
-        static_cast<scene::IMetaTriangleSelector*>(
-                static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
-                        *graphics::pseudoCamera->getAnimators().begin())
-                        ->getWorld())
-                ->addTriangleSelector(selector);
-        selector->drop();
-    });
+    static_cast<scene::IMetaTriangleSelector*>(
+            static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
+                    *graphics::pseudoCamera->getAnimators().begin())
+                    ->getWorld())
+            ->addTriangleSelector(selector);
+    selector->drop();
 }
 
 void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node)
@@ -567,6 +578,7 @@ void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node)
     if (selector == nullptr) {
         throw std::runtime_error("unable to create triangle selector on scene node bounding box");
     }
+    triangleSelectors.insert({node, selector});
 
     static_cast<scene::IMetaTriangleSelector*>(
             static_cast<scene::ISceneNodeAnimatorCollisionResponse*>(
@@ -755,4 +767,28 @@ irr::gui::IGUIListBox* createListBox(const std::vector<std::wstring>& strings,
 IrrEventReceiver& getEventReceiver()
 {
     return graphics::irrEventReceiver;
+}
+
+// Just proof of concept, TODO: rewrite it completely
+void graphicsModifyTerrain(ITerrainSceneNode* terrain, int start, int end, double delta)
+{
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+    auto mesh = terrain->getMesh();
+    for (uint i = 0; i < mesh->getMeshBufferCount(); ++i) {
+        auto meshbuf = mesh->getMeshBuffer(i);
+        if (meshbuf->getVertexType() != irr::video::EVT_2TCOORDS) {
+            continue;
+        }
+        auto vertices = static_cast<irr::video::S3DVertex2TCoords*>(meshbuf->getVertices());
+        for (int index = start; index < end; ++index) {
+            vertices[index].Pos.Y += delta;
+        }
+        meshbuf->setDirty();
+        meshbuf->recalculateBoundingBox();
+    }
+    terrain->setPosition(terrain->getPosition()); // Does not work without it
+
+    // Update collision information
+    graphicsStopHandlingCollisions(terrain);
+    graphicsHandleCollisions(terrain);
 }
