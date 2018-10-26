@@ -10,8 +10,9 @@
 
 #include <irrlicht.h>
 
-const double CHUNK_SIZE_IRRLICHT = 2400;
-const int64_t CHUNK_SIZE = 256;
+// const double CHUNK_SIZE_IRRLICHT = 2400;
+const double CHUNK_SIZE_IRRLICHT = 2400.0;
+const int64_t CHUNK_SIZE = 256.0;
 
 class TerrainManager
 {
@@ -31,7 +32,7 @@ public:
     void addChunk(offset_t off_x, offset_t off_y, const Chunk& chunk);
     void addChunk(offset_t off_x, offset_t off_y, Chunk&& chunk);
     void deleteChunk(offset_t off_x, offset_t off_y);
-    bool hasGeneratedTerrain(offset_t off_x, offset_t off_y);
+    bool hasChunk(offset_t off_x, offset_t off_y);
 
     void trackMob(EnemyId mobId);
     void updateMob(EnemyId mobId);
@@ -44,6 +45,9 @@ public:
     void forgetObject(GameObjectId objectId);
 
     void generateTerrain(offset_t x, offset_t y);
+    bool hasGeneratedTerrain(offset_t off_x, offset_t off_y);
+
+    void maybeUpdateJunctions(offset_t x, offset_t y);
 
     std::function<irr::video::IImage*(offset_t, offset_t)> getGenerator() const;
     void setGenerator(const std::function<irr::video::IImage*(offset_t, offset_t)>& gen);

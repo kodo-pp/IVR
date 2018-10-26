@@ -493,10 +493,11 @@ void graphicsLoadTerrain(int64_t off_x,
                          video::ITexture* tex,
                          video::ITexture* detail)
 {
-    return addDrawFunction([=]() {
+    addDrawFunction([=]() {
         std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
         double irrOffsetX = CHUNK_SIZE_IRRLICHT * off_x;
         double irrOffsetY = CHUNK_SIZE_IRRLICHT * off_y;
+
         scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
                 heightmap.c_str(),                                          // heightmap filename
                 nullptr,                                                    // parent node
@@ -778,8 +779,13 @@ IrrEventReceiver& getEventReceiver()
     return graphics::irrEventReceiver;
 }
 
-// Just proof of concept, TODO: rewrite it completely
-void graphicsModifyTerrain(ITerrainSceneNode* terrain, int start, int end, double delta)
+// Low-level function. Use higher level API
+void graphicsModifyTerrain(ITerrainSceneNode* terrain,
+                           int x1,
+                           int y1,
+                           int x2,
+                           int y2,
+                           const std::function<int(int, int, int)>& func)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     auto mesh = terrain->getMesh();
@@ -789,9 +795,15 @@ void graphicsModifyTerrain(ITerrainSceneNode* terrain, int start, int end, doubl
             continue;
         }
         auto vertices = static_cast<irr::video::S3DVertex2TCoords*>(meshbuf->getVertices());
-        for (int index = start; index < end; ++index) {
-            vertices[index].Pos.Y += delta;
+
+        for (int x = x1; x < x2; ++x) {
+            for (int y = y1; y < y2; ++y) {
+                int index = y * CHUNK_SIZE + x;
+                assert(index >= 0 && index < CHUNK_SIZE * CHUNK_SIZE);
+                vertices[index].Pos.Y = std::clamp(func(x, y, vertices[index].Pos.Y), 0, 255);
+            }
         }
+
         meshbuf->setDirty();
         meshbuf->recalculateBoundingBox();
     }
@@ -800,6 +812,32 @@ void graphicsModifyTerrain(ITerrainSceneNode* terrain, int start, int end, doubl
     // Update collision information
     graphicsStopHandlingCollisions(terrain);
     graphicsHandleCollisions(terrain);
+}
+
+void graphicsVisitTerrain(ITerrainSceneNode* terrain,
+                          int x1,
+                          int y1,
+                          int x2,
+                          int y2,
+                          const std::function<void(int, int, int)>& func)
+{
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+    auto mesh = terrain->getMesh();
+    for (uint i = 0; i < mesh->getMeshBufferCount(); ++i) {
+        auto meshbuf = mesh->getMeshBuffer(i);
+        if (meshbuf->getVertexType() != irr::video::EVT_2TCOORDS) {
+            continue;
+        }
+        auto vertices = static_cast<irr::video::S3DVertex2TCoords*>(meshbuf->getVertices());
+
+        for (int x = x1; x < x2; ++x) {
+            for (int y = y1; y < y2; ++y) {
+                int index = y * CHUNK_SIZE + x;
+                assert(index >= 0 && index < CHUNK_SIZE * CHUNK_SIZE);
+                func(x, y, vertices[index].Pos.Y);
+            }
+        }
+    }
 }
 
 irr::video::IVideoDriver* getIrrlichtVideoDriver()

@@ -216,7 +216,18 @@ static inline std::string getGuiEventDebugName(irr::gui::EGUI_EVENT_TYPE type)
 };
 
 void setAimVisible(bool visible);
-void graphicsModifyTerrain(ITerrainSceneNode* terrain, int start, int end, double delta);
+void graphicsModifyTerrain(ITerrainSceneNode* terrain,
+                           int x1,
+                           int y1,
+                           int x2,
+                           int y2,
+                           const std::function<int(int, int, int)>& func);
+void graphicsVisitTerrain(ITerrainSceneNode* terrain,
+                          int x1,
+                          int y1,
+                          int x2,
+                          int y2,
+                          const std::function<void(int, int, int)>& func);
 irr::video::IVideoDriver* getIrrlichtVideoDriver();
 
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */

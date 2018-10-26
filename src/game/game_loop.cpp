@@ -157,18 +157,19 @@ static void processKeys(Player& player)
 void gameLoop()
 {
     Player player(graphicsGetCamera(), graphicsGetPseudoCamera());
-    terrainManager.loadTerrain(0, 0);
-    terrainManager.loadTerrain(0, 1);
-    terrainManager.loadTerrain(0, 2);
-    terrainManager.loadTerrain(0, 3);
-    terrainManager.loadTerrain(1, 0);
-    terrainManager.loadTerrain(1, 1);
-    terrainManager.loadTerrain(1, 2);
-    terrainManager.loadTerrain(1, 3);
+    for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            terrainManager.loadTerrain(i, j);
+        }
+    }
     drawBarrier();
-    graphicsHandleCollisions(terrainManager.getChunk(0, 0).sceneNode());
-    graphicsHandleCollisions(terrainManager.getChunk(1, 0).sceneNode());
+    terrainManager.maybeUpdateJunctions(0, 0);
     drawBarrier();
+
+    // graphicsModifyTerrain(
+    //         terrainManager.getMutableChunk(1, 0).sceneNode(), 0, 0, 50, 1, [](int, int, int) {
+    //             return 250;
+    //         });
 
     GameObjCube object = graphicsCreateCube();
 
