@@ -174,7 +174,6 @@ FuncResult handlerGraphicsLoadTexture(const std::vector<std::string>& args)
         throw std::logic_error("Wrong number of arguments for handlerGraphicsLoadTexture()");
     }
     FuncResult ret;
-    // TODO: replace with wstring
 
     std::string filename = getArgument<std::string>(args, 0);
     ITexture* texture = graphics::irrVideoDriver->getTexture(filename.c_str());
@@ -455,7 +454,7 @@ void graphicsRotateObject(ISceneNode* obj, const core::vector3df& rot)
     obj->setRotation(rot);
 }
 
-ITexture* graphicsLoadTexture(const std::wstring& textureFileName)
+ITexture* graphicsLoadTexture(const std::string& textureFileName)
 {
     return addDrawFunction([=]() -> ITexture* {
         std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -490,7 +489,7 @@ void graphicsAddTexture(const GameObject& obj, ITexture* tex)
 
 void graphicsLoadTerrain(int64_t off_x,
                          int64_t off_y,
-                         const std::wstring& heightmap,
+                         const std::string& heightmap,
                          video::ITexture* tex,
                          video::ITexture* detail)
 {
@@ -499,13 +498,13 @@ void graphicsLoadTerrain(int64_t off_x,
         double irrOffsetX = CHUNK_SIZE_IRRLICHT * off_x;
         double irrOffsetY = CHUNK_SIZE_IRRLICHT * off_y;
         scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
-                heightmap.c_str(),                                         // heightmap filename
-                nullptr,                                                   // parent node
-                -1,                                                        // node id
-                core::vector3df(irrOffsetX - 180, -650, irrOffsetY - 200), // position
-                core::vector3df(0.0f, 0.0f, 0.0f),                         // rotation
-                core::vector3df(10.0f, 4.0f, 10.0f),                       // scale
-                video::SColor(255, 255, 255, 255),                         // vertexColor (?)
+                heightmap.c_str(),                                          // heightmap filename
+                nullptr,                                                    // parent node
+                -1,                                                         // node id
+                core::vector3df(irrOffsetX - 180, -1250, irrOffsetY - 200), // position
+                core::vector3df(0.0f, 0.0f, 0.0f),                          // rotation
+                core::vector3df(10.0f, 4.0f, 10.0f),                        // scale
+                video::SColor(255, 255, 255, 255),                          // vertexColor (?)
                 5,              // maxLOD (Level Of Detail)
                 scene::ETPS_17, // patchSize (?)
                 4               // smoothFactor (?)
@@ -521,6 +520,16 @@ void graphicsLoadTerrain(int64_t off_x,
         Chunk terrainChunk({}, terrain);
         terrainManager.addChunk(off_x, off_y, std::move(terrainChunk));
     });
+}
+
+void graphicsLoadTerrain(int64_t off_x,
+                         int64_t off_y,
+                         video::IImage* heightmap,
+                         video::ITexture* tex,
+                         video::ITexture* detail)
+{
+    terrainManager.writeTerrain(off_x, off_y, heightmap);
+    graphicsLoadTerrain(off_x, off_y, terrainManager.getTerrainFilename(off_x, off_y), tex, detail);
 }
 
 static std::unordered_map<scene::ISceneNode*, scene::ITriangleSelector*> triangleSelectors;
@@ -693,7 +702,7 @@ scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh)
     return node;
 }
 
-scene::IMesh* graphicsLoadMesh(const std::wstring& filename)
+scene::IMesh* graphicsLoadMesh(const std::string& filename)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     auto mesh = graphics::irrSceneManager->getMesh(filename.c_str());
@@ -791,4 +800,10 @@ void graphicsModifyTerrain(ITerrainSceneNode* terrain, int start, int end, doubl
     // Update collision information
     graphicsStopHandlingCollisions(terrain);
     graphicsHandleCollisions(terrain);
+}
+
+irr::video::IVideoDriver* getIrrlichtVideoDriver()
+{
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+    return graphics::irrVideoDriver;
 }

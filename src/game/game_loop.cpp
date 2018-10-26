@@ -145,7 +145,7 @@ static void processKeys(Player& player)
                 placedCubes.push_back(graphicsCreateCube());
                 placedCubes.back().setPosition(hitPoint);
                 placedCubes.back().sceneNode()->setScale({10, 10, 10});
-                graphicsAddTexture(placedCubes.back(), graphicsLoadTexture(L"textures/cube3.png"));
+                graphicsAddTexture(placedCubes.back(), graphicsLoadTexture("textures/cube3.png"));
                 graphicsHandleCollisionsBoundingBox(placedCubes.back().sceneNode());
                 canPlaceObject = false;
                 delayedAssign(canPlaceObject, 0.4, true);
@@ -181,16 +181,16 @@ void gameLoop()
             staticCubes.back().setPhysicsEnabled(true);
         }
     }
-    graphicsAddTexture(object, graphicsLoadTexture(L"textures/cube1.png"));
+    graphicsAddTexture(object, graphicsLoadTexture("textures/cube1.png"));
 
-    auto tex2 = graphicsLoadTexture(L"textures/cube2.png");
+    auto tex2 = graphicsLoadTexture("textures/cube2.png");
     for (auto& cube : staticCubes) {
         graphicsAddTexture(cube, tex2);
     }
 
-    auto enemyMesh = graphicsLoadMesh(L"textures/test_mob.dae");
+    auto enemyMesh = graphicsLoadMesh("textures/test_mob.dae");
     EnemyId enemyId = enemyManager.createEnemy(
-            enemyMesh, graphicsLoadTexture(L"textures/mobs/test_mob.png"), {60, 60, 60});
+            enemyMesh, graphicsLoadTexture("textures/mobs/test_mob.png"), {60, 60, 60});
     terrainManager.trackMob(enemyId);
     Enemy& enemy = enemyManager.mutableAccessEnemy(enemyId);
     enemy.sceneNode()->setMaterialFlag(EMF_LIGHTING, false);
@@ -231,9 +231,6 @@ void gameLoop()
         enemy.ai();
 
         processKeys(player);
-
-        // Just a test
-        graphicsModifyTerrain(terrainManager.getMutableChunk(1, 0).sceneNode(), 0, 5000, 0.1);
 
         std::ignore = graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
         object.setPosition(GamePosition(sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20));

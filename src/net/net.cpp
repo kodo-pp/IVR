@@ -88,6 +88,19 @@ int createListeningSocket(uint64_t port)
 {
     LOG(L"Creating a socket");
     int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
+
+    // Set SO_REUSEADDR and SO_REUSEPORT socket option.
+    // Thanks to https://stackoverflow.com/questions/24194961/how-do-i-use-setsockoptso-reuseaddr
+    int enable = 1;
+    LOG("Setting SO_REUSEADDR...");
+    if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int))) {
+        LOG("WARNING: setsockopt(SO_REUSEADDR) failed");
+    }
+    enable = 1;
+    LOG("Setting SO_REUSEPORT...");
+    if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int))) {
+        LOG("WARNING: setsockopt(SO_REUSEPORT) failed");
+    }
     if (listenSocket < 0) {
         throw std::runtime_error("unable to create listening socket");
     }

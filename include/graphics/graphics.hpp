@@ -59,7 +59,7 @@ void graphicsGetPosition(scene::ISceneNode* node, float& x, float& y, float& z);
 // ===== Managing textures =====
 
 /// Load texture and return Irrlicht ITexture* instance for this texture
-ITexture* graphicsLoadTexture(const std::wstring&);
+ITexture* graphicsLoadTexture(const std::string&);
 
 /// Add texture to a game object
 void graphicsAddTexture(const GameObject&, ITexture*);
@@ -81,7 +81,13 @@ irr::scene::ISceneNode* graphicsGetPseudoCamera();
 // TODO
 void graphicsLoadTerrain(int64_t off_x,
                          int64_t off_y,
-                         const std::wstring& heightmap,
+                         const std::string& heightmap,
+                         video::ITexture* tex,
+                         video::ITexture* detail);
+
+void graphicsLoadTerrain(int64_t off_x,
+                         int64_t off_y,
+                         video::IImage* heightmap,
                          video::ITexture* tex,
                          video::ITexture* detail);
 
@@ -133,7 +139,7 @@ private:
 IrrEventReceiver& getEventReceiver();
 
 scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh);
-scene::IMesh* graphicsLoadMesh(const std::wstring& filename);
+scene::IMesh* graphicsLoadMesh(const std::string& filename);
 
 class DrawablesManager
 {
@@ -210,7 +216,7 @@ static inline std::string getGuiEventDebugName(irr::gui::EGUI_EVENT_TYPE type)
 };
 
 void setAimVisible(bool visible);
-
 void graphicsModifyTerrain(ITerrainSceneNode* terrain, int start, int end, double delta);
+irr::video::IVideoDriver* getIrrlichtVideoDriver();
 
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */
