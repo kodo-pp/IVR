@@ -93,7 +93,14 @@ const Chunk& TerrainManager::getChunk(offset_t off_x, offset_t off_y) const
 }
 Chunk& TerrainManager::getMutableChunk(offset_t off_x, offset_t off_y)
 {
-    return chunks.at({off_x, off_y});
+    LOG("TerrainManager @" << this << ": getting chunk at " << off_x << ", " << off_y);
+    try {
+        return chunks.at({off_x, off_y});
+    } catch (const std::out_of_range& e) {
+        LOG("no such chunk");
+        logStackTrace();
+        std::rethrow_exception(std::current_exception());
+    }
 }
 void TerrainManager::addChunk(offset_t off_x, offset_t off_y, const Chunk& chunk)
 {
@@ -132,7 +139,7 @@ void TerrainManager::trackMob(EnemyId mobId)
 {
     auto chunk = enemyManager.accessEnemy(mobId).getPosition().getChunk();
     enemies.insert({mobId, chunk});
-    chunks.at(chunk).trackMob(mobId);
+    getOrCreateChunk(chunk.first, chunk.second).trackMob(mobId);
 }
 void TerrainManager::updateMob(EnemyId mobId)
 {
@@ -245,8 +252,47 @@ std::string TerrainManager::getCreateTerrainFilename(offset_t x, offset_t y)
     return "terrain/heightmaps/" + std::to_string(x) + "_" + std::to_string(y) + ".png";
 }
 
-void trackObject(GameObjectId objectId);
-void updateObject(GameObjectId objectId);
-void forgetObject(GameObjectId objectId);
+// void TerrainManager::trackObject(GameObjectId objectId);
+// void TerrainManager::updateObject(GameObjectId objectId);
+// void TerrainManager::forgetObject(GameObjectId objectId);
+
+void TerrainManager::autoLoad(double px, double py)
+{
+    try {
+        offset_t cx = floor(px / CHUNK_SIZE_IRRLICHT);
+        offset_t cy = floor(py / CHUNK_SIZE_IRRLICHT);
+        std::vector<std::pair<offset_t, offset_t>> chunklist;
+        chunklist.emplace_back(cx, cy);
+        chunklist.emplace_back(cx - 1, cy);
+        chunklist.emplace_back(cx + 1, cy);
+        chunklist.emplace_back(cx, cy - 1);
+        chunklist.emplace_back(cx, cy + 1);
+        chunklist.emplace_back(cx - 1, cy - 1);
+        chunklist.emplace_back(cx + 1, cy - 1);
+        chunklist.emplace_back(cx - 1, cy + 1);
+        chunklist.emplace_back(cx + 1, cy + 1);
+        setLoaded(chunklist);
+    } catch (const std::exception& e) {
+        LOG("Exception caught at TerrainManager::autoLoad(): " << e.what());
+        std::rethrow_exception(std::current_exception());
+    }
+}
+
+void TerrainManager::setLoaded(const std::vector<std::pair<offset_t, offset_t>> chunklist)
+{
+    for (auto [cx, cy] : chunklist) {
+        if (!hasChunk(cx, cy)) {
+            loadTerrain(cx, cy);
+        }
+    }
+}
+
+Chunk& TerrainManager::getOrCreateChunk(offset_t x, offset_t y)
+{
+    if (!hasChunk(x, y)) {
+        loadTerrain(x, y);
+    }
+    return getMutableChunk(x, y);
+}
 
 TerrainManager terrainManager;

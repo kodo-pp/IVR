@@ -33,6 +33,9 @@ public:
     void addChunk(offset_t off_x, offset_t off_y, Chunk&& chunk);
     void deleteChunk(offset_t off_x, offset_t off_y);
     bool hasChunk(offset_t off_x, offset_t off_y);
+    Chunk& getOrCreateChunk(offset_t x, offset_t y);
+
+    void autoLoad(double px, double py);
 
     void trackMob(EnemyId mobId);
     void updateMob(EnemyId mobId);
@@ -56,6 +59,8 @@ public:
     std::string getCreateTerrainFilename(offset_t x, offset_t y);
 
 private:
+    void setLoaded(const std::vector<std::pair<offset_t, offset_t>> chunklist);
+
     // XXX: maybe replace with unordered_map, but then we need to write hash() function for
     // std::pair, which may not be a trivial task
     std::map<std::pair<offset_t, offset_t>, Chunk> chunks;

@@ -157,13 +157,13 @@ static void processKeys(Player& player)
 void gameLoop()
 {
     Player player(graphicsGetCamera(), graphicsGetPseudoCamera());
-    for (int i = 0; i < 5; ++i) {
-        for (int j = 0; j < 5; ++j) {
-            terrainManager.loadTerrain(i, j);
-        }
-    }
-    drawBarrier();
-    terrainManager.maybeUpdateJunctions(0, 0);
+    // for (int i = 0; i < 5; ++i) {
+    //     for (int j = 0; j < 5; ++j) {
+    //         terrainManager.loadTerrain(i, j);
+    //     }
+    // }
+    // drawBarrier();
+    // terrainManager.maybeUpdateJunctions(0, 0);
     drawBarrier();
 
     // graphicsModifyTerrain(
@@ -206,6 +206,7 @@ void gameLoop()
         ++counter;
         if (counter == desiredFps / 10) {
             counter = 0;
+            terrainManager.autoLoad(player.getPosition().x, player.getPosition().z);
             for (const auto& fp : eachTickFuncs) {
                 try {
                     auto arg = DyntypeCaster<std::string>::get(fp.second);
