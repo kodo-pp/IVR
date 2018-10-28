@@ -524,30 +524,33 @@ void graphicsLoadTerrain(int64_t off_x,
                          video::ITexture* tex,
                          video::ITexture* detail)
 {
-    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     double irrOffsetX = CHUNK_SIZE_IRRLICHT * off_x;
+
     double irrOffsetY = CHUNK_SIZE_IRRLICHT * off_y;
+    scene::ITerrainSceneNode* terrain;
 
-    scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
-            heightmap.c_str(),                                          // heightmap filename
-            nullptr,                                                    // parent node
-            -1,                                                         // node id
-            core::vector3df(irrOffsetX - 180, -1250, irrOffsetY - 200), // position
-            core::vector3df(0.0f, 0.0f, 0.0f),                          // rotation
-            core::vector3df(10.0f, 4.0f, 10.0f),                        // scale
-            video::SColor(255, 255, 255, 255),                          // vertexColor (?)
-            5,                                                          // maxLOD (Level Of Detail)
-            scene::ETPS_17,                                             // patchSize (?)
-            4                                                           // smoothFactor (?)
-    );
-    if (terrain == nullptr) {
-        throw std::runtime_error("unable to create terrain scene node");
+    {
+        std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+        terrain = graphics::irrSceneManager->addTerrainSceneNode(
+                heightmap.c_str(),                                          // heightmap filename
+                nullptr,                                                    // parent node
+                -1,                                                         // node id
+                core::vector3df(irrOffsetX - 180, -1250, irrOffsetY - 200), // position
+                core::vector3df(0.0f, 0.0f, 0.0f),                          // rotation
+                core::vector3df(10.0f, 4.0f, 10.0f),                        // scale
+                video::SColor(255, 255, 255, 255),                          // vertexColor (?)
+                5,              // maxLOD (Level Of Detail)
+                scene::ETPS_17, // patchSize (?)
+                4               // smoothFactor (?)
+        );
+        if (terrain == nullptr) {
+            throw std::runtime_error("unable to create terrain scene node");
+        }
+        terrain->setMaterialFlag(irr::video::EMF_LIGHTING, false);
+        terrain->setMaterialTexture(1, tex);
+        terrain->setMaterialTexture(0, detail);
+        terrain->scaleTexture(1.0f, 20.0f);
     }
-    terrain->setMaterialFlag(irr::video::EMF_LIGHTING, false);
-    terrain->setMaterialTexture(1, tex);
-    terrain->setMaterialTexture(0, detail);
-    terrain->scaleTexture(1.0f, 20.0f);
-
     Chunk terrainChunk({}, terrain);
     terrainManager.addChunk(off_x, off_y, std::move(terrainChunk));
 }
