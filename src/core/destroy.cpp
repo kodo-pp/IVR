@@ -14,10 +14,11 @@
 std::atomic<bool> doWeNeedToShutDown(false);
 std::atomic<bool> areWeShuttingDown(false);
 
-void destroy(void)
+void destroy()
 {
     // Just shut down
     LOG("Shutting down");
+    getLogStream().flush();
     // exit(0);
     _exit(0);
 }

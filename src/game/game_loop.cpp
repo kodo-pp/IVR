@@ -267,8 +267,7 @@ void drawLoop()
 
     while (irrDeviceRun()) {
         if (doWeNeedToShutDown) {
-            LOG("Shutting down draw thread");
-            return;
+            break;
         }
 
         {

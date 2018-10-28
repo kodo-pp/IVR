@@ -21,11 +21,14 @@
 #include <irrlicht.h>
 #include <unistd.h>
 
+// При вызове текущий поток блокируется до тех пор, пока все задачи основному потоку не будут
+// завершены
 void drawBarrier()
 {
     addDrawFunction([]() -> void { LOG("--- Draw barrier ---"); }, true);
 }
 
+// Обработчик событий графического движка
 bool IrrEventReceiver::OnEvent(const irr::SEvent& event)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
@@ -44,28 +47,29 @@ bool IrrEventReceiver::OnEvent(const irr::SEvent& event)
     return false;
 }
 
+// Определяет, нажата ли заданная клавиша на клавиатуре
 bool IrrEventReceiver::isKeyPressed(irr::EKEY_CODE key) const
 {
     return pressedKeys.count(key) > 0;
 }
 
+// Добавляет пользоваетельский обработчик событий
 uint64_t IrrEventReceiver::addEventHandler(const EventHandlerType& handler)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
     return eventHandlers.insert(handler);
 }
 
+// Удаляет пользоваетельский обработчик событий
 void IrrEventReceiver::deleteEventHandler(uint64_t id)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
     eventHandlers.remove(id);
 }
 
-/**
- * Глобальные переменные, хранящие необходимые объекты для работы с Irrlicht
- *
- * Отдельное пространство имён для изоляции
- */
+// Глобальные переменные, хранящие необходимые объекты для работы с Irrlicht
+// Отдельное пространство имён для изоляции
+// По идее, всё это надо убрать в класс, но лень
 namespace graphics
 {
     IrrlichtDevice* irrDevice = nullptr;
@@ -84,15 +88,19 @@ namespace graphics
     std::atomic<bool> hasCollision(false);
     std::atomic<bool> aimVisible(false);
 
+    std::unordered_map<std::string, irr::video::ITexture*> textureCache;
 } // namespace graphics
 
+// Включает/выключает видимость прицела
 void setAimVisible(bool visible)
 {
     graphics::aimVisible = visible;
 }
 
+// Инициализация графического движко
 static void initializeIrrlicht(std::vector<std::string>& args);
 
+// Внешнее API: создание куба как объекта
 FuncResult handlerGraphicsCreateCube(UNUSED const std::vector<std::string>& args)
 {
     FuncResult ret;
@@ -107,6 +115,7 @@ FuncResult handlerGraphicsCreateCube(UNUSED const std::vector<std::string>& args
     return ret;
 }
 
+// Внешнее API: перемещение оъекта
 FuncResult handlerGraphicsMoveObject(const std::vector<std::string>& args)
 {
     if (args.size() != 4) {
@@ -127,6 +136,7 @@ FuncResult handlerGraphicsMoveObject(const std::vector<std::string>& args)
     return ret;
 }
 
+// Внешнее API: удаление оъекта
 FuncResult handlerGraphicsDeleteObject(const std::vector<std::string>& args)
 {
     if (args.size() != 1) {
@@ -144,6 +154,7 @@ FuncResult handlerGraphicsDeleteObject(const std::vector<std::string>& args)
     return ret;
 }
 
+// Внешнее API: вращение оъекта
 FuncResult handlerGraphicsRotateObject(const std::vector<std::string>& args)
 {
     if (args.size() != 4) {
@@ -167,6 +178,7 @@ FuncResult handlerGraphicsRotateObject(const std::vector<std::string>& args)
 
 extern std::recursive_mutex irrlichtMutex;
 
+// Внешнее API: загрузить текстуру из файла
 FuncResult handlerGraphicsLoadTexture(const std::vector<std::string>& args)
 {
     std::lock_guard<std::recursive_mutex> irrlock(irrlichtMutex);
@@ -190,6 +202,7 @@ FuncResult handlerGraphicsLoadTexture(const std::vector<std::string>& args)
     return ret;
 }
 
+// Внешнее API: добавить текстуру к объекту
 FuncResult handlerGraphicsAddTexture(const std::vector<std::string>& args)
 {
     if (args.size() != 2) {
@@ -212,6 +225,7 @@ FuncResult handlerGraphicsAddTexture(const std::vector<std::string>& args)
     return ret;
 }
 
+// Внешнее API: добавить текстуру к модели
 FuncResult handlerGraphicsDrawableAddTexture(const std::vector<std::string>& args)
 {
     if (args.size() != 2) {
@@ -234,8 +248,10 @@ FuncResult handlerGraphicsDrawableAddTexture(const std::vector<std::string>& arg
     return ret;
 }
 
+// Создать куб как модель
 scene::ISceneNode* graphicsCreateDrawableCube();
 
+// Внешнее API: создать куб как модель
 FuncResult handlerCreateDrawableCube(const std::vector<std::string>& args)
 {
     if (args.size() != 0) {
@@ -250,6 +266,7 @@ FuncResult handlerCreateDrawableCube(const std::vector<std::string>& args)
     return ret;
 }
 
+// Внешнее API: включить физику для объекта
 FuncResult handlerDrawableEnablePhysics(const std::vector<std::string>& args)
 {
     if (args.size() != 4) {
@@ -269,6 +286,7 @@ FuncResult handlerDrawableEnablePhysics(const std::vector<std::string>& args)
     return ret;
 }
 
+// Инициализация внешнего API
 static inline void initializeGraphicsFuncProviders()
 {
     registerFuncProvider(FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "u");
@@ -293,12 +311,14 @@ static inline void initializeGraphicsFuncProviders()
             "");
 }
 
+// Освобождение ресурсов
 void cleanupGraphics()
 {
     graphics::terrainSelector->drop();
     graphics::irrDevice->drop();
 }
 
+// Инициализация графической системы
 void initializeGraphics(std::vector<std::string>& args)
 {
     initializeIrrlicht(args);
@@ -358,22 +378,22 @@ static void initializeIrrlicht(UNUSED std::vector<std::string>& args)
     // graphicsInitializeCollisions();
 }
 
+// Создать куб как объект
 GameObjCube graphicsCreateCube()
 {
-    return addDrawFunction([]() -> GameObjCube {
-        std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
-        scene::ISceneNode* node = graphics::irrSceneManager->addCubeSceneNode();
-        if (node == nullptr) {
-            // return (ISceneNode*)nullptr;
-            throw std::runtime_error("failed to create a cube scene node");
-        }
+    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
+    scene::ISceneNode* node = graphics::irrSceneManager->addCubeSceneNode();
+    if (node == nullptr) {
+        // return (ISceneNode*)nullptr;
+        throw std::runtime_error("failed to create a cube scene node");
+    }
 
-        node->setMaterialFlag(EMF_LIGHTING, false);
+    node->setMaterialFlag(EMF_LIGHTING, false);
 
-        return GameObjCube(node);
-    });
+    return GameObjCube(node);
 }
 
+// Отрисовать кадр
 void graphicsDraw()
 {
     // Внимание: эту функцию можно вызывать только из основного потока.
@@ -408,6 +428,7 @@ void graphicsDraw()
     graphics::irrVideoDriver->endScene();
 }
 
+// Переместить объект
 void graphicsMoveObject(ISceneNode* obj, double x, double y, double z)
 {
     return addDrawFunction([=]() {
@@ -419,6 +440,7 @@ void graphicsMoveObject(ISceneNode* obj, double x, double y, double z)
         obj->setPosition(core::vector3df(x, y, z));
     });
 }
+// Переместить объект
 void graphicsMoveObject(ISceneNode* obj, const core::vector3df& pos)
 {
     return addDrawFunction([=]() {
@@ -429,6 +451,7 @@ void graphicsMoveObject(ISceneNode* obj, const core::vector3df& pos)
         obj->setPosition(pos);
     });
 }
+// Переместить объект
 void graphicsMoveObject(ISceneNode* obj, const GamePosition& gp)
 {
     if (obj == nullptr) {
@@ -438,6 +461,7 @@ void graphicsMoveObject(ISceneNode* obj, const GamePosition& gp)
     obj->setPosition(gp.toIrrVector3df());
 }
 
+// Удалить объект
 void graphicsDeleteObject(GameObject* obj)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -445,6 +469,7 @@ void graphicsDeleteObject(GameObject* obj)
     delete obj;
 }
 
+// Повернуть объект
 void graphicsRotateObject(ISceneNode* obj, const core::vector3df& rot)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -454,75 +479,80 @@ void graphicsRotateObject(ISceneNode* obj, const core::vector3df& rot)
     obj->setRotation(rot);
 }
 
+// Загрузить текстуру из файла
 ITexture* graphicsLoadTexture(const std::string& textureFileName)
 {
+    if (auto it = graphics::textureCache.find(textureFileName);
+        it != graphics::textureCache.end()) {
+        LOG("loading cached texture: " << textureFileName);
+        return it->second;
+    }
     return addDrawFunction([=]() -> ITexture* {
         std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-        LOG(L"loading texture: " << textureFileName);
+        LOG("loading texture: " << textureFileName);
         ITexture* texture = graphics::irrVideoDriver->getTexture(textureFileName.c_str());
         if (texture == nullptr) {
-            LOG(L"Loading texture failed");
-            return nullptr;
+            LOG("Loading texture failed");
+            throw std::runtime_error("Loading texture failed");
         }
-        LOG(L"Texture loaded successfully");
+        LOG("Texture loaded successfully");
+        texture->grab();
+        graphics::textureCache.emplace(textureFileName, texture);
         return texture;
     });
 }
 
+// Добавить текстуру к объекту
 void graphicsAddTexture(const GameObject& obj, ITexture* tex)
 {
-    return addDrawFunction([=]() {
-        std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-        LOG(L"Adding texture");
-        if ((obj.sceneNode() == nullptr) || (tex == nullptr)) {
-            LOG(L"Adding texture failed");
-            return;
-        }
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+    LOG(L"Adding texture");
+    if ((obj.sceneNode() == nullptr) || (tex == nullptr)) {
+        LOG(L"Adding texture failed");
+        return;
+    }
 
-        obj.sceneNode()->setMaterialTexture(0, tex);
-        LOG(L"Texture added successfully");
-    });
+    obj.sceneNode()->setMaterialTexture(0, tex);
+    LOG(L"Texture added successfully");
 }
 
-// COMBAK: Stub, maybe customize arguments like node position and scale
-// Code taken from http://irrlicht.sourceforge.net/docu/example012.html
-
+// Загрузить чанк в память
+// Код частично взят с http://irrlicht.sourceforge.net/docu/example012.html
 void graphicsLoadTerrain(int64_t off_x,
                          int64_t off_y,
                          const std::string& heightmap,
                          video::ITexture* tex,
                          video::ITexture* detail)
 {
-    addDrawFunction([=]() {
-        std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-        double irrOffsetX = CHUNK_SIZE_IRRLICHT * off_x;
-        double irrOffsetY = CHUNK_SIZE_IRRLICHT * off_y;
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+    double irrOffsetX = CHUNK_SIZE_IRRLICHT * off_x;
+    double irrOffsetY = CHUNK_SIZE_IRRLICHT * off_y;
 
-        scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
-                heightmap.c_str(),                                          // heightmap filename
-                nullptr,                                                    // parent node
-                -1,                                                         // node id
-                core::vector3df(irrOffsetX - 180, -1250, irrOffsetY - 200), // position
-                core::vector3df(0.0f, 0.0f, 0.0f),                          // rotation
-                core::vector3df(10.0f, 4.0f, 10.0f),                        // scale
-                video::SColor(255, 255, 255, 255),                          // vertexColor (?)
-                5,              // maxLOD (Level Of Detail)
-                scene::ETPS_17, // patchSize (?)
-                4               // smoothFactor (?)
-        );
-        if (terrain == nullptr) {
-            throw std::runtime_error("unable to create terrain scene node");
-        }
-        terrain->setMaterialFlag(irr::video::EMF_LIGHTING, false);
-        terrain->setMaterialTexture(1, tex);
-        terrain->setMaterialTexture(0, detail);
-        terrain->scaleTexture(1.0f, 20.0f);
+    scene::ITerrainSceneNode* terrain = graphics::irrSceneManager->addTerrainSceneNode(
+            heightmap.c_str(),                                          // heightmap filename
+            nullptr,                                                    // parent node
+            -1,                                                         // node id
+            core::vector3df(irrOffsetX - 180, -1250, irrOffsetY - 200), // position
+            core::vector3df(0.0f, 0.0f, 0.0f),                          // rotation
+            core::vector3df(10.0f, 4.0f, 10.0f),                        // scale
+            video::SColor(255, 255, 255, 255),                          // vertexColor (?)
+            5,                                                          // maxLOD (Level Of Detail)
+            scene::ETPS_17,                                             // patchSize (?)
+            4                                                           // smoothFactor (?)
+    );
+    if (terrain == nullptr) {
+        throw std::runtime_error("unable to create terrain scene node");
+    }
+    terrain->setMaterialFlag(irr::video::EMF_LIGHTING, false);
+    terrain->setMaterialTexture(1, tex);
+    terrain->setMaterialTexture(0, detail);
+    terrain->scaleTexture(1.0f, 20.0f);
 
-        Chunk terrainChunk({}, terrain);
-        terrainManager.addChunk(off_x, off_y, std::move(terrainChunk));
-    });
+    Chunk terrainChunk({}, terrain);
+    terrainManager.addChunk(off_x, off_y, std::move(terrainChunk));
 }
 
+// Загрузить чанк в память, использовать irr::video::IImage* в качестве массива высот
 void graphicsLoadTerrain(int64_t off_x,
                          int64_t off_y,
                          video::IImage* heightmap,
@@ -535,6 +565,7 @@ void graphicsLoadTerrain(int64_t off_x,
 
 static std::unordered_map<scene::ISceneNode*, scene::ITriangleSelector*> triangleSelectors;
 
+// Включить взаимодействие других объектов и игрока с данным объектом
 void graphicsHandleCollisions(scene::ITerrainSceneNode* node)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -553,6 +584,7 @@ void graphicsHandleCollisions(scene::ITerrainSceneNode* node)
     selector->drop();
 }
 
+// Выключить взаимодействие других объектов и игрока с данным объектом
 void graphicsStopHandlingCollisions(scene::ITerrainSceneNode* node)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -564,6 +596,7 @@ void graphicsStopHandlingCollisions(scene::ITerrainSceneNode* node)
     metaSelector->removeTriangleSelector(triangleSelectors.at(node));
 }
 
+// Включить взаимодействие других объектов и игрока с данным набором вершин
 void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -581,6 +614,8 @@ void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node)
     selector->drop();
 }
 
+// Включить взаимодействие других объектов и игрока с данным irr::scene::ISceneNode* по его bounding
+// box
 void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -598,6 +633,7 @@ void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node)
     selector->drop();
 }
 
+// Включить физику для заданного irr::scene::ISceneNode*
 void graphicsEnablePhysics(scene::ISceneNode* node, const core::vector3df& radius)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -615,12 +651,14 @@ void graphicsEnablePhysics(scene::ISceneNode* node, const core::vector3df& radiu
     animator->drop();
 }
 
+// Выключить физику для заданного irr::scene::ISceneNode*
 void graphicsDisablePhysics(scene::ISceneNode* node)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     node->removeAnimators();
 }
 
+// Инициализации физики и обсчёта коллизий
 void graphicsInitializeCollisions()
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -647,30 +685,36 @@ void graphicsInitializeCollisions()
     animator->drop();
 }
 
+// Получить объект камеры
 irr::scene::ICameraSceneNode* graphicsGetCamera()
 {
     return graphics::camera;
 }
 
+// Получить объект псевдокамеры, которая используется для обсчёта физики
 irr::scene::ISceneNode* graphicsGetPseudoCamera()
 {
     return graphics::pseudoCamera;
 }
 
+// Вызывает метод IrrlictDevice::run() и возвращает его результат
 bool irrDeviceRun()
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     return graphics::irrDevice->run();
 }
 
-const IrrEventReceiver& getKeyboardEventReceiver()
+// Возвращает обработчик событий графического движка
+[[deprecated]] const IrrEventReceiver& getKeyboardEventReceiver()
 {
     return graphics::irrEventReceiver;
 }
 
+// Определяет, куда поставить объект, если даны положение камеры и точкпа, куда камера направлена
 std::pair<bool, GamePosition> graphicsGetPlacePosition(const GamePosition& pos,
                                                        const GamePosition& target)
 {
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     // Thanks to irrlicht.sourceforge.net/docu/example007.html
     core::line3df ray;
     ray.start = pos.toIrrVector3df();
@@ -693,6 +737,7 @@ std::pair<bool, GamePosition> graphicsGetPlacePosition(const GamePosition& pos,
     return {collisionHappened, GamePosition(hitPoint)};
 }
 
+// Создаёт ISceneNode* по набору вершин
 scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -703,6 +748,7 @@ scene::ISceneNode* graphicsCreateMeshSceneNode(scene::IMesh* mesh)
     return node;
 }
 
+// Загружает набор вершин из файла
 scene::IMesh* graphicsLoadMesh(const std::string& filename)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -713,6 +759,7 @@ scene::IMesh* graphicsLoadMesh(const std::string& filename)
     return mesh;
 }
 
+// Создаёт куб как модель
 scene::ISceneNode* graphicsCreateDrawableCube()
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -723,6 +770,7 @@ scene::ISceneNode* graphicsCreateDrawableCube()
     return node;
 }
 
+// Вызывает функцию прыжка у объекта со включённой физикой
 void graphicsJump(scene::ISceneNode* node, float jumpSpeed)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -737,6 +785,7 @@ void graphicsJump(scene::ISceneNode* node, float jumpSpeed)
     }
 }
 
+// Вызывает функцию движения вперёд у объекта
 void graphicsStep(scene::ISceneNode* node, float distance)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -744,6 +793,7 @@ void graphicsStep(scene::ISceneNode* node, float distance)
     node->setPosition(node->getPosition() + direction * distance);
 }
 
+// Поворачивает ISceneNode* к даннай точке
 void graphicsLookAt(scene::ISceneNode* node, float x, float y, float z)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -753,6 +803,7 @@ void graphicsLookAt(scene::ISceneNode* node, float x, float y, float z)
     node->setRotation(diff.getHorizontalAngle());
 }
 
+// Получает положение ISceneNode* и возвращает его через 3 ссылки
 void graphicsGetPosition(scene::ISceneNode* node, float& x, float& y, float& z)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -763,6 +814,7 @@ void graphicsGetPosition(scene::ISceneNode* node, float& x, float& y, float& z)
     z = arr[2];
 }
 
+// Создаёт listbox в виде объекта графического движка
 irr::gui::IGUIListBox* createListBox(const std::vector<std::wstring>& strings,
                                      const core::recti& position)
 {
@@ -774,12 +826,13 @@ irr::gui::IGUIListBox* createListBox(const std::vector<std::wstring>& strings,
     return listbox;
 }
 
+// Возвращает обработчик событий
 IrrEventReceiver& getEventReceiver()
 {
     return graphics::irrEventReceiver;
 }
 
-// Low-level function. Use higher level API
+// Применяет функтор на прямоугольной области ландшафта чанка
 void graphicsModifyTerrain(ITerrainSceneNode* terrain,
                            int x1,
                            int y1,
@@ -814,6 +867,7 @@ void graphicsModifyTerrain(ITerrainSceneNode* terrain,
     graphicsHandleCollisions(terrain);
 }
 
+// Применяет функтор на прямоугольной области ландшафта чанка, не изменяя этот ландшафт
 void graphicsVisitTerrain(ITerrainSceneNode* terrain,
                           int x1,
                           int y1,
@@ -840,6 +894,7 @@ void graphicsVisitTerrain(ITerrainSceneNode* terrain,
     }
 }
 
+// Возвращает объект IVideoDriver*
 irr::video::IVideoDriver* getIrrlichtVideoDriver()
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
