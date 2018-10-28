@@ -31,59 +31,63 @@ void TerrainManager::loadTerrain(offset_t off_x, offset_t off_y)
     maybeUpdateJunctions(off_x, off_y - 1);
 }
 
-void TerrainManager::maybeUpdateJunctions(offset_t x, offset_t y)
+void TerrainManager::maybeUpdateJunctions(UNUSED offset_t x, UNUSED offset_t y)
 {
-    LOG("maybeUpdateJunctions(" << x << ", " << y << ")");
-    if (!hasChunk(x, y)) {
-        LOG("  maybeUpdateJunctions: !hasChunk(x, y)");
-        return;
-    }
-
-    if (hasChunk(x + 1, y)) {
-        LOG("  maybeUpdateJunctions: hasChunk(x + 1, y)");
-
-        auto otherChunk = getChunk(x + 1, y);
-
-        std::vector<int> values;
-        values.reserve(CHUNK_SIZE);
-
-        graphicsVisitTerrain(
-                otherChunk.sceneNode(), 0, 0, CHUNK_SIZE, 1, [&](int /* x */, int /* y */, int v) {
-                    values.push_back(v);
-                });
-
-        graphicsModifyTerrain(
-                getMutableChunk(x, y).sceneNode(),
-                0,
-                CHUNK_SIZE - 1,
-                CHUNK_SIZE,
-                CHUNK_SIZE,
-                [&](int dx, int /* dy */, int /* v */) -> int { return values.at(dx); });
-    }
-
-    if (hasChunk(x, y + 1)) {
-        LOG("  maybeUpdateJunctions: hasChunk(x, y + 1)");
-        auto otherChunk = getChunk(x, y + 1);
-
-        std::vector<int> values;
-        values.reserve(CHUNK_SIZE);
-
-        graphicsVisitTerrain(
-                otherChunk.sceneNode(), 0, 0, 1, CHUNK_SIZE, [&](int /* x */, int /* y */, int v) {
-                    values.push_back(v);
-                });
-
-        graphicsModifyTerrain(getMutableChunk(x, y).sceneNode(),
-                              CHUNK_SIZE - 1,
-                              0,
-                              CHUNK_SIZE,
-                              CHUNK_SIZE,
-                              [&](int dx, int dy, int /* v */) -> int {
-                                  LOG("lambda(dx=" << dx << ", dy=" << dy << ")");
-                                  // return values.at(dy);
-                                  return 255;
-                              });
-    }
+    LOG("maybeUpdateJunctions: skipping as it does not work");
+    return;
+    // LOG("maybeUpdateJunctions(" << x << ", " << y << ")");
+    // if (!hasChunk(x, y)) {
+    //     LOG("  maybeUpdateJunctions: !hasChunk(x, y)");
+    //     return;
+    // }
+    //
+    // if (hasChunk(x + 1, y)) {
+    //     LOG("  maybeUpdateJunctions: hasChunk(x + 1, y)");
+    //
+    //     auto otherChunk = getChunk(x + 1, y);
+    //
+    //     std::vector<int> values;
+    //     values.reserve(CHUNK_SIZE);
+    //
+    //     graphicsVisitTerrain(
+    //             otherChunk.sceneNode(), 0, 0, CHUNK_SIZE, 1, [&](int /* x */, int /* y */, int v)
+    //             {
+    //                 values.push_back(v);
+    //             });
+    //
+    //     graphicsModifyTerrain(
+    //             getMutableChunk(x, y).sceneNode(),
+    //             0,
+    //             CHUNK_SIZE - 1,
+    //             CHUNK_SIZE,
+    //             CHUNK_SIZE,
+    //             [&](int dx, int /* dy */, int /* v */) -> int { return values.at(dx); });
+    // }
+    //
+    // if (hasChunk(x, y + 1)) {
+    //     LOG("  maybeUpdateJunctions: hasChunk(x, y + 1)");
+    //     auto otherChunk = getChunk(x, y + 1);
+    //
+    //     std::vector<int> values;
+    //     values.reserve(CHUNK_SIZE);
+    //
+    //     graphicsVisitTerrain(
+    //             otherChunk.sceneNode(), 0, 0, 1, CHUNK_SIZE, [&](int /* x */, int /* y */, int v)
+    //             {
+    //                 values.push_back(v);
+    //             });
+    //
+    //     graphicsModifyTerrain(getMutableChunk(x, y).sceneNode(),
+    //                           CHUNK_SIZE - 1,
+    //                           0,
+    //                           CHUNK_SIZE,
+    //                           CHUNK_SIZE,
+    //                           [&](int dx, int dy, int /* v */) -> int {
+    //                               LOG("lambda(dx=" << dx << ", dy=" << dy << ")");
+    //                               // return values.at(dy);
+    //                               return 255;
+    //                           });
+    // }
 }
 
 const Chunk& TerrainManager::getChunk(offset_t off_x, offset_t off_y) const

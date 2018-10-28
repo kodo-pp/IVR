@@ -20,15 +20,17 @@ Player::Player(irr::scene::ICameraSceneNode* _camera, irr::scene::ISceneNode* _p
 
 void Player::move(double dx, double dz)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     pseudoCamera->setPosition(pseudoCamera->getPosition() + irr::core::vector3df(dx, 0, dz));
-    camera->updateAbsolutePosition();
+    // camera->updateAbsolutePosition();
     camera->setPosition(cachedPosition);
-    camera->updateAbsolutePosition();
+    // camera->updateAbsolutePosition();
     cachedPosition = pseudoCamera->getPosition();
 }
 
 void Player::moveForward(double delta, double directionOffset)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     // XXX: For now, vertical camera angle is ignored. Maybe it should be so,
     // maybe it should not
     double x, y, z;
@@ -47,19 +49,23 @@ static bool checkCameraVerticalOverrotation(const irr::core::vector3df& rot)
 
 void Player::turn(double dx, double dy)
 {
-    camera->setRotation(rotation);
-    camera->updateAbsolutePosition();
-    auto currentRotation = camera->getRotation();
-    if (!checkCameraVerticalOverrotation(currentRotation + irr::core::vector3df(dx, dy, 0))) {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    // camera->setRotation(rotation);
+    // camera->updateAbsolutePosition();
+    // auto currentRotation = camera->getRotation();
+    if (!checkCameraVerticalOverrotation(rotation + irr::core::vector3df(dx, dy, 0))) {
         return;
     }
-    camera->setRotation(currentRotation + irr::core::vector3df(dx, dy, 0));
+    rotation += irr::core::vector3df(dx, dy, 0);
+    // camera->bindTargetAndRotation(true);
     camera->updateAbsolutePosition();
-    rotation = camera->getRotation();
+    camera->setRotation(rotation);
+    camera->updateAbsolutePosition();
 }
 
 void Player::jump(double speed)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     auto anim = static_cast<irr::scene::ISceneNodeAnimatorCollisionResponse*>(
             *pseudoCamera->getAnimators().begin());
     if (!anim->isFalling()) {
@@ -69,15 +75,18 @@ void Player::jump(double speed)
 
 GamePosition Player::getPosition()
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     return GamePosition(camera->getPosition());
 }
 
 core::vector3df Player::getRotation()
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     return rotation;
 }
 
 GamePosition Player::getCameraTarget()
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     return GamePosition(camera->getTarget());
 }

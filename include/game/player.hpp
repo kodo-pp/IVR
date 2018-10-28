@@ -25,6 +25,7 @@ public:
     GamePosition getCameraTarget();
 
 private:
+    mutable std::recursive_mutex mutex;
     irr::scene::ICameraSceneNode* camera;
     irr::scene::ISceneNode* pseudoCamera;
     irr::core::vector3df rotation;

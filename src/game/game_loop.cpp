@@ -25,6 +25,7 @@
 std::recursive_mutex irrlichtMutex;
 
 std::atomic<bool> canPlaceObject(true);
+std::atomic<bool> gameStarted(false);
 
 // TODO: use TerrainManager or something like that
 std::vector<GameObjCube> placedCubes;
@@ -33,7 +34,13 @@ std::vector<std::pair<std::string, uint64_t>> eachTickFuncs;
 std::recursive_mutex drawFunctionsMutex;
 std::vector<std::packaged_task<void()>> drawFunctions;
 
-static const int desiredFps = 30;
+static const int desiredFps = 60;
+
+Player& getPlayer()
+{
+    static Player player(graphicsGetCamera(), graphicsGetPseudoCamera());
+    return player;
+}
 
 std::recursive_mutex& getDrawFunctionsMutex()
 {
@@ -156,7 +163,8 @@ static void processKeys(Player& player)
 
 void gameLoop()
 {
-    Player player(graphicsGetCamera(), graphicsGetPseudoCamera());
+    gameStarted = true;
+    Player& player = getPlayer();
     // for (int i = 0; i < 5; ++i) {
     //     for (int j = 0; j < 5; ++j) {
     //         terrainManager.loadTerrain(i, j);
@@ -280,6 +288,10 @@ void drawLoop()
         {
             std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
             graphicsDraw();
+            if (gameStarted) {
+                getPlayer().moveForward(0, 0);
+                getPlayer().turn(0, 0);
+            }
         }
         ++fpsCounter;
 
