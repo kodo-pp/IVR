@@ -47,10 +47,10 @@ fi
 exec_name="main"
 
 # Level of optimization, ignored when environment variable 'DEBUG' is set to 'yes'
-optimization_level=2
+optimization_level=3
 
 # Optimization flags (used only when DEBUG=no)
-OPT_FLAGS="-O${optimization_level} -ftree-vectorize"
+OPT_FLAGS="-O${optimization_level} -ftree-vectorize -march=native -mtune=native"
 if [[ "${USE_LTO}" == "yes" ]]; then
     OPT_FLAGS="${OPT_FLAGS} -flto"
 fi
@@ -94,7 +94,7 @@ CXXFLAGS="-std=gnu++17"
 LDFLAGS="-z relro -z now -dlsym -rdynamic"
 
 # Flags for C and C++ compilers
-FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -Wno-nested-anon-types -DFORTIFY_SOURCE"
+FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -Wno-nested-anon-types -DFORTIFY_SOURCE -pipe"
 
 if [[ "${DISABLE_BOOST_STACKTRACE}" == "yes" ]]; then
     FLAGS+=' -DNO_BOOST_STACKTRACE'
