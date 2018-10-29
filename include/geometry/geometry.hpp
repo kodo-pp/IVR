@@ -7,7 +7,7 @@
 
 #include <modbox/geometry/game_position.hpp>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 
 /**
  * Represents a rectangle defined by two 2D points

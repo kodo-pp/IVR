@@ -10,7 +10,7 @@
 #include <modbox/util/handle_storage.hpp>
 
 #include <boost/algorithm/string.hpp>
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 
 using namespace irr;
 using namespace scene;
@@ -240,7 +240,7 @@ static inline std::string getGuiEventDebugName(irr::gui::EGUI_EVENT_TYPE type)
     }
 
 #undef ENTRY
-};
+}
 
 void setAimVisible(bool visible);
 void graphicsModifyTerrain(ITerrainSceneNode* terrain,

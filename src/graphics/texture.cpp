@@ -6,7 +6,7 @@
 #include <modbox/log/log.hpp>
 #include <modbox/util/handle_storage.hpp>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 
 using irr::video::ITexture;
 

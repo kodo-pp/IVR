@@ -19,7 +19,7 @@
 #include <modbox/util/util.hpp>
 #include <modbox/world/terrain.hpp>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 #include <unistd.h>
 
 std::recursive_mutex irrlichtMutex;

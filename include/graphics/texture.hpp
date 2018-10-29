@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <cstdlib>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 
 using irr::video::ITexture;
 

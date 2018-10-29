@@ -10,7 +10,7 @@
 #include <modbox/game/game_object.hpp>
 #include <modbox/geometry/game_position.hpp>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 
 /**
  * Represents a chunk (a relatively small area in the world)

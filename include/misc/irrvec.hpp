@@ -1,6 +1,6 @@
 #include <tuple>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 
 using irr::core::vector3d;
 

@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 using namespace irr::core;
 
 class GamePosition

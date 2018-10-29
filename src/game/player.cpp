@@ -8,7 +8,7 @@
 #include <modbox/log/log.hpp>
 #include <modbox/misc/irrvec.hpp>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 
 Player::Player(irr::scene::ICameraSceneNode* _camera, irr::scene::ISceneNode* _pseudoCamera)
         : camera(_camera)

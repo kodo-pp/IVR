@@ -5,7 +5,7 @@
 #include <modbox/log/log.hpp>
 #include <modbox/world/terrain.hpp>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 #include <sys/stat.h>
 
 bool TerrainManager::hasGeneratedTerrain(offset_t off_x, offset_t off_y)

@@ -18,7 +18,7 @@
 #include <modbox/util/util.hpp>
 #include <modbox/world/terrain.hpp>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 #include <unistd.h>
 
 // Глобальные переменные, хранящие необходимые объекты для работы с Irrlicht
@@ -996,8 +996,12 @@ irr::scene::ISceneNode* graphicsGetPseudoCamera()
 // Вызывает метод IrrlictDevice::run() и возвращает его результат
 bool irrDeviceRun()
 {
+    LOG("irrDeviceRun :: acquiring lock...");
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-    return graphics::irrDevice->run();
+    LOG("irrDeviceRun :: acquired lock");
+    auto x = graphics::irrDevice->run();
+    LOG("irrDeviceRun :: releasing lock");
+    return x;
 }
 
 // Возвращает обработчик событий графического движка

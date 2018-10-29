@@ -8,7 +8,7 @@
 #include <modbox/game/enemy.hpp>
 #include <modbox/world/chunk.hpp>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 
 // const double CHUNK_SIZE_IRRLICHT = 2400;
 const double CHUNK_SIZE_IRRLICHT = 2400.0;

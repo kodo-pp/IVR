@@ -93,8 +93,62 @@ CXXFLAGS="-std=gnu++17"
 # Special for linker
 LDFLAGS="-z relro -z now -dlsym -rdynamic"
 
+# Pretty-print command. The first argument is action such as 'cc'
+# (compile C file), 'c++' (compile C++ file), or 'link'. The last function argument
+# is the last command argument, and it means that is is a source/output file,
+# depending on command
+function dump_command() {
+    case $1 in
+    cc)
+        echo -ne '\e[34mBuilding C source:    \e[0m' >&2
+        ;;
+    cxx)
+        echo -ne '\e[34mBuilding C++ source:  \e[0m' >&2
+        ;;
+    link)
+        echo -ne '\e[35mLinking executable:   \e[0m' >&2
+        ;;
+    strip)
+        echo -ne '\e[36mStripping executable: \e[0m' >&2
+        ;;
+    pch)
+        echo -ne '\e[32mPrecompiling header:  \e[0m' >&2
+        ;;
+    esac
+
+    case $1 in
+    cc|cxx|pch)
+        # The last function argument, see
+        # https://stackoverflow.com/questions/1853946/getting-the-last-argument-passed-to-a-shell-script
+        local src_file="${!#}"
+        echo "$src_file" >&2
+        ;;
+    link)
+        local final_exec_file="${!#}"
+        echo "$final_exec_file" >&2
+        ;;
+    strip)
+        echo "$exec_name" >&2
+        ;;
+    esac
+
+    shift
+    echo "$@" >> build.log
+}
+
+if [[ "${CC_TOOLCHAIN}" == "clang" ]]; then
+    if [[ "${FORCE_REBUILD}" == "yes" || ! -e "include/irrlicht.pch" ]]; then
+        dump_command pch irrlicht.h
+        clang++ -xc++-header -std=gnu++17 /usr/include/irrlicht/irrlicht.h -o irrlicht.pch
+    fi
+else
+    echo -e '\e[33mPrecompiled irrlicht header disabled\e[0m' >&2
+fi
 # Flags for C and C++ compilers
 FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -Wno-nested-anon-types -DFORTIFY_SOURCE -pipe"
+if [[ "${CC_TOOLCHAIN}" == "clang" ]]; then
+    FLAGS+=" -DHAVE_IRRLICHT_PCH -include-pch include/irrlicht.pch"
+fi
 
 if [[ "${DISABLE_BOOST_STACKTRACE}" == "yes" ]]; then
     FLAGS+=' -DNO_BOOST_STACKTRACE'
@@ -148,47 +202,6 @@ function run_command() {
         exit 1
     fi
 }
-
-# Pretty-print command. The first argument is action such as 'cc'
-# (compile C file), 'c++' (compile C++ file), or 'link'. The last function argument
-# is the last command argument, and it means that is is a source/output file,
-# depending on command
-function dump_command() {
-    case $1 in
-    cc)
-        echo -ne '\e[1;34m[ CC ]  \e[0m' >&2
-        ;;
-    cxx)
-        echo -ne '\e[1;34m[ C++ ] \e[0m' >&2
-        ;;
-    link)
-        echo -ne '\e[1;35m[LINK]  \e[0m' >&2
-        ;;
-    strip)
-        echo -ne '\e[1;36m[STRIP] \e[0m' >&2
-        ;;
-    esac
-
-    case $1 in
-    cc|cxx)
-        # The last function argument, see
-        # https://stackoverflow.com/questions/1853946/getting-the-last-argument-passed-to-a-shell-script
-        local src_file="${!#}"
-        echo "$src_file" >&2
-        ;;
-    link)
-        local final_exec_file="${!#}"
-        echo "-> $final_exec_file" >&2
-        ;;
-    strip)
-        echo "$exec_name" >&2
-        ;;
-    esac
-
-    shift
-    echo "$@" >> build.log
-}
-
 
 # Translate some_file_name.whatever -> some_file_name.o
 function object_file() {
@@ -254,7 +267,6 @@ function thread_pool_run() {
 }
 
 # OK, begin the build process
-echo -e '\e[1mBuilding...\e[0m' >&2
 truncate -s 0 build.log
 
 # Find all source files and build them. We assume that file names doesn't contain

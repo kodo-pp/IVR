@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 
 /**
  * Represents an abstract GUI element.

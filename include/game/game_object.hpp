@@ -11,7 +11,7 @@
 
 #include <modbox/modules/module.hpp>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 
 using irr::scene::ISceneNode;
 
