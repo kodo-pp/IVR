@@ -290,6 +290,166 @@ FuncResult handlerDrawableEnablePhysics(const std::vector<std::string>& args)
     return ret;
 }
 
+FuncResult handlerAdd2DRectangle(const std::vector<std::string>& args)
+{
+    if (args.size() != 8) {
+        throw std::logic_error("Wrong number of arguments for handlerAdd2DRectangle()");
+    }
+    FuncResult ret;
+    ret.data.resize(1);
+
+    LOG("Args:");
+    for (const auto& i : args) {
+        LOG("  " << i);
+    }
+
+    auto x1 = getArgument<float>(args, 0);
+    auto y1 = getArgument<float>(args, 1);
+    auto x2 = getArgument<float>(args, 2);
+    auto y2 = getArgument<float>(args, 3);
+    auto r = getArgument<uint>(args, 4);
+    auto g = getArgument<uint>(args, 5);
+    auto b = getArgument<uint>(args, 6);
+    auto a = getArgument<uint>(args, 7);
+
+    uint64_t handle = graphicsAdd2DRectangle(/* rect */ {x1, y1, x2, y2}, /* color */ {a, r, g, b});
+    setReturn(ret, 0, handle);
+    return ret;
+}
+FuncResult handlerAdd2DLine(const std::vector<std::string>& args)
+{
+    if (args.size() != 8) {
+        throw std::logic_error("Wrong number of arguments for handlerAdd2DLine()");
+    }
+    FuncResult ret;
+    ret.data.resize(1);
+
+    auto x1 = getArgument<float>(args, 0);
+    auto y1 = getArgument<float>(args, 1);
+    auto x2 = getArgument<float>(args, 2);
+    auto y2 = getArgument<float>(args, 3);
+    auto r = getArgument<uint>(args, 4);
+    auto g = getArgument<uint>(args, 5);
+    auto b = getArgument<uint>(args, 6);
+    auto a = getArgument<uint>(args, 7);
+
+    uint64_t handle = graphicsAdd2DLine(/* line */ {x1, y1, x2, y2}, /* color */ {a, r, g, b});
+    setReturn(ret, 0, handle);
+    return ret;
+}
+FuncResult handlerAdd2DImage(const std::vector<std::string>& args)
+{
+    if (args.size() != 5) {
+        throw std::logic_error("Wrong number of arguments for handlerAdd2DImage()");
+    }
+    FuncResult ret;
+    ret.data.resize(1);
+
+    auto x1 = getArgument<float>(args, 0);
+    auto y1 = getArgument<float>(args, 1);
+    auto x2 = getArgument<float>(args, 2);
+    auto y2 = getArgument<float>(args, 3);
+    auto imageHandle = getArgument<uint64_t>(args, 4);
+    auto texture = accessTexture(imageHandle);
+
+    uint64_t handle = graphicsAdd2DImage(/* rect */ {x1, y1, x2, y2}, texture);
+    setReturn(ret, 0, handle);
+    return ret;
+}
+
+FuncResult handlerRemove2DRectangle(const std::vector<std::string>& args)
+{
+    if (args.size() != 1) {
+        throw std::logic_error("Wrong number of arguments for handlerRemove2DRectangle()");
+    }
+    FuncResult ret;
+
+    auto handle = getArgument<uint64_t>(args, 0);
+    graphicsRemove2DRectangle(handle);
+    return ret;
+}
+FuncResult handlerRemove2DLine(const std::vector<std::string>& args)
+{
+    if (args.size() != 1) {
+        throw std::logic_error("Wrong number of arguments for handlerRemove2DLine()");
+    }
+    FuncResult ret;
+
+    auto handle = getArgument<uint64_t>(args, 0);
+    graphicsRemove2DLine(handle);
+    return ret;
+}
+FuncResult handlerRemove2DImage(const std::vector<std::string>& args)
+{
+    if (args.size() != 1) {
+        throw std::logic_error("Wrong number of arguments for handlerRemove2DImage()");
+    }
+    FuncResult ret;
+
+    auto handle = getArgument<uint64_t>(args, 0);
+    graphicsRemove2DImage(handle);
+    return ret;
+}
+
+FuncResult handlerModify2DRectangle(const std::vector<std::string>& args)
+{
+    if (args.size() != 9) {
+        throw std::logic_error("Wrong number of arguments for handlerModify2DRectangle()");
+    }
+    FuncResult ret;
+
+    auto handle = getArgument<uint64_t>(args, 0);
+    auto x1 = getArgument<float>(args, 1);
+    auto y1 = getArgument<float>(args, 2);
+    auto x2 = getArgument<float>(args, 3);
+    auto y2 = getArgument<float>(args, 4);
+    auto r = getArgument<uint>(args, 5);
+    auto g = getArgument<uint>(args, 6);
+    auto b = getArgument<uint>(args, 7);
+    auto a = getArgument<uint>(args, 8);
+
+    graphicsModify2DRectangle(handle, /* rect */ {x1, y1, x2, y2}, /* color */ {a, r, g, b});
+    return ret;
+}
+FuncResult handlerModify2DLine(const std::vector<std::string>& args)
+{
+    if (args.size() != 9) {
+        throw std::logic_error("Wrong number of arguments for handlerModify2DLine()");
+    }
+    FuncResult ret;
+
+    auto handle = getArgument<uint64_t>(args, 0);
+    auto x1 = getArgument<float>(args, 1);
+    auto y1 = getArgument<float>(args, 2);
+    auto x2 = getArgument<float>(args, 3);
+    auto y2 = getArgument<float>(args, 4);
+    auto r = getArgument<uint>(args, 5);
+    auto g = getArgument<uint>(args, 6);
+    auto b = getArgument<uint>(args, 7);
+    auto a = getArgument<uint>(args, 8);
+
+    graphicsModify2DLine(handle, /* line */ {x1, y1, x2, y2}, /* color */ {a, r, g, b});
+    return ret;
+}
+FuncResult handlerModify2DImage(const std::vector<std::string>& args)
+{
+    if (args.size() != 6) {
+        throw std::logic_error("Wrong number of arguments for handlerModify2DImage()");
+    }
+    FuncResult ret;
+
+    auto handle = getArgument<uint64_t>(args, 0);
+    auto x1 = getArgument<float>(args, 1);
+    auto y1 = getArgument<float>(args, 2);
+    auto x2 = getArgument<float>(args, 3);
+    auto y2 = getArgument<float>(args, 4);
+    auto imageHandle = getArgument<uint64_t>(args, 5);
+    auto texture = accessTexture(imageHandle);
+
+    graphicsModify2DImage(handle, /* rect */ {x1, y1, x2, y2}, texture);
+    return ret;
+}
+
 // Инициализация внешнего API
 static inline void initializeGraphicsFuncProviders()
 {
@@ -313,6 +473,21 @@ static inline void initializeGraphicsFuncProviders()
             FuncProvider("graphics.drawable.enablePhysics", handlerDrawableEnablePhysics),
             "ufff",
             "");
+    registerFuncProvider(
+            FuncProvider("graphics.2d.addRectangle", handlerAdd2DRectangle), "ffffiiii", "u");
+    registerFuncProvider(FuncProvider("graphics.2d.addLine", handlerAdd2DLine), "ffffiiii", "u");
+    registerFuncProvider(FuncProvider("graphics.2d.addImage", handlerAdd2DImage), "ffffu", "u");
+    registerFuncProvider(FuncProvider("graphics.2d.modifyRectangle", handlerModify2DRectangle),
+                         "uffffiiii",
+                         "u");
+    registerFuncProvider(
+            FuncProvider("graphics.2d.modifyLine", handlerModify2DLine), "uffffiiii", "u");
+    registerFuncProvider(
+            FuncProvider("graphics.2d.modifyImage", handlerModify2DImage), "uffffu", "u");
+    registerFuncProvider(
+            FuncProvider("graphics.2d.removeRectangle", handlerRemove2DRectangle), "u", "");
+    registerFuncProvider(FuncProvider("graphics.2d.removeLine", handlerRemove2DLine), "u", "");
+    registerFuncProvider(FuncProvider("graphics.2d.removeImage", handlerRemove2DImage), "u", "");
 }
 
 // Освобождение ресурсов
@@ -989,4 +1164,24 @@ void graphicsRemove2DImage(uint64_t handle)
 {
     graphics::images.access(handle).second->drop();
     graphics::images.remove(handle);
+}
+
+void graphicsModify2DRectangle(uint64_t handle,
+                               const irr::core::rectf& rect,
+                               const irr::video::SColor& color)
+{
+    graphics::rectangles.mutableAccess(handle) = {rect, color};
+}
+void graphicsModify2DLine(uint64_t handle,
+                          const irr::core::line2df& line,
+                          const irr::video::SColor& color)
+{
+    graphics::lines.mutableAccess(handle) = {line, color};
+}
+void graphicsModify2DImage(uint64_t handle,
+                           const irr::core::rectf& rect,
+                           irr::video::ITexture* texture)
+{
+    graphics::images.access(handle).second->drop();
+    graphics::images.mutableAccess(handle) = {rect, texture};
 }

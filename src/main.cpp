@@ -37,12 +37,13 @@ int main(int argc, char** argv)
                 MainMenu mainMenu({{L"Singleplayer",
                                     []() {
                                         try {
-                                            moduleManager.loadModule("test");
+                                            // moduleManager.loadModule("test");
+                                            moduleManager.loadModule("aim");
                                         } catch (const std::exception& e) {
                                             LOG("Failed to load module: " << e.what());
                                             return;
                                         }
-                                        setAimVisible(true);
+                                        // setAimVisible(true);
                                         graphicsInitializeCollisions();
                                         gameLoop();
                                     }},
