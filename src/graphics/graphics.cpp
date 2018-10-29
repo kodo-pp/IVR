@@ -21,52 +21,6 @@
 #include <irrlicht.h>
 #include <unistd.h>
 
-// При вызове текущий поток блокируется до тех пор, пока все задачи основному потоку не будут
-// завершены
-void drawBarrier()
-{
-    addDrawFunction([]() -> void { LOG("--- Draw barrier ---"); }, true);
-}
-
-// Обработчик событий графического движка
-bool IrrEventReceiver::OnEvent(const irr::SEvent& event)
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-    if (event.EventType == irr::EET_KEY_INPUT_EVENT) {
-        if (event.KeyInput.PressedDown) {
-            pressedKeys.insert(event.KeyInput.Key);
-        } else {
-            if (pressedKeys.count(event.KeyInput.Key) != 0u) {
-                pressedKeys.erase(event.KeyInput.Key);
-            }
-        }
-    }
-    for (const auto& handler : eventHandlers) {
-        handler.second(event);
-    }
-    return false;
-}
-
-// Определяет, нажата ли заданная клавиша на клавиатуре
-bool IrrEventReceiver::isKeyPressed(irr::EKEY_CODE key) const
-{
-    return pressedKeys.count(key) > 0;
-}
-
-// Добавляет пользоваетельский обработчик событий
-uint64_t IrrEventReceiver::addEventHandler(const EventHandlerType& handler)
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-    return eventHandlers.insert(handler);
-}
-
-// Удаляет пользоваетельский обработчик событий
-void IrrEventReceiver::deleteEventHandler(uint64_t id)
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-    eventHandlers.remove(id);
-}
-
 // Глобальные переменные, хранящие необходимые объекты для работы с Irrlicht
 // Отдельное пространство имён для изоляции
 // По идее, всё это надо убрать в класс, но лень
@@ -94,6 +48,111 @@ namespace graphics
     HandleStorage<uint64_t, std::pair<irr::core::line2df, irr::video::SColor>> lines;
     HandleStorage<uint64_t, std::pair<irr::core::rectf, irr::video::ITexture*>> images;
 } // namespace graphics
+
+extern std::recursive_mutex irrlichtMutex;
+
+// При вызове текущий поток блокируется до тех пор, пока все задачи основному потоку не будут
+// завершены
+void drawBarrier()
+{
+    addDrawFunction([]() -> void { LOG("--- Draw barrier ---"); }, true);
+}
+
+// Обработчик событий графического движка
+bool IrrEventReceiver::OnEvent(const irr::SEvent& event)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock2(irrlichtMutex);
+    if (event.EventType == irr::EET_KEY_INPUT_EVENT) {
+        if (event.KeyInput.PressedDown) {
+            pressedKeys.insert(event.KeyInput.Key);
+        } else {
+            if (pressedKeys.count(event.KeyInput.Key) != 0u) {
+                pressedKeys.erase(event.KeyInput.Key);
+            }
+        }
+    } else if (event.EventType == irr::EET_MOUSE_INPUT_EVENT) {
+        if (event.MouseInput.isLeftPressed()) {
+            leftMouseButtonDown = true;
+        } else {
+            leftMouseButtonDown = false;
+        }
+        if (event.MouseInput.isMiddlePressed()) {
+            middleMouseButtonDown = true;
+        } else {
+            middleMouseButtonDown = false;
+        }
+        if (event.MouseInput.isRightPressed()) {
+            rightMouseButtonDown = true;
+        } else {
+            rightMouseButtonDown = false;
+        }
+        if (event.MouseInput.Event == EMIE_MOUSE_MOVED) {
+            mousePosition = irr::core::position2di{
+                    event.MouseInput.Y,
+                    event.MouseInput.X}; // I have no idea why the order is reversed
+        }
+    }
+    for (const auto& handler : eventHandlers) {
+        handler.second(event);
+    }
+    return false;
+}
+
+irr::core::vector2di IrrEventReceiver::getMouseDelta()
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    // std::lock_guard<std::recursive_mutex> lock2(irrlichtMutex);
+    if (auto newViewport = graphicsGetViewport(); viewport != newViewport) {
+        viewport = newViewport;
+        mouseUpdateFlag = true;
+    }
+    if (mouseUpdateFlag) {
+        mouseUpdateFlag = false;
+        return {0, 0};
+    }
+    auto ret = mousePosition - lastSeenMousePosition;
+    lastSeenMousePosition = mousePosition;
+    auto center = graphicsGetViewport().getCenter();
+    // auto ret = mousePosition - center;
+
+    {
+        LOG("mouse :: Acquiring irrlicht lock...");
+        std::lock_guard<std::recursive_mutex> irrlock(irrlichtMutex);
+        LOG("mouse :: Acquired irrlicht lock");
+        auto cursorControl = graphics::irrDevice->getCursorControl();
+        if ((cursorControl->getPosition() - center).getLengthSQ() < 100 * 100) {
+            // assert("duck" == "not duck");
+            // cursorControl->setPosition(center);
+            // lastSeenMousePosition = center;
+        }
+        cursorControl->setVisible(false);
+        LOG("mouse :: Released irrlicht lock");
+    }
+
+    return ret;
+}
+
+// Определяет, нажата ли заданная клавиша на клавиатуре
+bool IrrEventReceiver::isKeyPressed(irr::EKEY_CODE key) const
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    return pressedKeys.count(key) > 0;
+}
+
+// Добавляет пользоваетельский обработчик событий
+uint64_t IrrEventReceiver::addEventHandler(const EventHandlerType& handler)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    return eventHandlers.insert(handler);
+}
+
+// Удаляет пользоваетельский обработчик событий
+void IrrEventReceiver::deleteEventHandler(uint64_t id)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    eventHandlers.remove(id);
+}
 
 // Включает/выключает видимость прицела
 void setAimVisible(bool visible)
@@ -179,8 +238,6 @@ FuncResult handlerGraphicsRotateObject(const std::vector<std::string>& args)
 
     return ret;
 }
-
-extern std::recursive_mutex irrlichtMutex;
 
 // Внешнее API: загрузить текстуру из файла
 FuncResult handlerGraphicsLoadTexture(const std::vector<std::string>& args)
@@ -312,7 +369,8 @@ FuncResult handlerAdd2DRectangle(const std::vector<std::string>& args)
     auto b = getArgument<uint>(args, 6);
     auto a = getArgument<uint>(args, 7);
 
-    uint64_t handle = graphicsAdd2DRectangle(/* rect */ {x1, y1, x2, y2}, /* color */ {a, r, g, b});
+    uint64_t handle = graphicsAdd2DRectangle(/* rect */ {x1, y1, x2, y2},
+                                             /* color */ {a, r, g, b});
     setReturn(ret, 0, handle);
     return ret;
 }
@@ -333,7 +391,8 @@ FuncResult handlerAdd2DLine(const std::vector<std::string>& args)
     auto b = getArgument<uint>(args, 6);
     auto a = getArgument<uint>(args, 7);
 
-    uint64_t handle = graphicsAdd2DLine(/* line */ {x1, y1, x2, y2}, /* color */ {a, r, g, b});
+    uint64_t handle = graphicsAdd2DLine(/* line */ {x1, y1, x2, y2},
+                                        /* color */ {a, r, g, b});
     setReturn(ret, 0, handle);
     return ret;
 }
@@ -587,8 +646,8 @@ void graphicsDraw()
                                101,
                                140)); // Какой-то цвет, возможно, цвет фона (ARGB)
 
-    //    graphics::irrSceneManager->addCameraSceneNode(0, irr::core::vector3df(0,30,-40),
-    //    irr::core::vector3df(0,5,0));
+    //    graphics::irrSceneManager->addCameraSceneNode(0,
+    //    irr::core::vector3df(0,30,-40), irr::core::vector3df(0,5,0));
 
     graphics::irrGuiEnvironment->drawAll();
     graphics::irrSceneManager->drawAll();
@@ -851,8 +910,8 @@ void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node)
     selector->drop();
 }
 
-// Включить взаимодействие других объектов и игрока с данным irr::scene::ISceneNode* по его bounding
-// box
+// Включить взаимодействие других объектов и игрока с данным irr::scene::ISceneNode* по
+// его bounding box
 void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
@@ -947,7 +1006,8 @@ bool irrDeviceRun()
     return graphics::irrEventReceiver;
 }
 
-// Определяет, куда поставить объект, если даны положение камеры и точкпа, куда камера направлена
+// Определяет, куда поставить объект, если даны положение камеры и точкпа, куда камера
+// направлена
 std::pair<bool, GamePosition> graphicsGetPlacePosition(const GamePosition& pos,
                                                        const GamePosition& target)
 {
@@ -1184,4 +1244,9 @@ void graphicsModify2DImage(uint64_t handle,
 {
     graphics::images.access(handle).second->drop();
     graphics::images.mutableAccess(handle) = {rect, texture};
+}
+
+irr::core::recti graphicsGetViewport()
+{
+    return graphics::irrVideoDriver->getViewPort();
 }

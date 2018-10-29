@@ -142,10 +142,19 @@ public:
     uint64_t addEventHandler(const EventHandlerType& handler);
     void deleteEventHandler(uint64_t id);
 
+    irr::core::vector2di getMouseDelta();
+
 private:
+    bool mouseUpdateFlag = true;
+    bool leftMouseButtonDown = false;
+    bool middleMouseButtonDown = false;
+    bool rightMouseButtonDown = false;
+    irr::core::position2di mousePosition;
+    irr::core::position2di lastSeenMousePosition;
+    irr::core::recti viewport;
     std::unordered_set<irr::EKEY_CODE> pressedKeys;
     HandleStorage<uint64_t, EventHandlerType> eventHandlers;
-    std::recursive_mutex mutex;
+    mutable std::recursive_mutex mutex;
 };
 // And... Clean up
 #undef onEvent
@@ -251,5 +260,7 @@ irr::video::IVideoDriver* getIrrlichtVideoDriver();
 irr::core::recti graphicsViewportize(const irr::core::rectf& rect);
 irr::core::line2di graphicsViewportize(const irr::core::line2df& rect);
 irr::core::position2di graphicsViewportize(const irr::core::position2df& rect);
+
+irr::core::recti graphicsGetViewport();
 
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */

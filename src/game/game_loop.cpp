@@ -55,7 +55,7 @@ std::recursive_mutex& getIrrlichtMutex()
 static void processKeys(Player& player)
 {
     // XXX: This is stub, camera movement and rotation should be done by class like Player
-    const IrrEventReceiver& receiver = getEventReceiver();
+    IrrEventReceiver& receiver = getEventReceiver();
 
     // Camera movement (horizontal)
     {
@@ -122,19 +122,24 @@ static void processKeys(Player& player)
 
     // Camera rotation
     {
-        int dx = 0, dy = 0;
+        double dx = 0, dy = 0;
         if (receiver.isKeyPressed(irr::KEY_UP)) {
-            --dx;
+            dx -= 1.0;
         }
         if (receiver.isKeyPressed(irr::KEY_RIGHT)) {
-            ++dy;
+            dy += 1.0;
         }
         if (receiver.isKeyPressed(irr::KEY_DOWN)) {
-            ++dx;
+            dx += 1.0;
         }
         if (receiver.isKeyPressed(irr::KEY_LEFT)) {
-            --dy;
+            dy -= 1.0;
         }
+
+        auto mouseDelta = receiver.getMouseDelta();
+        const double mouseSensivity = 0.2;
+        dx += mouseDelta.X * mouseSensivity;
+        dy += mouseDelta.Y * mouseSensivity;
 
         const double speed = 2.0 / desiredFps * 30;
         player.turn(speed * dx, speed * dy);
