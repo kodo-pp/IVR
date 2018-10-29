@@ -92,7 +92,7 @@ namespace graphics
 
     HandleStorage<uint64_t, std::pair<irr::core::rectf, irr::video::SColor>> rectangles;
     HandleStorage<uint64_t, std::pair<irr::core::line2df, irr::video::SColor>> lines;
-    HandleStorage<uint64_t, std::pair<irr::core::position2df, irr::video::ITexture*>> images;
+    HandleStorage<uint64_t, std::pair<irr::core::rectf, irr::video::ITexture*>> images;
 } // namespace graphics
 
 // Включает/выключает видимость прицела
@@ -439,8 +439,9 @@ void graphicsDraw()
         graphics::irrVideoDriver->draw2DLine(vpline.start, vpline.end, color);
     }
     for (auto& [_, pi] : graphics::images) {
-        auto& [pos, image] = pi;
-        graphics::irrVideoDriver->draw2DImage(image, graphicsViewportize(pos));
+        auto& [rect, image] = pi;
+        graphics::irrVideoDriver->draw2DImage(
+                image, graphicsViewportize(rect), irr::core::recti{{0, 0}, image->getSize()});
     }
     graphics::irrVideoDriver->endScene();
 }
@@ -971,9 +972,9 @@ uint64_t graphicsAdd2DLine(const irr::core::line2df& line, const irr::video::SCo
 {
     return graphics::lines.insert({line, color});
 }
-uint64_t graphicsAdd2DImage(const irr::core::position2df& pos, irr::video::ITexture* texture)
+uint64_t graphicsAdd2DImage(const irr::core::rectf& rect, irr::video::ITexture* texture)
 {
-    return graphics::images.insert({pos, texture});
+    return graphics::images.insert({rect, texture});
 }
 
 void graphicsRemove2DRectangle(uint64_t handle)

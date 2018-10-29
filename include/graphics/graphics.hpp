@@ -58,7 +58,7 @@ void graphicsGetPosition(scene::ISceneNode* node, float& x, float& y, float& z);
 
 uint64_t graphicsAdd2DRectangle(const irr::core::rectf& rect, const irr::video::SColor& color);
 uint64_t graphicsAdd2DLine(const irr::core::line2df& line, const irr::video::SColor& color);
-uint64_t graphicsAdd2DImage(const irr::core::position2df& pos, irr::video::ITexture* texture);
+uint64_t graphicsAdd2DImage(const irr::core::rectf& rect, irr::video::ITexture* texture);
 
 void graphicsRemove2DRectangle(uint64_t handle);
 void graphicsRemove2DLine(uint64_t handle);

@@ -266,10 +266,9 @@ void drawLoop()
 
     double timeForFrame = 1.0 / desiredFps;
 
-    // Works
     graphicsAdd2DRectangle(/* rect */ {.1, .1, .2, .3}, /* color */ {255, 255, 200, 100});
     graphicsAdd2DLine(/* line */ {.3, .3, .4, .5}, /* color */ {255, 0, 0, 0});
-    graphicsAdd2DImage(/* position */ {.5, .5},
+    graphicsAdd2DImage(/* position */ {.5, .5, .7, .7},
                        /* image */ graphicsLoadTexture("textures/texture4.png"));
 
     safeDrawFunctionsRun = true;
