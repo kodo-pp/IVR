@@ -47,3 +47,8 @@ build.log
 *.orig
 vgcore.*
 *.tmp
+
+# Python cache
+__pycache__
+*.pyc
+*.pyd

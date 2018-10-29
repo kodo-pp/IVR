@@ -58,7 +58,11 @@ void ModuleManager::loadModule(const std::string& moduleName, const std::vector<
         throw std::runtime_error("fork() failed: " + std::string(strerror(errno)));
     } else if (pid == 0) {
         std::vector<char*> raw_argv;
-        raw_argv.reserve(args.size() + 1);
+        raw_argv.reserve(args.size() + 4);
+
+        raw_argv.emplace_back(const_cast<char*>(modulePath.c_str()));
+        raw_argv.emplace_back(const_cast<char*>("--main-port=44145"));
+        raw_argv.emplace_back(const_cast<char*>("--reverse-port=54144"));
         for (const std::string& arg : args) {
             // Надеюсь, оно не упадёт из-за этого
             raw_argv.emplace_back(const_cast<char*>(arg.c_str()));
