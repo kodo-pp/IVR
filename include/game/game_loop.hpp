@@ -16,6 +16,7 @@ void drawBarrier();
 
 std::recursive_mutex& getDrawFunctionsMutex();
 std::recursive_mutex& getIrrlichtMutex();
+extern std::atomic<bool> safeDrawFunctionsRun; // Костыль, но работает
 
 template <typename F>
 auto addDrawFunction(const F& func, bool barrier = false) -> decltype(func())
@@ -31,6 +32,9 @@ auto addDrawFunction(const F& func, bool barrier = false) -> decltype(func())
                     void> || std::is_default_constructible_v<ReturnType> || (std::is_copy_assignable_v<ReturnType> && std::is_copy_constructible_v<ReturnType>),
             "ReturnType is neither void, nor default constructible, nor copy "
             "constructible&assignable");
+    if (!safeDrawFunctionsRun) {
+        return func();
+    }
     if constexpr (std::is_same_v<ReturnType, void>) {
         {
             std::lock_guard<std::recursive_mutex> lock(drawFunctionsMutex);

@@ -56,6 +56,14 @@ void graphicsStep(scene::ISceneNode* node, float distance);
 void graphicsLookAt(scene::ISceneNode* node, float x, float y, float z);
 void graphicsGetPosition(scene::ISceneNode* node, float& x, float& y, float& z);
 
+uint64_t graphicsAdd2DRectangle(const irr::core::rectf& rect, const irr::video::SColor& color);
+uint64_t graphicsAdd2DLine(const irr::core::line2df& line, const irr::video::SColor& color);
+uint64_t graphicsAdd2DImage(const irr::core::position2df& pos, irr::video::ITexture* texture);
+
+void graphicsRemove2DRectangle(uint64_t handle);
+void graphicsRemove2DLine(uint64_t handle);
+void graphicsRemove2DImage(uint64_t handle);
+
 // ===== Managing textures =====
 
 /// Load texture and return Irrlicht ITexture* instance for this texture
@@ -229,5 +237,9 @@ void graphicsVisitTerrain(ITerrainSceneNode* terrain,
                           int y2,
                           const std::function<void(int, int, int)>& func);
 irr::video::IVideoDriver* getIrrlichtVideoDriver();
+
+irr::core::recti graphicsViewportize(const irr::core::rectf& rect);
+irr::core::line2di graphicsViewportize(const irr::core::line2df& rect);
+irr::core::position2di graphicsViewportize(const irr::core::position2df& rect);
 
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */

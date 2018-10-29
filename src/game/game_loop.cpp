@@ -26,6 +26,7 @@ std::recursive_mutex irrlichtMutex;
 
 std::atomic<bool> canPlaceObject(true);
 std::atomic<bool> gameStarted(false);
+std::atomic<bool> safeDrawFunctionsRun(false); // Костыль, но работает
 
 // TODO: use TerrainManager or something like that
 std::vector<GameObjCube> placedCubes;
@@ -208,7 +209,7 @@ void gameLoop()
 
     int counter = 0;
     double i = 0;
-    while (irrDeviceRun()) {
+    while (true) /* irrDeviceRun() can cause segfault */ {
         size_t idx = 0;
         std::vector<size_t> toRemove;
         ++counter;
@@ -265,6 +266,13 @@ void drawLoop()
 
     double timeForFrame = 1.0 / desiredFps;
 
+    // Works
+    graphicsAdd2DRectangle(/* rect */ {.1, .1, .2, .3}, /* color */ {255, 255, 200, 100});
+    graphicsAdd2DLine(/* line */ {.3, .3, .4, .5}, /* color */ {255, 0, 0, 0});
+    graphicsAdd2DImage(/* position */ {.5, .5},
+                       /* image */ graphicsLoadTexture("textures/texture4.png"));
+
+    safeDrawFunctionsRun = true;
     while (irrDeviceRun()) {
         if (doWeNeedToShutDown) {
             break;

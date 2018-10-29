@@ -89,6 +89,10 @@ namespace graphics
     std::atomic<bool> aimVisible(false);
 
     std::unordered_map<std::string, irr::video::ITexture*> textureCache;
+
+    HandleStorage<uint64_t, std::pair<irr::core::rectf, irr::video::SColor>> rectangles;
+    HandleStorage<uint64_t, std::pair<irr::core::line2df, irr::video::SColor>> lines;
+    HandleStorage<uint64_t, std::pair<irr::core::position2df, irr::video::ITexture*>> images;
 } // namespace graphics
 
 // Включает/выключает видимость прицела
@@ -425,7 +429,61 @@ void graphicsDraw()
                                                       core::recti(lt, rb));
         }
     }
+    for (auto& [_, rc] : graphics::rectangles) {
+        auto& [rect, color] = rc;
+        graphics::irrVideoDriver->draw2DRectangle(color, graphicsViewportize(rect));
+    }
+    for (auto& [_, lc] : graphics::lines) {
+        auto& [line, color] = lc;
+        auto vpline = graphicsViewportize(line);
+        graphics::irrVideoDriver->draw2DLine(vpline.start, vpline.end, color);
+    }
+    for (auto& [_, pi] : graphics::images) {
+        auto& [pos, image] = pi;
+        graphics::irrVideoDriver->draw2DImage(image, graphicsViewportize(pos));
+    }
     graphics::irrVideoDriver->endScene();
+}
+
+// Перевести координаты из [0.0 .. 1.0] в [0; width] || [top; height]
+irr::core::recti graphicsViewportize(const irr::core::rectf& rect)
+{
+    auto viewport = graphics::irrVideoDriver->getViewPort();
+    auto scaleX = viewport.getWidth();
+    auto scaleY = viewport.getHeight();
+    auto upperLeft = rect.UpperLeftCorner;
+    auto lowerRight = rect.LowerRightCorner;
+    auto left = upperLeft.X;
+    auto top = upperLeft.Y;
+    auto right = lowerRight.X;
+    auto bottom = lowerRight.Y;
+    return irr::core::recti({static_cast<int>(left * scaleX),
+                             static_cast<int>(top * scaleY),
+                             static_cast<int>(right * scaleX),
+                             static_cast<int>(bottom * scaleY)});
+}
+irr::core::line2di graphicsViewportize(const irr::core::line2df& line)
+{
+    auto viewport = graphics::irrVideoDriver->getViewPort();
+    auto scaleX = viewport.getWidth();
+    auto scaleY = viewport.getHeight();
+    auto x1 = line.start.X;
+    auto y1 = line.start.Y;
+    auto x2 = line.end.X;
+    auto y2 = line.end.Y;
+    return irr::core::line2di({static_cast<int>(x1 * scaleX),
+                               static_cast<int>(y1 * scaleY),
+                               static_cast<int>(x2 * scaleX),
+                               static_cast<int>(y2 * scaleY)});
+}
+irr::core::position2di graphicsViewportize(const irr::core::position2df& pos)
+{
+    auto viewport = graphics::irrVideoDriver->getViewPort();
+    auto scaleX = viewport.getWidth();
+    auto scaleY = viewport.getHeight();
+    auto x = pos.X;
+    auto y = pos.Y;
+    return irr::core::position2di{static_cast<int>(x * scaleX), static_cast<int>(y * scaleY)};
 }
 
 // Переместить объект
@@ -902,4 +960,32 @@ irr::video::IVideoDriver* getIrrlichtVideoDriver()
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     return graphics::irrVideoDriver;
+}
+
+uint64_t graphicsAdd2DRectangle(const irr::core::rectf& rect, const irr::video::SColor& color)
+{
+    return graphics::rectangles.insert({rect, color});
+}
+
+uint64_t graphicsAdd2DLine(const irr::core::line2df& line, const irr::video::SColor& color)
+{
+    return graphics::lines.insert({line, color});
+}
+uint64_t graphicsAdd2DImage(const irr::core::position2df& pos, irr::video::ITexture* texture)
+{
+    return graphics::images.insert({pos, texture});
+}
+
+void graphicsRemove2DRectangle(uint64_t handle)
+{
+    graphics::rectangles.remove(handle);
+}
+void graphicsRemove2DLine(uint64_t handle)
+{
+    graphics::lines.remove(handle);
+}
+void graphicsRemove2DImage(uint64_t handle)
+{
+    graphics::images.access(handle).second->drop();
+    graphics::images.remove(handle);
 }
