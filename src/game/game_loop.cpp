@@ -26,7 +26,7 @@ std::recursive_mutex irrlichtMutex;
 
 std::atomic<bool> canPlaceObject(true);
 std::atomic<bool> gameStarted(false);
-std::atomic<bool> safeDrawFunctionsRun(false); // Костыль, но работает
+std::atomic<bool> safeDrawFunctionsRun(false); // Костыль, но работает (теперь нет)
 
 // TODO: use TerrainManager or something like that
 std::vector<GameObjCube> placedCubes;
@@ -36,6 +36,15 @@ std::recursive_mutex drawFunctionsMutex;
 std::vector<std::packaged_task<void()>> drawFunctions;
 
 static const int desiredFps = 60;
+
+static std::optional<std::thread::id> drawThreadId;
+std::thread::id getDrawThreadId()
+{
+    if (!drawThreadId.has_value()) {
+        throw std::logic_error("Attempted to get draw thread ID before it was set");
+    }
+    return drawThreadId.value();
+}
 
 Player& getPlayer()
 {
@@ -246,8 +255,6 @@ void gameLoop()
         toRemove.clear();
         enemy.ai();
 
-        processKeys(player);
-
         std::ignore = graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
         object.setPosition(GamePosition(sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20));
         object.setRotation(i * 100, i * 50, i * 20);
@@ -266,6 +273,7 @@ void eachTickWithParam(const std::string& name, uint64_t param)
 
 void drawLoop()
 {
+    drawThreadId = std::this_thread::get_id();
     int fpsCounter = 0;
     double oneSecondCounter = 0.0;
 
@@ -295,8 +303,9 @@ void drawLoop()
             std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
             graphicsDraw();
             if (gameStarted) {
-                getPlayer().moveForward(0, 0);
-                getPlayer().turn(0, 0);
+                processKeys(getPlayer());
+                // getPlayer().moveForward(0, 0);
+                // getPlayer().turn(0, 0);
             }
         }
         ++fpsCounter;
@@ -310,6 +319,7 @@ void drawLoop()
             oneSecondCounter = 0.0;
         }
         if (timeToSleep < 0.0) {
+            // Comment it out to prevent spamming about low FPS. TODO: make it a config option
             LOG("Warning: frame rendering took longer than 1 / " << desiredFps << " s");
             LOG("Time to sleep is " << timeToSleep);
         } else {

@@ -18,6 +18,8 @@ std::recursive_mutex& getDrawFunctionsMutex();
 std::recursive_mutex& getIrrlichtMutex();
 extern std::atomic<bool> safeDrawFunctionsRun; // Костыль, но работает
 
+std::thread::id getDrawThreadId();
+
 template <typename F>
 auto addDrawFunction(const F& func, bool barrier = false) -> decltype(func())
 {
@@ -32,7 +34,8 @@ auto addDrawFunction(const F& func, bool barrier = false) -> decltype(func())
                     void> || std::is_default_constructible_v<ReturnType> || (std::is_copy_assignable_v<ReturnType> && std::is_copy_constructible_v<ReturnType>),
             "ReturnType is neither void, nor default constructible, nor copy "
             "constructible&assignable");
-    if (!safeDrawFunctionsRun) {
+    if (!safeDrawFunctionsRun || std::this_thread::get_id() == getDrawThreadId()) {
+        LOG("Running draw function in-place");
         return func();
     }
     if constexpr (std::is_same_v<ReturnType, void>) {
@@ -44,7 +47,7 @@ auto addDrawFunction(const F& func, bool barrier = false) -> decltype(func())
             std::future<void> future = drawFunctions.back().get_future();
             future.wait();
         }
-        LOG("Called");
+        LOG("Draw function called");
         return;
     } else if constexpr (std::is_default_constructible_v<ReturnType>) {
         ReturnType ret;
@@ -55,8 +58,9 @@ auto addDrawFunction(const F& func, bool barrier = false) -> decltype(func())
             future = drawFunctions.back().get_future();
         }
         future.wait();
+        LOG("Draw function called");
         return ret;
-        LOG("Called");
+
     } else if constexpr (std::is_copy_assignable_v<
                                  ReturnType> && std::is_copy_constructible_v<ReturnType>) {
         ReturnType* ret;
@@ -69,7 +73,7 @@ auto addDrawFunction(const F& func, bool barrier = false) -> decltype(func())
         future.wait();
         ReturnType retval(*ret);
         delete ret;
-        LOG("Called");
+        LOG("Draw function called");
         return retval;
     }
 }

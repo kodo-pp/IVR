@@ -30,7 +30,11 @@ namespace graphics
     video::IVideoDriver* irrVideoDriver = nullptr;
     scene::ISceneManager* irrSceneManager = nullptr;
     gui::IGUIEnvironment* irrGuiEnvironment = nullptr;
-    IrrEventReceiver irrEventReceiver;
+    IrrEventReceiver& getIrrEventReceiver()
+    {
+        static IrrEventReceiver irrEventReceiver;
+        return irrEventReceiver;
+    }
 
     scene::ISceneNode* pseudoCamera = nullptr;
     scene::ICameraSceneNode* camera = nullptr;
@@ -58,11 +62,14 @@ void drawBarrier()
     addDrawFunction([]() -> void { LOG("--- Draw barrier ---"); }, true);
 }
 
+IrrEventReceiver::IrrEventReceiver() : cursorControl(graphics::irrDevice->getCursorControl())
+{
+}
+
 // Обработчик событий графического движка
 bool IrrEventReceiver::OnEvent(const irr::SEvent& event)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
-    std::lock_guard<std::recursive_mutex> lock2(irrlichtMutex);
     if (event.EventType == irr::EET_KEY_INPUT_EVENT) {
         if (event.KeyInput.PressedDown) {
             pressedKeys.insert(event.KeyInput.Key);
@@ -102,35 +109,22 @@ bool IrrEventReceiver::OnEvent(const irr::SEvent& event)
 irr::core::vector2di IrrEventReceiver::getMouseDelta()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
-    // std::lock_guard<std::recursive_mutex> lock2(irrlichtMutex);
     if (auto newViewport = graphicsGetViewport(); viewport != newViewport) {
         viewport = newViewport;
         mouseUpdateFlag = true;
     }
     if (mouseUpdateFlag) {
         mouseUpdateFlag = false;
+        lastSeenMousePosition = mousePosition;
         return {0, 0};
     }
-    auto ret = mousePosition - lastSeenMousePosition;
-    lastSeenMousePosition = mousePosition;
     auto center = graphicsGetViewport().getCenter();
-    // auto ret = mousePosition - center;
+    auto ret = cursorControl->getPosition() - center;
 
-    {
-        LOG("mouse :: Acquiring irrlicht lock...");
-        std::lock_guard<std::recursive_mutex> irrlock(irrlichtMutex);
-        LOG("mouse :: Acquired irrlicht lock");
-        auto cursorControl = graphics::irrDevice->getCursorControl();
-        if ((cursorControl->getPosition() - center).getLengthSQ() < 100 * 100) {
-            // assert("duck" == "not duck");
-            // cursorControl->setPosition(center);
-            // lastSeenMousePosition = center;
-        }
-        cursorControl->setVisible(false);
-        LOG("mouse :: Released irrlicht lock");
-    }
+    cursorControl->setPosition(center);
+    cursorControl->setVisible(false);
 
-    return ret;
+    return {ret.Y, ret.X}; // Need to transpose the original vector
 }
 
 // Определяет, нажата ли заданная клавиша на клавиатуре
@@ -575,13 +569,14 @@ static void initializeIrrlicht(UNUSED std::vector<std::string>& args)
             32,                                    // Глубина цвета
             false,                                 // Полноэкранный режим
             false, // stencil buffer (не очень понятно, что это. COMBAK)
-            true,  // Вертикальная синхронизация
-            &graphics::irrEventReceiver); // Объект-обработчик событий
+            true   // Вертикальная синхронизация
+    );
     if (graphics::irrDevice == nullptr) {
         // TODO: добавить fallback-настройки
         throw std::runtime_error("Failed to initialize Irrlicht device");
     }
     graphics::irrDevice->getLogger()->setLogLevel(irr::ELL_NONE);
+    graphics::irrDevice->setEventReceiver(&graphics::getIrrEventReceiver());
 
     graphics::irrDevice->setWindowCaption(L"Test window"); // COMBAK
 
@@ -996,21 +991,21 @@ irr::scene::ISceneNode* graphicsGetPseudoCamera()
 // Вызывает метод IrrlictDevice::run() и возвращает его результат
 bool irrDeviceRun()
 {
-    LOG("irrDeviceRun :: acquiring lock...");
+    // LOG("irrDeviceRun :: acquiring lock...");
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-    LOG("irrDeviceRun :: acquired lock");
+    // LOG("irrDeviceRun :: acquired lock");
     auto x = graphics::irrDevice->run();
-    LOG("irrDeviceRun :: releasing lock");
+    // LOG("irrDeviceRun :: releasing lock");
     return x;
 }
 
 // Возвращает обработчик событий графического движка
 [[deprecated]] const IrrEventReceiver& getKeyboardEventReceiver()
 {
-    return graphics::irrEventReceiver;
+    return graphics::getIrrEventReceiver();
 }
 
-// Определяет, куда поставить объект, если даны положение камеры и точкпа, куда камера
+// Определяет, куда поставить объект, если даны положение камеры и точка, куда камера
 // направлена
 std::pair<bool, GamePosition> graphicsGetPlacePosition(const GamePosition& pos,
                                                        const GamePosition& target)
@@ -1130,7 +1125,7 @@ irr::gui::IGUIListBox* createListBox(const std::vector<std::wstring>& strings,
 // Возвращает обработчик событий
 IrrEventReceiver& getEventReceiver()
 {
-    return graphics::irrEventReceiver;
+    return graphics::getIrrEventReceiver();
 }
 
 // Применяет функтор на прямоугольной области ландшафта чанка

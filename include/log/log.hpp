@@ -11,6 +11,8 @@
 #include <modbox/core/destroy.hpp>
 #include <modbox/util/util.hpp>
 
+#include <irrlicht.h>
+
 extern std::recursive_mutex logMutex;
 
 enum LogStreamSpecial
@@ -82,6 +84,20 @@ LogStream& operator<<(LogStream& logStream, const T& data)
 static inline LogStream& operator<<(LogStream& logStream, const std::string& data)
 {
     return logStream << wstring_cast(data);
+}
+
+template <typename T>
+LogStream& operator<<(LogStream& logStream, const irr::core::rect<T>& rect)
+{
+    logStream << "rect<" << typeid(T).name() << "> (" << rect.UpperLeftCorner.X << ", "
+              << rect.UpperLeftCorner.Y << ", " << rect.LowerRightCorner.X << ", "
+              << rect.LowerRightCorner.Y << ")";
+}
+template <typename T>
+LogStream& operator<<(LogStream& logStream, const irr::core::vector2d<T>& vec)
+{
+    logStream << "vec2d<" << typeid(T).name() << "> (" << vec.X << ", " << vec.Y << ")";
+    return logStream;
 }
 
 LogStream& getLogStream();

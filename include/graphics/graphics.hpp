@@ -133,7 +133,7 @@ class IrrEventReceiver : public irr::IEventReceiver
 {
 public:
     using EventHandlerType = std::function<bool(const irr::SEvent&)>;
-    IrrEventReceiver() = default;
+    IrrEventReceiver();
     virtual ~IrrEventReceiver() = default;
 
     virtual bool onEvent(const irr::SEvent& event) override;
@@ -149,6 +149,8 @@ private:
     bool leftMouseButtonDown = false;
     bool middleMouseButtonDown = false;
     bool rightMouseButtonDown = false;
+
+    irr::gui::ICursorControl* cursorControl;
     irr::core::position2di mousePosition;
     irr::core::position2di lastSeenMousePosition;
     irr::core::recti viewport;
