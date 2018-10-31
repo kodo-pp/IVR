@@ -36,6 +36,11 @@ void ModuleWorker::please_work() noexcept
     }
 }
 
+Module& ModuleWorker::getModule()
+{
+    return module;
+}
+
 void sendError(int sock, const std::string& errorMessage, uint8_t exitCode = 1)
 {
     sendString(sock, DyntypeCaster<std::string>::get(exitCode));

@@ -6,6 +6,8 @@ import socket
 import base64
 import time
 import re
+import traceback
+import os
 from threading import Lock, Thread
 
 # Netcat module taken from here: https://gist.github.com/leonjza/f35a7252babdf77c8421
@@ -208,7 +210,7 @@ class Modcat(Netcat):
                     self.send_arg(val, type)
         except BaseException as e:
             self.logger.log('Exception occured at serve_func: ' + str(e))
-            return
+            os._exit(1)
 
     def spawn_serving_thread(self):
         self.serving_thread = Thread(target=self.serve_func)
@@ -287,3 +289,6 @@ class Module:
         if reverse_port is None:
             raise ValueError('Reverse port information not provided')
         return main_port, reverse_port
+
+    def ready(self):
+        self.invoke('module.ready', [], '', '')

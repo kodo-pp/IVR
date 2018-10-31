@@ -11,10 +11,10 @@ from os import _exit as exit
 
 def main():
     module = pymodbox.Module('aim')
-    module.VERY_VERBOSE = True
+    module.ready()
     rect = [.48, .48, .52, .52]
     color = [0, 0, 0, 100]
-    [model_handle] = module.invoke('graphics.2d.addRectangle', [*rect, *color], 'ffffiiii', 'u')
+    module.invoke('graphics.2d.addRectangle', [*rect, *color], 'ffffiiii', 'u')
 
     while True:
         time.sleep(1)

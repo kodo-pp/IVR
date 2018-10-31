@@ -61,6 +61,7 @@ int main(int argc, char** argv)
                                         try {
                                             // moduleManager.loadModule("test");
                                             moduleManager.loadModule("aim");
+                                            moduleManager.loadModule("inventory");
                                         } catch (const std::exception& e) {
                                             LOG("Failed to load module: " << e.what());
                                             return;

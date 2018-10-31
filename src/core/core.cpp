@@ -454,6 +454,15 @@ FuncResult handlerClassNop(UNUSED const std::vector<std::string>& args)
     return res;
 }
 
+FuncResult handlerModuleReady(UNUSED const std::vector<std::string>& args)
+{
+    FuncResult res;
+    moduleManager.addReadyModule(moduleManager.getModuleWorkerByThreadId(std::this_thread::get_id())
+                                         .getModule()
+                                         .getName());
+    return res;
+}
+
 static void initializeCoreFuncProviders()
 {
     registerFuncProvider(FuncProvider("core.class.add", handlerAddModuleClass), "ssss", "");
@@ -469,6 +478,7 @@ static void initializeCoreFuncProviders()
 
     registerFuncProvider(FuncProvider("core.class.instance.set", handlerModuleClassSet), "uss", "");
     registerFuncProvider(FuncProvider("core.class.instance.get", handlerModuleClassGet), "us", "s");
+    registerFuncProvider(FuncProvider("module.ready", handlerModuleReady), "", "");
 }
 
 void ModuleClassMemberData::genericSet(const std::string& x)

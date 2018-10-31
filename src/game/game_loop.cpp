@@ -180,19 +180,33 @@ void gameLoop()
 {
     gameStarted = true;
     Player& player = getPlayer();
-    // for (int i = 0; i < 5; ++i) {
-    //     for (int j = 0; j < 5; ++j) {
-    //         terrainManager.loadTerrain(i, j);
-    //     }
-    // }
-    // drawBarrier();
-    // terrainManager.maybeUpdateJunctions(0, 0);
     drawBarrier();
 
-    // graphicsModifyTerrain(
-    //         terrainManager.getMutableChunk(1, 0).sceneNode(), 0, 0, 50, 1, [](int, int, int) {
-    //             return 250;
-    //         });
+    try {
+        usleep(100000);
+        LOG("Testing inventory...");
+        auto add = getFuncProvider("inventory.addItems");
+        auto remove = getFuncProvider("inventory.removeItems");
+        auto getCount = getFuncProvider("inventory.getCurrentCellCount");
+        auto getItem = getFuncProvider("inventory.getCurrentCellItem");
+
+        LOG("Adding 10 stone: " << add({"stone", "10"}).data.at(0) << " left");
+        LOG("Adding 20 wood: " << add({"wood", "20"}).data.at(0) << " left");
+        LOG("Adding 30 stone: " << add({"stone", "30"}).data.at(0) << " left");
+        LOG("Current cell contains " << getCount({}).data.at(0) << " " << getItem({}).data.at(0));
+        LOG("Removing 5 stone: " << remove({"stone", "5"}).data.at(0) << " removed");
+        LOG("Current cell contains " << getCount({}).data.at(0) << " " << getItem({}).data.at(0));
+        LOG("Removing 5 wood: " << remove({"wood", "5"}).data.at(0) << " removed");
+        LOG("Removing 80 wood: " << remove({"wood", "80"}).data.at(0) << " removed");
+        LOG("Removing 5 stone: " << remove({"stone", "5"}).data.at(0) << " removed");
+        LOG("Current cell contains " << getCount({}).data.at(0) << " " << getItem({}).data.at(0));
+        LOG("Removing 80 stone: " << remove({"stone", "80"}).data.at(0) << " removed");
+        LOG("Current cell contains " << getCount({}).data.at(0) << " " << getItem({}).data.at(0));
+        LOG("Finished testing inventory");
+    } catch (const std::runtime_error& e) {
+        LOG("Error while testing inventory: " << e.what());
+        LOG("It seems that it does not work properly");
+    }
 
     GameObjCube object = graphicsCreateCube();
 

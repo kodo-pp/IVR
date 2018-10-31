@@ -40,8 +40,13 @@ public:
     void unregisterModule(const std::string& moduleName);
     void loadModule(const std::string& moduleName, const std::vector<std::string>& args = {});
 
+    bool isReady(const std::string& moduleName) const;
+    void addReadyModule(const std::string& moduleName);
+
 protected:
+    mutable std::recursive_mutex mutex;
     std::unordered_map<std::string, Module> modules;
+    std::unordered_set<std::string> readyModules;
 };
 
 class ModuleWorker
@@ -66,6 +71,7 @@ public:
                                            const std::string& argTypes,
                                            const std::string& retTypes,
                                            const std::vector<std::string> arguments);
+    Module& getModule();
 
 private:
     mutable std::mutex reverseMutex;
