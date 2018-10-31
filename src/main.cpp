@@ -7,6 +7,7 @@
 
 #include <modbox/core/core.hpp>
 #include <modbox/core/destroy.hpp>
+#include <modbox/core/event_manager.hpp>
 #include <modbox/core/init.hpp>
 #include <modbox/core/memory_manager.hpp>
 #include <modbox/game/game_loop.hpp>
@@ -29,9 +30,30 @@ int main(int argc, char** argv)
         std::vector<std::string> args(argv, argv + argc);
         init(args);
 
-        LOG(L"ModBox version " << _PROJECT_VERSION);
+        LOG("ModBox version " << _PROJECT_VERSION);
         createModuleListenerThread();
         LOG("Creating game thread");
+
+        LOG("Testing event manager...");
+        getEventManager().addEventHandler(
+                "test event",
+                [](const std::unordered_map<std::string, std::string>&) { LOG("First handler"); });
+        getEventManager().addEventHandler(
+                "test event",
+                [](const std::unordered_map<std::string, std::string>&) { LOG("Second handler"); });
+        getEventManager().addEventHandler(
+                "not a test event",
+                [](const std::unordered_map<std::string, std::string>&) { LOG("Not a handler"); });
+        getEventManager().addEventHandler(
+                "test event",
+                [](const std::unordered_map<std::string, std::string>&) { LOG("Third handler"); });
+
+        // Expected output:
+        // First handler
+        // Second handler
+        // Third handler
+        getEventManager().raiseEvent("test event");
+
         std::thread gameThread([]() {
             try {
                 MainMenu mainMenu({{L"Singleplayer",

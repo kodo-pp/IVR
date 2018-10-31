@@ -140,6 +140,9 @@ function dump_command() {
 
 # Flags for C and C++ compilers
 FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -DFORTIFY_SOURCE -pipe"
+if [[ "${CC_TOOLCHAIN}" == "clang" ]]; then
+    FLAGS+=' -Wno-nested-anon-types'
+fi
 
 if [[ "${DISABLE_BOOST_STACKTRACE}" == "yes" ]]; then
     FLAGS+=' -DNO_BOOST_STACKTRACE'
