@@ -2,6 +2,8 @@
 
 # This script builds ModBox. For more information see ./build.sh --help
 
+set -e
+
 if [[ "$1" == "--help" ]]; then
     echo -e "Usage: $0 [--help]"
     echo -e "Build ModBox from its source, assuming that all dependencies are already installed."
@@ -136,20 +138,8 @@ function dump_command() {
     echo "$@" >> build.log
 }
 
-if [[ "${CC_TOOLCHAIN}" == "clang" ]]; then
-    if [[ "${FORCE_REBUILD}" == "yes" || ! -e "include/irrlicht.pch" ]]; then
-        dump_command pch irrlicht.h
-        clang++ -xc++-header -std=gnu++17 /usr/include/irrlicht/irrlicht.h -o irrlicht.pch
-    fi
-else
-    echo -e '\e[33mPrecompiled irrlicht header disabled\e[0m' >&2
-fi
 # Flags for C and C++ compilers
 FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -Wno-nested-anon-types -DFORTIFY_SOURCE -pipe"
-if [[ "${CC_TOOLCHAIN}" == "clang" ]]; then
-    FLAGS+=" -DHAVE_IRRLICHT_PCH -include-pch include/irrlicht.pch"
-fi
-
 if [[ "${DISABLE_BOOST_STACKTRACE}" == "yes" ]]; then
     FLAGS+=' -DNO_BOOST_STACKTRACE'
 fi
@@ -185,6 +175,24 @@ FLAGS="${FLAGS} -D_PROJECT_VERSION=\"$project_version\""
 # All changes of FLAGS variable below these lines will be ignored
 CFLAGS="${CFLAGS} ${FLAGS}"
 CXXFLAGS="${CXXFLAGS} ${FLAGS}"
+
+# --- BUILD ---
+
+# Precompile irrlicht.h to speed build up a bit
+if [[ "${CC_TOOLCHAIN}" == "clang" ]]; then
+    # Only clang is now supported
+    if [[ "${FORCE_REBUILD}" == "yes" || ! -e "include/irrlicht.pch" ]]; then
+        dump_command pch irrlicht.h
+        clang++ -xc++-header ${CXXFLAGS} /usr/include/irrlicht/irrlicht.h -o include/irrlicht.pch
+    fi
+else
+    echo -e '\e[33mPrecompiled irrlicht header disabled\e[0m' >&2
+fi
+
+# Include irrlicht PCH in all sources
+if [[ "${CC_TOOLCHAIN}" == "clang" ]]; then
+    FLAGS+=" -DHAVE_IRRLICHT_PCH -include-pch include/irrlicht.pch"
+fi
 
 # Run command. The first argument is action suzh as 'cc' (compile C file),
 # 'c++' (compile C++ file), or 'link'

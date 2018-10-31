@@ -11,7 +11,7 @@
 #include <modbox/core/destroy.hpp>
 #include <modbox/util/util.hpp>
 
-#include <irrlicht.h>
+#include <irrlicht_wrapper.hpp>
 
 extern std::recursive_mutex logMutex;
 
@@ -92,6 +92,7 @@ LogStream& operator<<(LogStream& logStream, const irr::core::rect<T>& rect)
     logStream << "rect<" << typeid(T).name() << "> (" << rect.UpperLeftCorner.X << ", "
               << rect.UpperLeftCorner.Y << ", " << rect.LowerRightCorner.X << ", "
               << rect.LowerRightCorner.Y << ")";
+    return logStream;
 }
 template <typename T>
 LogStream& operator<<(LogStream& logStream, const irr::core::vector2d<T>& vec)

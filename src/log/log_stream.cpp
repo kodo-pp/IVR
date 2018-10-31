@@ -4,8 +4,6 @@
 
 #include <modbox/log/log.hpp>
 
-#include <irrlicht.h>
-
 LogStream::LogStream(const std::function<std::wstring()>& _lineBeginnerFunc)
         : lineBeginnerFunc(_lineBeginnerFunc), doBeginLine(true)
 {
