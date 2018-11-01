@@ -7,6 +7,8 @@
 #include <modbox/graphics/graphics.hpp>
 #include <modbox/log/log.hpp>
 #include <modbox/misc/irrvec.hpp>
+#include <modbox/core/core.hpp>
+#include <modbox/core/event_manager.hpp>
 
 #include <irrlicht_wrapper.hpp>
 
@@ -70,6 +72,7 @@ void Player::jump(double speed)
             *pseudoCamera->getAnimators().begin());
     if (!anim->isFalling()) {
         anim->jump(speed);
+        getEventManager().raiseEvent("player.jump");
     }
 }
 
@@ -89,4 +92,52 @@ GamePosition Player::getCameraTarget()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
     return GamePosition(camera->getTarget());
+}
+
+
+void Player::hit(double damage)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    healthLeft = std::max(0.0, healthLeft - damage);
+    getEventManager().raiseEvent(
+        "player.health.change",
+        {
+            {"healthLeft", std::to_string(healthLeft)},
+            {"healthMax", std::to_string(healthMax)}
+        }
+    );
+}
+double Player::getHealthLeft() const
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    return healthLeft;
+}
+double Player::getHealthMax() const
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    return healthMax;
+}
+void Player::setHealthLeft(double health)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    getEventManager().raiseEvent(
+        "player.health.change",
+        {{"healthLeft", std::to_string(healthLeft)}, {"healthMax", std::to_string(healthMax)}}
+    );
+    healthLeft = std::min(health, healthMax);
+}
+void Player::setHealthMax(double health)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    getEventManager().raiseEvent(
+        "player.health.change",
+        {{"healthLeft", std::to_string(healthLeft)}, {"healthMax", std::to_string(healthMax)}}
+    );
+    healthMax = health;
+    healthLeft = std::min(healthLeft, healthMax);
+}
+bool Player::isDead() const
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    return healthLeft <= 0;
 }

@@ -48,6 +48,9 @@ void EventManager::raiseEvent(const std::string& event,
                               const std::unordered_map<std::string, std::string>& args) const
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
+    if (eventHandlers.count(event) == 0) {
+        return;
+    }
     for (const auto& handler : eventHandlers.at(event)) {
         handler(args);
     }

@@ -19,6 +19,12 @@ public:
     void moveForward(double delta, double directionOffset);
     void turn(double dx, double dy);
     void jump(double speed);
+    void hit(double damage);
+    double getHealthLeft() const;
+    double getHealthMax() const;
+    void setHealthLeft(double health);
+    void setHealthMax(double health);
+    bool isDead() const;
 
     GamePosition getPosition();
     core::vector3df getRotation();
@@ -26,6 +32,8 @@ public:
 
 private:
     mutable std::recursive_mutex mutex;
+    double healthLeft = 1.0;
+    double healthMax = 1.0;
     irr::scene::ICameraSceneNode* camera;
     irr::scene::ISceneNode* pseudoCamera;
     irr::core::vector3df rotation;

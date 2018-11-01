@@ -11,6 +11,7 @@
 #include <modbox/core/destroy.hpp>
 #include <modbox/log/log.hpp>
 #include <modbox/util/util.hpp>
+#include <modbox/game/player.hpp>
 
 void drawBarrier();
 
@@ -19,6 +20,8 @@ std::recursive_mutex& getIrrlichtMutex();
 extern std::atomic<bool> safeDrawFunctionsRun; // Костыль, но работает
 
 std::thread::id getDrawThreadId();
+
+Player& getPlayer();
 
 template <typename F>
 auto addDrawFunction(const F& func, bool barrier = false) -> decltype(func())

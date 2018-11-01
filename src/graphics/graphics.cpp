@@ -17,6 +17,7 @@
 #include <modbox/modules/module_io.hpp>
 #include <modbox/util/util.hpp>
 #include <modbox/world/terrain.hpp>
+#include <modbox/core/event_manager.hpp>
 
 #include <irrlicht_wrapper.hpp>
 #include <unistd.h>
@@ -76,34 +77,60 @@ bool IrrEventReceiver::OnEvent(const irr::SEvent& event)
     std::lock_guard<std::recursive_mutex> lock(mutex);
     if (event.EventType == irr::EET_KEY_INPUT_EVENT) {
         if (event.KeyInput.PressedDown) {
+            getEventManager().raiseEvent("keyboard.keyPress", {{"key", std::to_string(event.KeyInput.Key)}}); // TODO: перевести в нормальный строковый вид
             pressedKeys.insert(event.KeyInput.Key);
         } else {
             if (pressedKeys.count(event.KeyInput.Key) != 0u) {
+                getEventManager().raiseEvent("keyboard.keyRelease", {{"key", std::to_string(event.KeyInput.Key)}}); // TODO: перевести в нормальный строковый вид
                 pressedKeys.erase(event.KeyInput.Key);
             }
         }
     } else if (event.EventType == irr::EET_MOUSE_INPUT_EVENT) {
         if (event.MouseInput.isLeftPressed()) {
+            if (!leftMouseButtonDown) {
+                getEventManager().raiseEvent("mouse.leftButtonDown");
+            }
             leftMouseButtonDown = true;
         } else {
+            if (leftMouseButtonDown) {
+                getEventManager().raiseEvent("mouse.leftButtonUp");
+            }
             leftMouseButtonDown = false;
         }
+
         if (event.MouseInput.isMiddlePressed()) {
+            if (!middleMouseButtonDown) {
+                getEventManager().raiseEvent("mouse.middleButtonDown");
+            }
             middleMouseButtonDown = true;
         } else {
+            if (middleMouseButtonDown) {
+                getEventManager().raiseEvent("mouse.middleButtonUp");
+            }
             middleMouseButtonDown = false;
         }
+
         if (event.MouseInput.isRightPressed()) {
+            if (!rightMouseButtonDown) {
+                getEventManager().raiseEvent("mouse.rightButtonDown");
+            }
             rightMouseButtonDown = true;
         } else {
+            if (rightMouseButtonDown) {
+                getEventManager().raiseEvent("mouse.rightButtonUp");
+            }
             rightMouseButtonDown = false;
         }
+
         if (event.MouseInput.Event == EMIE_MOUSE_MOVED) {
             mousePosition = irr::core::position2di{
                     event.MouseInput.Y,
                     event.MouseInput.X}; // I have no idea why the order is reversed
+                                         // Ah, I understand now. That's because it isn't in fact
+                                         // But I've already reversed it second time, so that's OK
         }
     }
+
     for (const auto& handler : eventHandlers) {
         handler.second(event);
     }
@@ -1462,5 +1489,5 @@ std::optional<irr::core::vector3df> getRayIntersect(const irr::core::vector3df& 
             dummy2 
     );
 
-    return collisionHappened ? hitPoint : std::optional<irr::core:vector3df>();
+    return collisionHappened ? hitPoint : std::optional<irr::core::vector3df>();
 }

@@ -18,6 +18,7 @@
 #include <modbox/log/log.hpp>
 #include <modbox/util/util.hpp>
 #include <modbox/world/terrain.hpp>
+#include <modbox/core/event_manager.hpp>
 
 #include <irrlicht_wrapper.hpp>
 #include <unistd.h>
@@ -178,12 +179,7 @@ static void processKeys(Player& player)
 
 void gameLoop()
 {
-    gameStarted = true;
-    Player& player = getPlayer();
-    drawBarrier();
-
     try {
-        usleep(100000);
         LOG("Testing inventory...");
         auto add = getFuncProvider("inventory.addItems");
         auto remove = getFuncProvider("inventory.removeItems");
@@ -208,6 +204,10 @@ void gameLoop()
         LOG("It seems that it does not work properly");
     }
 
+    gameStarted = true;
+    Player& player = getPlayer();
+    drawBarrier();
+
     GameObjCube object = graphicsCreateCube();
 
     std::vector<GameObject> staticCubes;
@@ -226,14 +226,9 @@ void gameLoop()
         graphicsAddTexture(cube, tex2);
     }
 
-    auto enemyMesh = graphicsLoadMesh("textures/test_mob.dae");
-    EnemyId enemyId = enemyManager.createEnemy(
-            enemyMesh, graphicsLoadTexture("textures/mobs/test_mob.png"), {60, 60, 60});
-    terrainManager.trackMob(enemyId);
-    Enemy& enemy = enemyManager.mutableAccessEnemy(enemyId);
-    enemy.sceneNode()->setMaterialFlag(EMF_LIGHTING, false);
-    enemy.sceneNode()->setPosition({240, 240, 240});
-    graphicsEnablePhysics(enemy.sceneNode(), {60, 75, 60});
+    getEventManager().addEventHandler("mouse.leftButtonDown", [](const std::unordered_map<std::string, std::string>&) {
+        LOG("Left mouse down");
+    });
 
     int counter = 0;
     double i = 0;
@@ -267,7 +262,6 @@ void gameLoop()
             eachTickFuncs.erase(eachTickFuncs.begin() + i);
         }
         toRemove.clear();
-        enemy.ai();
 
         std::ignore = graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
         object.setPosition(GamePosition(sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20));
