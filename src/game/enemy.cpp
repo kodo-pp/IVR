@@ -13,6 +13,29 @@
 Enemy::Enemy(irr::scene::ISceneNode* _node, const std::string& _kind, EnemyId _id)
         : node(_node), kind(_kind), id(_id)
 {
+    node->grab();
+}
+
+Enemy::Enemy(const Enemy& other)
+        : node(other.node), kind(other.kind), id(other.id), healthLeft(other.healthLeft), healthMax(other.healthMax), movementSpeed(other.movementSpeed)
+{
+    node->grab();
+}
+Enemy::Enemy(Enemy&& other)
+        : node(other.node), kind(other.kind), id(other.id), healthLeft(other.healthLeft), healthMax(other.healthMax), movementSpeed(other.movementSpeed)
+{
+    node->grab();
+}
+Enemy& Enemy::operator=(const Enemy& other)
+{
+    Enemy copy(other);
+    std::swap(*this, copy);
+    return *this;
+}
+Enemy& Enemy::operator=(Enemy&& other)
+{
+    std::swap(*this, other);
+    return *this;
 }
 
 void Enemy::hit(double damage)
@@ -64,13 +87,14 @@ void Enemy::ai()
     double fps = /* getFps(); */ 60.0;
     double tickSpeed = /* getTickSpeed(); */ 10.0;
     int updateEach = static_cast<int>(round(fps / tickSpeed));
+    try {
     if (counter >= updateEach) {
         counter = 0;
         std::string action = enemyManager.getAiFunction(kind)(id);
         std::vector<std::string> parts;
         boost::algorithm::split(parts, action, [](char c) { return c == ' '; });
         if (parts.size() == 0) {
-            return;
+            goto yes_i_use_goto;
         }
         if (parts.at(0) == "jump") {
             if (parts.size() != 2) {
@@ -111,10 +135,18 @@ void Enemy::ai()
     } else {
         ++counter;
     }
+yes_i_use_goto:
+    graphicsStep(node, movementSpeed / fps);
+    } catch (const std::exception& e) {
+        LOG("Exception at Enemy::ai (kind = '" << kind << "')");
+        enemyManager.deferredDeleteEnemy(id);
+        std::rethrow_exception(std::current_exception());
+    }
 }
 
 EnemyId EnemyManager::createEnemy(const std::string& kind, irr::scene::ISceneNode* model)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     ++idCounter;
     enemies.emplace(idCounter, Enemy(model, kind, idCounter));
     creationFunctionsByKind.at(kind)(idCounter);
@@ -123,75 +155,104 @@ EnemyId EnemyManager::createEnemy(const std::string& kind, irr::scene::ISceneNod
 
 void EnemyManager::deleteEnemy(EnemyId id)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     enemies.erase(id);
 }
 
+void EnemyManager::deferredDeleteEnemy(EnemyId id)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    deferredDeleteQueue.emplace_back(id);
+}
+
+
 const Enemy& EnemyManager::accessEnemy(EnemyId id)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     return enemies.at(id);
 }
 Enemy& EnemyManager::mutableAccessEnemy(EnemyId id)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     return enemies.at(id);
 }
 
 EnemyManager enemyManager;
 
-// TODO: переместить в другое место
-FuncResult handlerEachTickWithHandle(const std::vector<std::string>& args)
+FuncResult handlerAddEnemyKind(const std::vector <std::string>& args)
 {
-    if (args.size() != 2) {
-        throw std::logic_error("Invalid number of arguments for handlerEnemySyncDrawable");
-    }
     FuncResult ret;
-    std::string name = getArgument<std::string>(args, 0);
-    uint64_t param = getArgument<uint64_t>(args, 1);
-    eachTickWithParam(name, param);
+    if (args.size() != 3) {
+        throw std::logic_error("Wrong number of arguments for handlerAddEnemyKind()");
+    }
+
+    auto kind = getArgument<std::string>(args, 0);
+    auto creationFunc = getArgument<std::string>(args, 1);
+    auto aiFunc = getArgument<std::string>(args, 2);
+
+    auto creationFp = getFuncProvider(creationFunc);
+    auto aiFp = getFuncProvider(aiFunc);
+
+    enemyManager.addKind(
+        kind,
+        [=](EnemyId id) { creationFp({std::to_string(id)}); },
+        [=](EnemyId id) {
+            auto playerPosition = getPlayer().getPosition();
+            auto enemyPosition = enemyManager.accessEnemy(id).getPosition();
+            return aiFp({
+                std::to_string(id),
+
+                std::to_string(enemyPosition.x),
+                std::to_string(enemyPosition.y),
+                std::to_string(enemyPosition.z),
+
+                std::to_string(playerPosition.x),
+                std::to_string(playerPosition.y),
+                std::to_string(playerPosition.z)
+            }).data.at(0);
+        }
+    );
 
     return ret;
 }
-
-FuncResult handlerEnemyProcessAi(const std::vector<std::string>& args)
+FuncResult handlerAddEnemy(const std::vector <std::string>& args)
 {
-    if (args.size() != 1) {
-        throw std::logic_error("Invalid number of arguments for handlerEnemyProcessAi");
-    }
     FuncResult ret;
-
-    auto instanceHandle = getArgument<uint64_t>(args, 0);
-    auto& instance = getModuleClassInstance(instanceHandle);
-    const auto& moduleClass = getModuleClass(instance.className);
-    const auto& funcProvider = getFuncProvider(moduleClass.methods.at("ai").name);
-    FuncResult result = funcProvider(args);
-    auto action = getArgument<std::string>(result.data, 0);
-
-    std::vector<std::string> split;
-    boost::algorithm::split(split, action, [](char c) { return c == ';'; });
-
-    auto modelHandle = instance.members.at("model").get<uint64_t>();
-    for (const std::string& act : split) {
+    ret.data.resize(1);
+    if (args.size() != 2) {
+        throw std::logic_error("Wrong number of arguments for handlerAddEnemy()");
     }
-    float x, y, z;
-    graphicsGetPosition(drawablesManager.access(modelHandle), x, y, z);
-    instance.members.at("x").set<double>(x);
-    instance.members.at("y").set<double>(y);
-    instance.members.at("z").set<double>(z);
 
+    auto kind = getArgument<std::string>(args, 0);
+    auto drawableHandle = getArgument<uint64_t>(args, 1);
+
+    auto enemyId = enemyManager.createEnemy(
+        kind,
+        drawablesManager.access(drawableHandle)
+    );
+    
+    setReturn(ret, 0, enemyId);
+    return ret;
+}
+FuncResult handlerRemoveEnemy(const std::vector <std::string>& args)
+{
+    FuncResult ret;
+    if (args.size() != 1) {
+        throw std::logic_error("Wrong number of arguments for handlerRemoveEnemy()");
+    }
+
+    auto enemyId = getArgument<uint64_t>(args, 0);
+
+    enemyManager.deleteEnemy(enemyId);
+    
     return ret;
 }
 
 void initializeEnemies()
 {
-    registerFuncProvider(
-            FuncProvider("core.eachTickWithHandle", handlerEachTickWithHandle), "si", "");
-    registerFuncProvider(FuncProvider("enemy.processAi", handlerEnemyProcessAi), "u", "");
-    addModuleClass("graphics.Drawable",
-                   ModuleClass({{"model", {'u'}}}, {}, "graphics.Drawable", ""));
-    addModuleClass("game.Enemy",
-                   ModuleClass({{"x", {'f'}}, {"y", {'f'}}, {"z", {'f'}}, {"hp", {'f'}}},
-                               {{"ai", {"core.class.nop", "ub", "bs"}}},
-                               "game.Enemy",
-                               "graphics.Drawable"));
+    registerFuncProvider(FuncProvider("enemy.addKind", handlerAddEnemyKind), "sss", "");
+    registerFuncProvider(FuncProvider("enemy.add", handlerAddEnemy), "su", "u");
+    registerFuncProvider(FuncProvider("enemy.remove", handlerRemoveEnemy), "su", "");
 }
 
 std::function <std::string(EnemyId)> EnemyManager::getAiFunction(const std::string& kind)
@@ -210,4 +271,25 @@ void EnemyManager::addKind(
     }
     aiFunctionsByKind.emplace(kind, aiFunction);
     creationFunctionsByKind.emplace(kind, creationFunction);
+}
+
+void EnemyManager::processAi()
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    for (auto& [id, enemy] : enemies) {
+        std::ignore = id;
+        enemy.ai();
+    }
+    for (EnemyId enemy : deferredDeleteQueue) {
+        deleteEnemy(enemy);
+    }
+    deferredDeleteQueue.clear();
+}
+
+Enemy::~Enemy()
+{
+    node->drop();
+    if (node->getReferenceCount() == 1) {
+        node->remove();
+    }
 }

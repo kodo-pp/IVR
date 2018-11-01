@@ -321,18 +321,18 @@ FuncResult handlerGraphicsDrawableAddTexture(const std::vector<std::string>& arg
     FuncResult ret;
     std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
 
-    uint64_t objectHandle = getArgument<uint64_t>(args, 0);
+    uint64_t drawableHandle = getArgument<uint64_t>(args, 0);
     uint64_t textureHandle = getArgument<uint64_t>(args, 1);
 
-    auto obj = drawablesManager.access(objectHandle);
+    auto model = drawablesManager.access(drawableHandle);
     ITexture* texture = accessTexture(textureHandle);
 
-    LOG(L"Adding texture " << textureHandle << L" to object " << objectHandle);
-
-    obj->setMaterialTexture(0, texture);
+    LOG("Adding texture " << textureHandle << " to drawable " << drawableHandle);
+    model->setMaterialTexture(0, texture);
 
     return ret;
 }
+
 
 // Создать куб как модель
 scene::ISceneNode* graphicsCreateDrawableCube();
@@ -352,7 +352,26 @@ FuncResult handlerCreateDrawableCube(const std::vector<std::string>& args)
     return ret;
 }
 
-// Внешнее API: включить физику для объекта
+// Внешнее API: создать модель из набора вершин, хранящемся в файле
+FuncResult handlerCreateDrawableFromMeshFile(const std::vector<std::string>& args)
+{
+    if (args.size() != 1) {
+        throw std::logic_error("Wrong number of arguments for handlerCreateDrawableFromMeshFile()");
+    }
+
+    FuncResult ret;
+    ret.data.resize(1);
+
+    auto meshFile = getArgument<std::string>(args, 0);
+
+    LOG("Loading mesh: '" << meshFile << "'");
+    auto mesh = graphicsLoadMesh(meshFile);
+    LOG("Creating a drawable mesh");
+    setReturn<uint64_t>(ret, 0, drawablesManager.track(graphicsCreateMeshSceneNode(mesh)));
+    return ret;
+}
+
+// Внешнее API: включить физику для модели
 FuncResult handlerDrawableEnablePhysics(const std::vector<std::string>& args)
 {
     if (args.size() != 4) {
@@ -372,6 +391,22 @@ FuncResult handlerDrawableEnablePhysics(const std::vector<std::string>& args)
     return ret;
 }
 
+// Внешнее API: отключить физику для модели
+FuncResult handlerDrawableDisablePhysics(const std::vector<std::string>& args)
+{
+    if (args.size() != 1) {
+        throw std::logic_error("Wrong number of arguments for handlerDrawableDisablePhysics()");
+    }
+
+    auto drawableHandle = getArgument<uint64_t>(args, 0);
+    auto drawable = drawablesManager.access(drawableHandle);
+
+    graphicsDisablePhysics(drawable);
+
+    FuncResult ret;
+    return ret;
+}
+
 FuncResult handlerAdd2DRectangle(const std::vector<std::string>& args)
 {
     if (args.size() != 8) {
@@ -379,11 +414,6 @@ FuncResult handlerAdd2DRectangle(const std::vector<std::string>& args)
     }
     FuncResult ret;
     ret.data.resize(1);
-
-    LOG("Args:");
-    for (const auto& i : args) {
-        LOG("  " << i);
-    }
 
     auto x1 = getArgument<float>(args, 0);
     auto y1 = getArgument<float>(args, 1);
@@ -700,8 +730,14 @@ static inline void initializeGraphicsFuncProviders()
     registerFuncProvider(
             FuncProvider("graphics.drawable.createCube", handlerCreateDrawableCube), "", "u");
     registerFuncProvider(
+            FuncProvider("graphics.drawable.createFromMeshFile", handlerCreateDrawableFromMeshFile), "s", "u");
+    registerFuncProvider(
             FuncProvider("graphics.drawable.enablePhysics", handlerDrawableEnablePhysics),
             "ufff",
+            "");
+    registerFuncProvider(
+            FuncProvider("graphics.drawable.disablePhysics", handlerDrawableDisablePhysics),
+            "u",
             "");
     registerFuncProvider(
             FuncProvider("graphics.2d.addRectangle", handlerAdd2DRectangle), "ffffiiii", "u");

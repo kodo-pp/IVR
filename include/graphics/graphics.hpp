@@ -25,7 +25,6 @@ void drawBarrier();
 void initializeGraphics(std::vector<std::string>&);
 
 /// Stop graphical engine and free related resources
-/// Should be called once when the game is exited
 void cleanupGraphics();
 
 // ===== Managing objects =====

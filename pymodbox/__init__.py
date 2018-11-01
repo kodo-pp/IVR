@@ -202,6 +202,11 @@ class Modcat(Netcat):
                     self.logger.log('Exception at module function:')
                     traceback.print_exc()
                     self.write_str(1)
+                    if self.logger.exit_on_callback_errors:
+                        self.logger.log('Bye-bye')
+                        self.logger.nc.close()
+                        self.logger.rnc.close()
+                        os._exit(1)
                     continue
 
                 # Exit code is 0
@@ -239,6 +244,8 @@ class Module:
         self.module_name = module_name
         self.VERBOSE = True
         self.VERY_VERBOSE = False
+        self.exit_on_callback_errors = False
+
         self.call_lock = Lock()
 
         self.main_port, self.reverse_port = self.portinfo(sys.argv)

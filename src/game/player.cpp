@@ -56,6 +56,9 @@ void Player::turn(double dx, double dy)
     // camera->updateAbsolutePosition();
     // auto currentRotation = camera->getRotation();
     if (!checkCameraVerticalOverrotation(rotation + irr::core::vector3df(dx, dy, 0))) {
+        camera->updateAbsolutePosition();
+        camera->setRotation(rotation);
+        camera->updateAbsolutePosition();
         return;
     }
     rotation += irr::core::vector3df(dx, dy, 0);

@@ -20,12 +20,12 @@ class Enemy
 {
 public:
     Enemy(irr::scene::ISceneNode* _node, const std::string& _kind, EnemyId _id);
-    Enemy(const Enemy& other) = default;
-    Enemy(Enemy&& other) = default;
-    virtual ~Enemy() = default;
+    Enemy(const Enemy& other);
+    Enemy(Enemy&& other);
+    virtual ~Enemy();
 
-    Enemy& operator=(const Enemy& other) = default;
-    Enemy& operator=(Enemy&& other) = default;
+    Enemy& operator=(const Enemy& other);
+    Enemy& operator=(Enemy&& other);
 
     virtual void hit(double damage);
 
@@ -49,7 +49,7 @@ public:
 protected:
     EnemyId id;
     std::string kind;
-    double movementSpeed;
+    double movementSpeed = 0.0;
     double healthLeft;
     double healthMax;
     irr::scene::ISceneNode* node;
@@ -68,6 +68,7 @@ public:
 
     EnemyId createEnemy(const std::string& kind, irr::scene::ISceneNode* model);
     void deleteEnemy(EnemyId id);
+    void deferredDeleteEnemy(EnemyId id);
     const Enemy& accessEnemy(EnemyId id);
     Enemy& mutableAccessEnemy(EnemyId id);
 
@@ -78,11 +79,14 @@ public:
     );
     std::function<std::string(EnemyId)> getAiFunction(const std::string& kind);
 
+    void processAi();
+
 private:
     mutable std::recursive_mutex mutex;
     std::unordered_map<std::string, std::function<std::string(EnemyId)>> aiFunctionsByKind;
     std::unordered_map<std::string, std::function<void(EnemyId)>> creationFunctionsByKind;
     std::unordered_map<EnemyId, Enemy> enemies;
+    std::vector<EnemyId> deferredDeleteQueue;
     EnemyId idCounter = 0;
 };
 

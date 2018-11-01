@@ -126,8 +126,10 @@ std::vector<std::string> ModuleWorker::runModuleFunc(const std::string& command,
         return result;
     } catch (const std::exception& e) {
         LOG("Exception happened at ModuleWorker::runModuleFunc(): " << wstring_cast(e.what()));
+        close(module.getMainSocket());
+        close(module.getReverseSocket());
         logStackTrace();
-        throw e;
+        std::rethrow_exception(std::current_exception());
     }
 }
 
