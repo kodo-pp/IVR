@@ -265,4 +265,10 @@ irr::core::position2di graphicsViewportize(const irr::core::position2df& rect);
 
 irr::core::recti graphicsGetViewport();
 
+void addSelectorKind(const std::string& kind);
+void removeSelectorKind(const std::string& kind);
+void addSubSelector(const std::string& kind, irr::scene::ITriangleSelector* selector);
+void removeSubSelector(const std::string& kind, irr::scene::ITriangleSelector* selector);
+std::optional<irr::core::vector3df> getRayIntersect(const irr::core::vector3df& origin, const irr::core::vector3df& end, const std::string& kind);
+
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */
