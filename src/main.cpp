@@ -20,6 +20,7 @@
 #include <modbox/net/net.hpp>
 #include <modbox/util/handle_storage.hpp>
 #include <modbox/util/util.hpp>
+#include <modbox/world/world.hpp>
 
 #include <signal.h>
 #include <sys/types.h>
@@ -43,12 +44,15 @@ int main(int argc, char** argv)
             if (!maybeResult.has_value()) {
                 return;
             } else {
-                auto [name, modules, buildMode] = *maybeResult;
-                LOG("name = " << name);
-                LOG("modules.size() = " << modules.size());
-                LOG("buildMode = " << buildMode);
+                try {
+                    auto [name, modules, buildMode] = *maybeResult;
+                    LOG("Creating world '" << name << "'");
+                    createWorld(name, modules, buildMode);
+                } catch (const std::runtime_error& e) {
+                    LOG("Error while creating world: " << e.what());
+                    return;
+                }
             }
-            LOG("I am a duck");
         };
         auto loadWorldFunc = []() {
             // Not implemented
