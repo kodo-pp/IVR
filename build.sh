@@ -139,7 +139,7 @@ function dump_command() {
 }
 
 # Flags for C and C++ compilers
-FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -DFORTIFY_SOURCE -pipe"
+FLAGS="-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-result -DFORTIFY_SOURCE -pipe -Wno-reorder"
 if [[ "${CC_TOOLCHAIN}" == "clang" ]]; then
     FLAGS+=' -Wno-nested-anon-types'
 fi

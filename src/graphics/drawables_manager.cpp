@@ -14,6 +14,16 @@ uint64_t DrawablesManager::track(irr::scene::ISceneNode* drawable)
     return drawables.insert(drawable);
 }
 
+std::optional<uint64_t> DrawablesManager::reverseLookup(irr::scene::ISceneNode* drawable)
+{
+    for (auto& [handle, value] : drawables) {
+        if (value == drawable) {
+            return handle;
+        }
+    }
+    return {};
+}
+
 void DrawablesManager::forget(uint64_t handle)
 {
     drawables.remove(handle);

@@ -102,6 +102,7 @@ void Player::hit(double damage)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
     healthLeft = std::max(0.0, healthLeft - damage);
+    LOG("Player was attacked! health left: " << healthLeft);
     getEventManager().raiseEvent(
         "player.health.change",
         {

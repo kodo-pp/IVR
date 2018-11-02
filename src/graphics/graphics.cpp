@@ -635,7 +635,7 @@ FuncResult handlerGraphicsRemoveSubSelector(const std::vector <std::string>& arg
     std::lock_guard <std::recursive_mutex> lock(selectorMutex);
     FuncResult ret;
     if (args.size() != 2) {
-        throw std::logic_error("Invalid number of arguments for handlerGraphicsAddSubSelectorForDrawable()");
+        throw std::logic_error("Invalid number of arguments for handlerGraphicsRemoveSubSelector()");
     }
 
     auto kind = getArgument<std::string>(args, 0);
@@ -650,7 +650,7 @@ FuncResult handlerGraphicsGetRayIntersection(const std::vector <std::string>& ar
     std::lock_guard <std::recursive_mutex> lock(selectorMutex);
     FuncResult ret;
     if (args.size() != 7) {
-        throw std::logic_error("Invalid number of arguments for handlerGraphicsAddSubSelectorForDrawable()");
+        throw std::logic_error("Invalid number of arguments for handlerGraphicsGetRayIntersection()");
     }
 
     ret.data.resize(4);
@@ -666,9 +666,9 @@ FuncResult handlerGraphicsGetRayIntersection(const std::vector <std::string>& ar
     auto result = getRayIntersect({x1, y1, z1}, {x2, y2, z2}, kind);
     if (result.has_value()) {
         setReturn(ret, 0, 1);
-        setReturn(ret, 1, result->X);
-        setReturn(ret, 2, result->Y);
-        setReturn(ret, 3, result->Z);
+        setReturn(ret, 1, result->first.X);
+        setReturn(ret, 2, result->first.Y);
+        setReturn(ret, 3, result->first.Z);
     } else {
         setReturn(ret, 0, 0);
         setReturn(ret, 1, 0.0);
@@ -678,38 +678,85 @@ FuncResult handlerGraphicsGetRayIntersection(const std::vector <std::string>& ar
 
     return ret;
 }
-FuncResult handlerGraphicsGetCameraRayIntersection(const std::vector <std::string>& args)
+
+FuncResult handlerGraphicsGetCameraTarget(const std::vector <std::string>& args)
 {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
     FuncResult ret;
-    if (args.size() != 2) {
-        throw std::logic_error("Invalid number of arguments for handlerGraphicsAddSubSelectorForDrawable()");
+    if (args.size() != 1) {
+        throw std::logic_error("Invalid number of arguments for handlerGraphicsGetCameraTarget()");
     }
 
-    ret.data.resize(4);
-
-    auto kind = getArgument<std::string>(args, 0);
-    auto len = getArgument<float>(args, 1);
+    ret.data.resize(3);
+    auto len = getArgument<float>(args, 0);
     auto cameraPosition = graphics::camera->getPosition();
     auto cameraTarget = graphics::camera->getTarget();
     auto targetPosition = cameraPosition + (cameraTarget - cameraPosition).normalize() * len;
-
-    auto result = getRayIntersect(cameraPosition, targetPosition, kind);
-    if (result.has_value()) {
-        setReturn(ret, 0, 1);
-        setReturn(ret, 1, result->X);
-        setReturn(ret, 2, result->Y);
-        setReturn(ret, 3, result->Z);
-    } else {
-        setReturn(ret, 0, 0);
-        setReturn(ret, 1, 0.0);
-        setReturn(ret, 2, 0.0);
-        setReturn(ret, 3, 0.0);
-    }
-
+    setReturn(ret, 0, targetPosition.X);
+    setReturn(ret, 1, targetPosition.Y);
+    setReturn(ret, 2, targetPosition.Z);
     return ret;
 }
 
+FuncResult handlerGraphicsGetRayIntersectionDrawable(const std::vector <std::string>& args)
+{
+    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    FuncResult ret;
+    if (args.size() != 7) {
+        throw std::logic_error("Invalid number of arguments for handlerGraphicsGetRayIntersectionDrawable()");
+    }
+
+    ret.data.resize(2);
+
+    auto kind = getArgument<std::string>(args, 0);
+    auto x1 = getArgument<float>(args, 1);
+    auto y1 = getArgument<float>(args, 2);
+    auto z1 = getArgument<float>(args, 3);
+    auto x2 = getArgument<float>(args, 4);
+    auto y2 = getArgument<float>(args, 5);
+    auto z2 = getArgument<float>(args, 6);
+
+    auto result = getRayIntersect({x1, y1, z1}, {x2, y2, z2}, kind);
+    if (result.has_value()) {
+        if (auto maybeHandle = drawablesManager.reverseLookup(result->second); maybeHandle.has_value()) {
+            setReturn(ret, 0, 1);
+            setReturn(ret, 1, *maybeHandle);
+            return ret;
+        }
+    }
+    setReturn(ret, 0, 0);
+    setReturn(ret, 1, 0);
+    return ret;
+}
+FuncResult handlerGraphicsGetRayIntersectionEnemy(const std::vector <std::string>& args)
+{
+    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    FuncResult ret;
+    if (args.size() != 7) {
+        throw std::logic_error("Invalid number of arguments for handlerGraphicsGetRayIntersectionEnemy()");
+    }
+
+    ret.data.resize(2);
+
+    auto kind = getArgument<std::string>(args, 0);
+    auto x1 = getArgument<float>(args, 1);
+    auto y1 = getArgument<float>(args, 2);
+    auto z1 = getArgument<float>(args, 3);
+    auto x2 = getArgument<float>(args, 4);
+    auto y2 = getArgument<float>(args, 5);
+    auto z2 = getArgument<float>(args, 6);
+
+    auto result = getRayIntersect({x1, y1, z1}, {x2, y2, z2}, kind);
+    if (result.has_value()) {
+        if (auto maybeHandle = enemyManager.reverseLookup(result->second); maybeHandle.has_value()) {
+            setReturn(ret, 0, 1);
+            setReturn(ret, 1, *maybeHandle);
+            return ret;
+        }
+    }
+    setReturn(ret, 0, 0);
+    setReturn(ret, 1, 0);
+    return ret;
+}
 // Инициализация внешнего API
 static inline void initializeGraphicsFuncProviders()
 {
@@ -761,7 +808,8 @@ static inline void initializeGraphicsFuncProviders()
     registerFuncProvider(FuncProvider("selector.addForDrawable", handlerGraphicsAddSubSelectorForDrawable), "su", "u");
     registerFuncProvider(FuncProvider("selector.remove", handlerGraphicsRemoveSubSelector), "su", "");
     registerFuncProvider(FuncProvider("selector.rayIntersect", handlerGraphicsGetRayIntersection), "sffffff", "ifff");
-    registerFuncProvider(FuncProvider("selector.cameraRayIntersect", handlerGraphicsGetCameraRayIntersection), "sf", "ifff");
+    registerFuncProvider(FuncProvider("selector.rayIntersectDrawable", handlerGraphicsGetRayIntersectionDrawable), "sffffff", "iu");
+    registerFuncProvider(FuncProvider("selector.rayIntersectEnemy", handlerGraphicsGetRayIntersectionEnemy), "sffffff", "iu");
 }
 
 // Освобождение ресурсов
@@ -1505,7 +1553,7 @@ void removeSubSelector(const std::string& kind, irr::scene::ITriangleSelector* s
     graphics::selectorKinds.at(kind)->removeTriangleSelector(selector);
 }
 
-std::optional<irr::core::vector3df> getRayIntersect(const irr::core::vector3df& origin, const irr::core::vector3df& end, const std::string& kind) {
+std::optional<std::pair <irr::core::vector3df, irr::scene::ISceneNode*>> getRayIntersect(const irr::core::vector3df& origin, const irr::core::vector3df& end, const std::string& kind) {
     std::lock_guard <std::recursive_mutex> lock(selectorMutex);
     core::line3df ray;
     ray.start = origin;
@@ -1514,16 +1562,35 @@ std::optional<irr::core::vector3df> getRayIntersect(const irr::core::vector3df& 
     auto collisionManager = graphics::irrSceneManager->getSceneCollisionManager();
 
     core::vector3df hitPoint;
-    UNUSED core::triangle3df dummy1;
-    UNUSED scene::ISceneNode* dummy2;
+    UNUSED core::triangle3df dummy;
+    irr::scene::ISceneNode* affectedSceneNode;
 
     bool collisionHappened = collisionManager->getCollisionPoint(
             ray,                    
             graphics::selectorKinds.at(kind),
             hitPoint,
-            dummy1,
-            dummy2 
+            dummy,
+            affectedSceneNode
     );
 
-    return collisionHappened ? hitPoint : std::optional<irr::core::vector3df>();
+    if (collisionHappened) {
+        return {{hitPoint, affectedSceneNode}};
+    }
+    return {};
+}
+
+irr::scene::ITriangleSelector* graphicsCreateTriangleSelector(irr::scene::ISceneNode* node)
+{
+    auto selector = graphics::irrSceneManager->createTriangleSelectorFromBoundingBox(node);
+    if (selector == nullptr) {
+        throw std::runtime_error("Unable to create triangle selector");
+    }
+    return selector;
+}
+
+irr::core::vector3df getCameraTarget(float len)
+{
+    auto cameraPosition = graphics::camera->getPosition();
+    auto cameraTarget = graphics::camera->getTarget();
+    return cameraPosition + (cameraTarget - cameraPosition).normalize() * len;
 }

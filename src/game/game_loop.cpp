@@ -186,6 +186,7 @@ void gameLoop()
     GameObjCube object = graphicsCreateCube();
 
     std::vector<GameObject> staticCubes;
+    addSelectorKind("enemies");
 
     for (int i = 0; i < 10; ++i) {
         for (int j = 0; j < 2; ++j) {
@@ -202,6 +203,13 @@ void gameLoop()
     }
 
     getEventManager().addEventHandler("mouse.leftButtonDown", [](const std::unordered_map<std::string, std::string>&) {
+        auto maybeValue = getRayIntersect(getPlayer().getPosition().toIrrVector3df(), getCameraTarget(700), "enemies"); // XXX: configure this number
+        if (maybeValue.has_value()) {
+            auto& [point, drawable] = *maybeValue;
+            if (auto maybeEnemyId = enemyManager.reverseLookup(drawable); maybeEnemyId.has_value()) {
+                enemyManager.mutableAccessEnemy(*maybeEnemyId).hit(0.1);
+            }
+        }
         LOG("Left mouse down");
     });
 

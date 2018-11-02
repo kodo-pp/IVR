@@ -53,6 +53,7 @@ protected:
     double healthLeft;
     double healthMax;
     irr::scene::ISceneNode* node;
+    irr::scene::ITriangleSelector* selector;
 };
 
 class EnemyManager
@@ -71,11 +72,13 @@ public:
     void deferredDeleteEnemy(EnemyId id);
     const Enemy& accessEnemy(EnemyId id);
     Enemy& mutableAccessEnemy(EnemyId id);
+    std::optional<EnemyId> reverseLookup(irr::scene::ISceneNode* drawable);
 
     void addKind(
         const std::string& kind,
         const std::function <void(EnemyId)>& creationFunction,
-        const std::function <std::string(EnemyId)>& aiFunction
+        const std::function <std::string(EnemyId)>& aiFunction,
+        double healthMax
     );
     std::function<std::string(EnemyId)> getAiFunction(const std::string& kind);
 
@@ -86,6 +89,7 @@ private:
     std::unordered_map<std::string, std::function<std::string(EnemyId)>> aiFunctionsByKind;
     std::unordered_map<std::string, std::function<void(EnemyId)>> creationFunctionsByKind;
     std::unordered_map<EnemyId, Enemy> enemies;
+    std::unordered_map<std::string, double> healthMaximumsByKind;
     std::vector<EnemyId> deferredDeleteQueue;
     EnemyId idCounter = 0;
 };

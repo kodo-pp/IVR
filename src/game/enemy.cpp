@@ -13,6 +13,8 @@
 Enemy::Enemy(irr::scene::ISceneNode* _node, const std::string& _kind, EnemyId _id)
         : node(_node), kind(_kind), id(_id)
 {
+    selector = graphicsCreateTriangleSelector(node);
+    addSubSelector("enemies", selector);
     node->grab();
 }
 
@@ -20,11 +22,13 @@ Enemy::Enemy(const Enemy& other)
         : node(other.node), kind(other.kind), id(other.id), healthLeft(other.healthLeft), healthMax(other.healthMax), movementSpeed(other.movementSpeed)
 {
     node->grab();
+    selector->grab();
 }
 Enemy::Enemy(Enemy&& other)
         : node(other.node), kind(other.kind), id(other.id), healthLeft(other.healthLeft), healthMax(other.healthMax), movementSpeed(other.movementSpeed)
 {
     node->grab();
+    selector->grab();
 }
 Enemy& Enemy::operator=(const Enemy& other)
 {
@@ -115,6 +119,8 @@ void Enemy::ai()
                 throw std::runtime_error("Invalid number of arguments for 'setSpeed' action");
             }
             movementSpeed = boost::lexical_cast<double>(parts.at(1));
+        } else if (parts.at(0) == "pass") {
+            // Do nothing
         } else if (parts.at(0) == "attackPlayer") {
             if (parts.size() != 3) {
                 throw std::runtime_error("Invalid number of arguments for 'attackPlayer' action");
@@ -149,6 +155,7 @@ EnemyId EnemyManager::createEnemy(const std::string& kind, irr::scene::ISceneNod
     std::lock_guard<std::recursive_mutex> lock(mutex);
     ++idCounter;
     enemies.emplace(idCounter, Enemy(model, kind, idCounter));
+    enemies.at(idCounter).setHealthMax(healthMaximumsByKind.at(kind));
     creationFunctionsByKind.at(kind)(idCounter);
     return idCounter;
 }
@@ -182,13 +189,14 @@ EnemyManager enemyManager;
 FuncResult handlerAddEnemyKind(const std::vector <std::string>& args)
 {
     FuncResult ret;
-    if (args.size() != 3) {
+    if (args.size() != 4) {
         throw std::logic_error("Wrong number of arguments for handlerAddEnemyKind()");
     }
 
     auto kind = getArgument<std::string>(args, 0);
     auto creationFunc = getArgument<std::string>(args, 1);
     auto aiFunc = getArgument<std::string>(args, 2);
+    auto healthMax = getArgument<double>(args, 3);
 
     auto creationFp = getFuncProvider(creationFunc);
     auto aiFp = getFuncProvider(aiFunc);
@@ -210,7 +218,8 @@ FuncResult handlerAddEnemyKind(const std::vector <std::string>& args)
                 std::to_string(playerPosition.y),
                 std::to_string(playerPosition.z)
             }).data.at(0);
-        }
+        },
+        healthMax
     );
 
     return ret;
@@ -250,7 +259,7 @@ FuncResult handlerRemoveEnemy(const std::vector <std::string>& args)
 
 void initializeEnemies()
 {
-    registerFuncProvider(FuncProvider("enemy.addKind", handlerAddEnemyKind), "sss", "");
+    registerFuncProvider(FuncProvider("enemy.addKind", handlerAddEnemyKind), "sssf", "");
     registerFuncProvider(FuncProvider("enemy.add", handlerAddEnemy), "su", "u");
     registerFuncProvider(FuncProvider("enemy.remove", handlerRemoveEnemy), "su", "");
 }
@@ -263,7 +272,8 @@ std::function <std::string(EnemyId)> EnemyManager::getAiFunction(const std::stri
 void EnemyManager::addKind(
     const std::string& kind,
     const std::function <void(EnemyId)>& creationFunction,
-    const std::function <std::string(EnemyId)>& aiFunction
+    const std::function <std::string(EnemyId)>& aiFunction,
+    double healthMax
 ) {
     std::lock_guard <std::recursive_mutex> lock(mutex);
     if (aiFunctionsByKind.count(kind) > 0) {
@@ -271,6 +281,7 @@ void EnemyManager::addKind(
     }
     aiFunctionsByKind.emplace(kind, aiFunction);
     creationFunctionsByKind.emplace(kind, creationFunction);
+    healthMaximumsByKind.emplace(kind, healthMax);
 }
 
 void EnemyManager::processAi()
@@ -288,8 +299,23 @@ void EnemyManager::processAi()
 
 Enemy::~Enemy()
 {
+    selector->drop();
+    if (selector->getReferenceCount() == 1) {
+        removeSubSelector("enemies", selector);
+    }
     node->drop();
     if (node->getReferenceCount() == 1) {
         node->remove();
     }
+}
+
+std::optional<EnemyId> EnemyManager::reverseLookup(irr::scene::ISceneNode* drawable)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    for (auto [id, enemy] : enemies) {
+        if (enemy.sceneNode() == drawable) {
+            return id;
+        }
+    }
+    return {};
 }

@@ -182,6 +182,7 @@ public:
 
     irr::scene::ISceneNode* access(uint64_t handle);
     uint64_t track(irr::scene::ISceneNode* drawable);
+    std::optional<uint64_t> reverseLookup(irr::scene::ISceneNode* drawable);
     void forget(uint64_t handle);
 
 private:
@@ -268,6 +269,10 @@ void addSelectorKind(const std::string& kind);
 void removeSelectorKind(const std::string& kind);
 void addSubSelector(const std::string& kind, irr::scene::ITriangleSelector* selector);
 void removeSubSelector(const std::string& kind, irr::scene::ITriangleSelector* selector);
-std::optional<irr::core::vector3df> getRayIntersect(const irr::core::vector3df& origin, const irr::core::vector3df& end, const std::string& kind);
+std::optional<std::pair<irr::core::vector3df, irr::scene::ISceneNode*>> getRayIntersect(const irr::core::vector3df& origin, const irr::core::vector3df& end, const std::string& kind);
+
+irr::core::vector3df getCameraTarget(float len);
+
+irr::scene::ITriangleSelector* graphicsCreateTriangleSelector(irr::scene::ISceneNode* node);
 
 #endif /* end of include guard: GRAPHICS_GRAPHICS_HPP */
