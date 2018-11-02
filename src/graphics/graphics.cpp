@@ -757,6 +757,25 @@ FuncResult handlerGraphicsGetRayIntersectionEnemy(const std::vector <std::string
     setReturn(ret, 1, 0);
     return ret;
 }
+
+FuncResult handlerGraphicsScaleDrawable(const std::vector <std::string>& args)
+{
+    std::lock_guard <std::recursive_mutex> lock(irrlichtMutex);
+    FuncResult ret;
+    if (args.size() != 4) {
+        throw std::logic_error("Invalid number of arguments for handlerGraphicsScaleDrawable()");
+    }
+
+    auto drawableHandle = getArgument<uint64_t>(args, 0);
+    auto scaleX = getArgument<float>(args, 1);
+    auto scaleY = getArgument<float>(args, 2);
+    auto scaleZ = getArgument<float>(args, 3);
+
+    drawablesManager.access(drawableHandle)->setScale({scaleX, scaleY, scaleZ});
+
+    return ret;
+}
+
 // Инициализация внешнего API
 static inline void initializeGraphicsFuncProviders()
 {
@@ -785,6 +804,10 @@ static inline void initializeGraphicsFuncProviders()
     registerFuncProvider(
             FuncProvider("graphics.drawable.disablePhysics", handlerDrawableDisablePhysics),
             "u",
+            "");
+    registerFuncProvider(
+            FuncProvider("graphics.drawable.setScale", handlerGraphicsScaleDrawable),
+            "ufff",
             "");
     registerFuncProvider(
             FuncProvider("graphics.2d.addRectangle", handlerAdd2DRectangle), "ffffiiii", "u");

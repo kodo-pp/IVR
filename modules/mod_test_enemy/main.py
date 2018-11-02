@@ -22,13 +22,13 @@ def test_enemy_ai(module, handle, x, y, z, player_x, player_y, player_z):
     counter += 1
 
     global last_player_attack, attack_max_each
-    if (player_x - x) ** 2 + (player_z - z) ** 2 < 100 and time.time() - last_player_attack >= attack_max_each:
+    if counter % 4 == 0 and time.time() - last_player_attack >= attack_max_each:
         last_player_attack = time.time()
-        return ['attackPlayer 30000 0.1']
-    if counter % 3 == 0:
+        return ['attackPlayer 100 0.1']
+    elif counter % 4 == 1:
         return ['jump 10']
-    elif counter % 3 == 1:
-        return ['setSpeed 30']
+    elif counter % 4 == 2:
+        return ['setSpeed 50']
     else:
         return ['lookAt {} {} {}'.format(player_x, player_y, player_z)]
 
@@ -38,10 +38,10 @@ def main():
     module.register_func_provider(test_enemy_creation, 'testEnemy.creation', 'u', '')
     module.register_func_provider(test_enemy_ai, 'testEnemy.ai', 'uffffff', 's')
     module.ready()
-    module.invoke('enemy.addKind', ['testEnemy', 'testEnemy.creation', 'testEnemy.ai'], 'sssf', '')
-
+    module.invoke('enemy.addKind', ['testEnemy', 'testEnemy.creation', 'testEnemy.ai', 3.0], 'sssf', '')
     [drawable_handle] = module.invoke('graphics.drawable.createCube', [], '', 'u')
-    module.invoke('graphics.drawable.enablePhysics', [drawable_handle, 1, 1, 1], 'ufff', '')
+    module.invoke('graphics.drawable.setScale', [drawable_handle, 5, 5, 5], 'ufff', '')
+    module.invoke('graphics.drawable.enablePhysics', [drawable_handle, 5, 5, 5], 'ufff', '')
     [enemy_handle] = module.invoke('enemy.add', ['testEnemy', drawable_handle], 'su', 'u')
 
     while True:

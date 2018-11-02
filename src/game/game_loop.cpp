@@ -207,7 +207,7 @@ void gameLoop()
         if (maybeValue.has_value()) {
             auto& [point, drawable] = *maybeValue;
             if (auto maybeEnemyId = enemyManager.reverseLookup(drawable); maybeEnemyId.has_value()) {
-                enemyManager.mutableAccessEnemy(*maybeEnemyId).hit(0.1);
+                enemyManager.mutableAccessEnemy(*maybeEnemyId).hit(1.0);
             }
         }
         LOG("Left mouse down");

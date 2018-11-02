@@ -15,17 +15,18 @@ Enemy::Enemy(irr::scene::ISceneNode* _node, const std::string& _kind, EnemyId _i
 {
     selector = graphicsCreateTriangleSelector(node);
     addSubSelector("enemies", selector);
+    selector->grab();
     node->grab();
 }
 
 Enemy::Enemy(const Enemy& other)
-        : node(other.node), kind(other.kind), id(other.id), healthLeft(other.healthLeft), healthMax(other.healthMax), movementSpeed(other.movementSpeed)
+        : node(other.node), kind(other.kind), id(other.id), healthLeft(other.healthLeft), healthMax(other.healthMax), movementSpeed(other.movementSpeed), selector(other.selector)
 {
     node->grab();
     selector->grab();
 }
 Enemy::Enemy(Enemy&& other)
-        : node(other.node), kind(other.kind), id(other.id), healthLeft(other.healthLeft), healthMax(other.healthMax), movementSpeed(other.movementSpeed)
+        : node(other.node), kind(other.kind), id(other.id), healthLeft(other.healthLeft), healthMax(other.healthMax), movementSpeed(other.movementSpeed), selector(other.selector)
 {
     node->grab();
     selector->grab();
@@ -45,6 +46,7 @@ Enemy& Enemy::operator=(Enemy&& other)
 void Enemy::hit(double damage)
 {
     healthLeft -= damage;
+    LOG("Enemy was hit! health left: " << healthLeft);
 }
 
 double Enemy::getHealthLeft() const
@@ -156,6 +158,7 @@ EnemyId EnemyManager::createEnemy(const std::string& kind, irr::scene::ISceneNod
     ++idCounter;
     enemies.emplace(idCounter, Enemy(model, kind, idCounter));
     enemies.at(idCounter).setHealthMax(healthMaximumsByKind.at(kind));
+    enemies.at(idCounter).setHealthLeft(healthMaximumsByKind.at(kind));
     creationFunctionsByKind.at(kind)(idCounter);
     return idCounter;
 }
@@ -288,8 +291,12 @@ void EnemyManager::processAi()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
     for (auto& [id, enemy] : enemies) {
-        std::ignore = id;
-        enemy.ai();
+        if (enemy.isDead()) {
+            LOG("Enemy is dead");
+            deferredDeleteQueue.emplace_back(id);
+        } else {
+            enemy.ai();
+        }
     }
     for (EnemyId enemy : deferredDeleteQueue) {
         deleteEnemy(enemy);
@@ -300,7 +307,7 @@ void EnemyManager::processAi()
 Enemy::~Enemy()
 {
     selector->drop();
-    if (selector->getReferenceCount() == 1) {
+    if (selector->getReferenceCount() == 2) {
         removeSubSelector("enemies", selector);
     }
     node->drop();
