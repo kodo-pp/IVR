@@ -162,15 +162,31 @@ void gameLoop()
 
     addSelectorKind("enemies");
 
+    getFuncProvider("inventory.addItems")({"literally nothing", "10"});
+    getFuncProvider("inventory.addItems")({"[melee] sword", "1"});
+
     getEventManager().addEventHandler("mouse.leftButtonDown", [](const std::unordered_map<std::string, std::string>&) {
-        auto maybeValue = getRayIntersect(getPlayer().getPosition().toIrrVector3df(), getCameraTarget(700), "enemies"); // XXX: configure this number
-        if (maybeValue.has_value()) {
-            auto& [point, drawable] = *maybeValue;
-            if (auto maybeEnemyId = enemyManager.reverseLookup(drawable); maybeEnemyId.has_value()) {
-                enemyManager.mutableAccessEnemy(*maybeEnemyId).hit(1.0);
+        auto currentItem = getFuncProvider("inventory.getCurrentCellItem")({}).data.at(0);
+        getEventManager().raiseEvent("use.l", {{"item", currentItem}});
+        LOG("Left mouse down");
+    });
+
+    getEventManager().addEventHandler("mouse.middleButtonDown", [](const std::unordered_map<std::string, std::string>&) {
+        getFuncProvider("inventory.shiftCurrentCell")({"1"});
+        LOG("Shifting inventory");
+    });
+
+    // TODO: перенести в модуль
+    getEventManager().addEventHandler("use.l", [](const std::unordered_map<std::string, std::string>& args) {
+        if (args.at("item").find("[melee]") != std::string::npos) {
+            auto maybeValue = getRayIntersect(getPlayer().getPosition().toIrrVector3df(), getCameraTarget(700), "enemies"); // XXX: configure this number
+            if (maybeValue.has_value()) {
+                auto& [point, drawable] = *maybeValue;
+                if (auto maybeEnemyId = enemyManager.reverseLookup(drawable); maybeEnemyId.has_value()) {
+                    enemyManager.mutableAccessEnemy(*maybeEnemyId).hit(1.0);
+                }
             }
         }
-        LOG("Left mouse down");
     });
 
     int counter = 0;

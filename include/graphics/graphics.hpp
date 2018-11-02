@@ -52,6 +52,7 @@ void graphicsGetPosition(scene::ISceneNode* node, float& x, float& y, float& z);
 uint64_t graphicsAdd2DRectangle(const irr::core::rectf& rect, const irr::video::SColor& color);
 uint64_t graphicsAdd2DLine(const irr::core::line2df& line, const irr::video::SColor& color);
 uint64_t graphicsAdd2DImage(const irr::core::rectf& rect, irr::video::ITexture* texture);
+uint64_t graphicsAdd2DText(const irr::core::rectf& rect, const std::string& text);
 
 void graphicsModify2DRectangle(uint64_t handle,
                                const irr::core::rectf& rect,
@@ -62,10 +63,14 @@ void graphicsModify2DLine(uint64_t handle,
 void graphicsModify2DImage(uint64_t handle,
                            const irr::core::rectf& rect,
                            irr::video::ITexture* texture);
+void graphicsModify2DText(uint64_t handle,
+                           const irr::core::rectf& rect,
+                           const std::string& text);
 
 void graphicsRemove2DRectangle(uint64_t handle);
 void graphicsRemove2DLine(uint64_t handle);
 void graphicsRemove2DImage(uint64_t handle);
+void graphicsRemove2DText(uint64_t handle);
 
 // ===== Managing textures =====
 

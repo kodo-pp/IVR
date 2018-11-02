@@ -49,6 +49,7 @@ namespace graphics
     HandleStorage<uint64_t, std::pair<irr::core::rectf, irr::video::SColor>> rectangles;
     HandleStorage<uint64_t, std::pair<irr::core::line2df, irr::video::SColor>> lines;
     HandleStorage<uint64_t, std::pair<irr::core::rectf, irr::video::ITexture*>> images;
+    HandleStorage<uint64_t, std::pair<irr::core::rectf, std::string>> texts;
     std::unordered_map<std::string, irr::scene::IMetaTriangleSelector*> selectorKinds;
     HandleStorage <uint64_t, irr::scene::ITriangleSelector*> selectors;
 } // namespace graphics
@@ -452,6 +453,25 @@ FuncResult handlerAdd2DImage(const std::vector<std::string>& args)
     return ret;
 }
 
+FuncResult handlerAdd2DText(const std::vector<std::string>& args)
+{
+    if (args.size() != 5) {
+        throw std::logic_error("Wrong number of arguments for handlerAdd2DText()");
+    }
+    FuncResult ret;
+    ret.data.resize(1);
+
+    auto x1 = getArgument<float>(args, 0);
+    auto y1 = getArgument<float>(args, 1);
+    auto x2 = getArgument<float>(args, 2);
+    auto y2 = getArgument<float>(args, 3);
+    auto text = getArgument<std::string>(args, 4);
+
+    uint64_t handle = graphicsAdd2DText(/* rect */ {x1, y1, x2, y2}, text);
+    setReturn(ret, 0, handle);
+    return ret;
+}
+
 FuncResult handlerRemove2DRectangle(const std::vector<std::string>& args)
 {
     if (args.size() != 1) {
@@ -483,6 +503,17 @@ FuncResult handlerRemove2DImage(const std::vector<std::string>& args)
 
     auto handle = getArgument<uint64_t>(args, 0);
     graphicsRemove2DImage(handle);
+    return ret;
+}
+FuncResult handlerRemove2DText(const std::vector<std::string>& args)
+{
+    if (args.size() != 1) {
+        throw std::logic_error("Wrong number of arguments for handlerRemove2DText()");
+    }
+    FuncResult ret;
+
+    auto handle = getArgument<uint64_t>(args, 0);
+    graphicsRemove2DText(handle);
     return ret;
 }
 
@@ -542,6 +573,23 @@ FuncResult handlerModify2DImage(const std::vector<std::string>& args)
     auto texture = accessTexture(imageHandle);
 
     graphicsModify2DImage(handle, /* rect */ {x1, y1, x2, y2}, texture);
+    return ret;
+}
+FuncResult handlerModify2DText(const std::vector<std::string>& args)
+{
+    if (args.size() != 6) {
+        throw std::logic_error("Wrong number of arguments for handlerModify2DText()");
+    }
+    FuncResult ret;
+
+    auto handle = getArgument<uint64_t>(args, 0);
+    auto x1 = getArgument<float>(args, 1);
+    auto y1 = getArgument<float>(args, 2);
+    auto x2 = getArgument<float>(args, 3);
+    auto y2 = getArgument<float>(args, 4);
+    auto text = getArgument<std::string>(args, 5);
+
+    graphicsModify2DText(handle, /* rect */ {x1, y1, x2, y2}, text);
     return ret;
 }
 
@@ -800,17 +848,21 @@ static inline void initializeGraphicsFuncProviders()
             FuncProvider("graphics.2d.addRectangle", handlerAdd2DRectangle), "ffffiiii", "u");
     registerFuncProvider(FuncProvider("graphics.2d.addLine", handlerAdd2DLine), "ffffiiii", "u");
     registerFuncProvider(FuncProvider("graphics.2d.addImage", handlerAdd2DImage), "ffffu", "u");
+    registerFuncProvider(FuncProvider("graphics.2d.addText", handlerAdd2DText), "ffffs", "u");
     registerFuncProvider(FuncProvider("graphics.2d.modifyRectangle", handlerModify2DRectangle),
                          "uffffiiii",
-                         "u");
+                         "");
     registerFuncProvider(
-            FuncProvider("graphics.2d.modifyLine", handlerModify2DLine), "uffffiiii", "u");
+            FuncProvider("graphics.2d.modifyLine", handlerModify2DLine), "uffffiiii", "");
     registerFuncProvider(
-            FuncProvider("graphics.2d.modifyImage", handlerModify2DImage), "uffffu", "u");
+            FuncProvider("graphics.2d.modifyImage", handlerModify2DImage), "uffffu", "");
+    registerFuncProvider(
+            FuncProvider("graphics.2d.modifyText", handlerModify2DText), "uffffs", "");
     registerFuncProvider(
             FuncProvider("graphics.2d.removeRectangle", handlerRemove2DRectangle), "u", "");
     registerFuncProvider(FuncProvider("graphics.2d.removeLine", handlerRemove2DLine), "u", "");
     registerFuncProvider(FuncProvider("graphics.2d.removeImage", handlerRemove2DImage), "u", "");
+    registerFuncProvider(FuncProvider("graphics.2d.removeText", handlerRemove2DText), "u", "");
     
     registerFuncProvider(FuncProvider("selector.addKind", handlerGraphicsAddSelectorKind), "s", "");
     registerFuncProvider(FuncProvider("selector.removeKind", handlerGraphicsRemoveSelectorKind), "s", "");
@@ -923,6 +975,10 @@ void graphicsDraw()
         auto& [rect, image] = pi;
         graphics::irrVideoDriver->draw2DImage(
                 image, graphicsViewportize(rect), irr::core::recti{{0, 0}, image->getSize()});
+    }
+    for (auto& [_, pt] : graphics::texts) {
+        auto& [rect, text] = pt;
+        graphics::irrGuiEnvironment->getBuiltInFont()->draw(wstring_cast(text).c_str(), graphicsViewportize(rect), irr::video::SColor(255, 0, 0, 0));
     }
     graphics::irrVideoDriver->endScene();
 }
@@ -1441,6 +1497,10 @@ uint64_t graphicsAdd2DImage(const irr::core::rectf& rect, irr::video::ITexture* 
 {
     return graphics::images.insert({rect, texture});
 }
+uint64_t graphicsAdd2DText(const irr::core::rectf& rect, const std::string& text)
+{
+    return graphics::texts.insert({rect, text});
+}
 
 void graphicsRemove2DRectangle(uint64_t handle)
 {
@@ -1454,6 +1514,10 @@ void graphicsRemove2DImage(uint64_t handle)
 {
     graphics::images.access(handle).second->drop();
     graphics::images.remove(handle);
+}
+void graphicsRemove2DText(uint64_t handle)
+{
+    graphics::texts.remove(handle);
 }
 
 void graphicsModify2DRectangle(uint64_t handle,
@@ -1474,6 +1538,12 @@ void graphicsModify2DImage(uint64_t handle,
 {
     graphics::images.access(handle).second->drop();
     graphics::images.mutableAccess(handle) = {rect, texture};
+}
+void graphicsModify2DText(uint64_t handle,
+                           const irr::core::rectf& rect,
+                           const std::string& text)
+{
+    graphics::texts.mutableAccess(handle) = {rect, text};
 }
 
 irr::core::recti graphicsGetViewport()

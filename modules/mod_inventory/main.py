@@ -11,11 +11,16 @@ import json
 from os import _exit as exit
 from base64 import b64encode, b64decode
 
+current_inventory_cell = 0
+
 class Inventory:
     def __init__(self, size, max_stack):
         self.items = [[0, 'nil']] * size
         self.size = size
         self.max_stack = max_stack
+        self.rectangles = None
+        self.rect = [.05, .9, .3, .95]
+        self.text_handle = None
 
     def __getitem__(self, index):
         return self.items[index]
@@ -41,6 +46,8 @@ class Inventory:
                 delta = min(count, self.max_stack - stored_count)
                 self.items[index] = stored_count + delta, item
                 count -= delta
+        global current_inventory_cell
+        self.draw(current_inventory_cell)
         return count
 
     def remove(self, item, count):
@@ -60,10 +67,22 @@ class Inventory:
             delta = min(count - removed, stored_count)
             removed += delta
             self.items[index] = stored_count - delta, item if stored_count - delta > 0 else 'nil'
+        self.draw(current_inventory_cell)
         return removed
 
-current_inventory_cell = 0
+    def draw(self, current):
+        global module
+        if self.text_handle is None:
+            [self.text_handle] = module.invoke('graphics.2d.addText', [*self.rect, ''], 'ffffs', 'u')
+        text = 'Inventory: ({} / {}) '.format(current + 1, self.size)
+        if self.items[current][0] == 0 or self.items[current][1] == 'nil':
+            text += '<empty>'
+        else:
+            text += '{} x {}'.format(*self.items[current])
+        module.invoke('graphics.2d.modifyText', [self.text_handle, *self.rect, text], 'uffffs', '')
+
 current_inventory = Inventory(size=10, max_stack=100)
+
 module = None
 
 def is_current_inventory_cell_empty(module):
@@ -86,17 +105,33 @@ def remove_items_from_inventory(module, item, count):
     global current_inventory
     return [current_inventory.remove(item, count)]
 
+def set_current_inventory_cell(module, cellno):
+    global current_inventory, current_inventory_cell
+    current_inventory_cell = cellno % current_inventory.size
+    current_inventory.draw(current_inventory_cell)
+    return []
+
+def shift_current_inventory_cell(module, count):
+    global current_inventory, current_inventory_cell
+    current_inventory_cell = (current_inventory_cell + count + current_inventory.size) % current_inventory.size
+    current_inventory.draw(current_inventory_cell)
+    return []
+
 def main():
     global module
     module = pymodbox.Module('inventory')
     module.register_func_provider(is_current_inventory_cell_empty, 'inventory.isCurrentCellEmpty', '', 'i')
     module.register_func_provider(get_current_inventory_cell_count, 'inventory.getCurrentCellCount', '', 'u')
     module.register_func_provider(get_current_inventory_cell_item, 'inventory.getCurrentCellItem', '', 's')
+    module.register_func_provider(set_current_inventory_cell, 'inventory.setCurrentCell', 'i', '')
+    module.register_func_provider(shift_current_inventory_cell, 'inventory.shiftCurrentCell', 'i', '')
     module.register_func_provider(add_items_to_inventory, 'inventory.addItems', 'su', 'u')
     module.register_func_provider(remove_items_from_inventory, 'inventory.removeItems', 'su', 'u')
 
     module.ready()
 
+    global current_inventory, current_inventory_cell
+    current_inventory.draw(current_inventory_cell)
     while True:
         time.sleep(1)
 

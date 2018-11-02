@@ -7,6 +7,7 @@
 #include <mutex>
 #include <unordered_set>
 #include <unordered_map>
+#include <map>
 
 #include <modbox/modules/module.hpp>
 
@@ -29,6 +30,7 @@ public:
 
     GamePosition getPosition() const;
     void setPosition(const GamePosition& newPosition);
+    bool attachPart(const std::string& partKind);
     irr::scene::ISceneNode* sceneNode() const;
 
 protected:
@@ -56,10 +58,13 @@ public:
     std::optional<GameObjectId> reverseLookup(irr::scene::ISceneNode* drawable);
 
     void addKind(const std::string& kind);
+    void addRecipe(const std::string& kind, const std::string& partKind, const std::string& resultingKind);
+    std::optional <std::string> checkRecipe(const std::string& kind, const std::string& partKind);
 
 private:
     mutable std::recursive_mutex mutex;
     std::unordered_set<std::string> kinds;
+    std::map<std::pair<std::string, std::string>, std::string> recipes;
     std::unordered_map<GameObjectId, GameObject> gameObjects;
     GameObjectId idCounter = 0;
 };

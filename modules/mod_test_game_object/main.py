@@ -14,10 +14,11 @@ def main():
     module.ready()
 
     module.invoke('gameObject.addKind', ['testGameObject'], 's', '')
+    module.invoke('gameObject.addKind', ['anotherGameObject'], 's', '')
     [drawable_handle] = module.invoke('graphics.drawable.createCube', [], '', 'u')
     module.invoke('graphics.drawable.setScale', [drawable_handle, 7, 7, 7], 'ufff', '')
     module.invoke('graphics.drawable.enablePhysics', [drawable_handle, 7, 7, 7], 'ufff', '')
-    module.invoke('graphics.drawable.enableCollisions', [drawable_handle, 7, 7, 7], 'ufff', '')
+    module.invoke('graphics.drawable.enableCollisions', [drawable_handle], 'u', '')
     [object_handle] = module.invoke('gameObject.add', ['testGameObject', drawable_handle], 'su', 'u')
 
     while True:

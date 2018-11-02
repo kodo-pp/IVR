@@ -112,6 +112,7 @@ void GameObjectManager::addKind(const std::string& kind) {
     if (kinds.count(kind) > 0) {
         throw std::runtime_error("Game object kind '" + kind + "' already registered");
     }
+    kinds.insert(kind);
     getEventManager().raiseEvent("gameObject.newKind", {{"kind", kind}});
 }
 
@@ -166,11 +167,79 @@ FuncResult handlerRemoveGameObject(const std::vector <std::string>& args)
     getGameObjectManager().deleteGameObject(gameObjectId);
     return ret;
 }
+FuncResult handlerGameObjectAddRecipe(const std::vector <std::string>& args)
+{
+    FuncResult ret;
+    if (args.size() != 3) {
+        throw std::logic_error("Wrong number of arguments for handlerGameObjectAddRecipe()");
+    }
+
+    auto kind = getArgument<std::string>(args, 0);
+    auto partKind = getArgument<std::string>(args, 1);
+    auto resultingKind = getArgument<std::string>(args, 2);
+    getGameObjectManager().addRecipe(kind, partKind, resultingKind);
+    return ret;
+}
+FuncResult handlerGameObjectAttachPart(const std::vector <std::string>& args)
+{
+    FuncResult ret;
+    if (args.size() != 2) {
+        throw std::logic_error("Wrong number of arguments for handlerGameObjectAddRecipe()");
+    }
+    ret.data.resize(1);
+
+    auto id = getArgument<uint64_t>(args, 0);
+    auto partKind = getArgument<std::string>(args, 1);
+
+    bool ok = getGameObjectManager().mutableAccess(id).attachPart(partKind);
+    setReturn(ret, 0, ok ? 1 : 0);
+
+    return ret;
+}
 
 void initializeGameObjects()
 {
+    addSelectorKind("gameObjects");
     registerFuncProvider(FuncProvider("gameObject.addKind", handlerAddGameObjectKind), "s", "");
     registerFuncProvider(FuncProvider("gameObject.add", handlerAddGameObject), "su", "u");
     registerFuncProvider(FuncProvider("gameObject.remove", handlerRemoveGameObject), "su", "");
+    registerFuncProvider(FuncProvider("gameObject.addRecipe", handlerGameObjectAddRecipe), "sss", "");
+    registerFuncProvider(FuncProvider("gameObject.attachPart", handlerGameObjectAttachPart), "us", "i");
 }
 
+void GameObjectManager::addRecipe(const std::string& kind, const std::string& partKind, const std::string& resultingKind)
+{
+    std::lock_guard <std::recursive_mutex> lock(mutex);
+    if (kinds.count(kind) == 0) {
+        throw std::runtime_error("No such kind: '" + kind + "'");
+    }
+    if (kinds.count(resultingKind) == 0) {
+        throw std::runtime_error("No such kind: '" + resultingKind + "'");
+    }
+    if (recipes.count({kind, partKind}) > 0) {
+        throw std::runtime_error("Recipe already exists: '" + kind + "' + '" + partKind + "'");
+    }
+    recipes.insert(std::make_pair(std::make_pair(kind, partKind), resultingKind));
+}
+
+bool GameObject::attachPart(const std::string& partKind)
+{
+    if (auto res = getGameObjectManager().checkRecipe(kind, partKind); res.has_value()) {
+        getEventManager().raiseEvent(
+            "gameObject.partAttach",
+            {{"id", std::to_string(id)}, {"kind", kind}, {"partKind", partKind}, {"resultingKind", *res}}
+        );
+        kind = *res;
+        return true;
+    }
+    return false;
+}
+
+std::optional <std::string> GameObjectManager::checkRecipe(const std::string& kind, const std::string& partKind)
+{
+    std::lock_guard <std::recursive_mutex> lock(mutex);
+    if (auto it = recipes.find({kind, partKind}); it != recipes.end()) {
+        return it->second;
+    }
+    return {};
+}
