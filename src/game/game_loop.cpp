@@ -172,8 +172,8 @@ void gameLoop()
     addSelectorKind("enemies");
 
     getFuncProvider("inventory.addItems")({"literally nothing", "10"});
-    getFuncProvider("inventory.addItems")({"sword", "1"});
-    getFuncProvider("inventory.addItems")({"rifle", "1"});
+    getFuncProvider("inventory.addItems")({"sword", "5"});
+    getFuncProvider("inventory.addItems")({"rifle", "2"});
     getFuncProvider("inventory.addItems")({"a bit of magic", "1"});
 
     getEventManager().addEventHandler("mouse.leftButtonDown", [](const std::unordered_map<std::string, std::string>&) {
@@ -193,6 +193,7 @@ void gameLoop()
     getEventManager().addEventHandler("use.l", [](const std::unordered_map<std::string, std::string>& args) {
         if (getWeaponManager().hasWeapon(args.at("item"))) {
             // Attack enemy
+            std::thread([=](){getFuncProvider("inventory.removeItems")({args.at("item"), "1"});}).detach();
             auto length = getWeaponManager().getLength(args.at("item"));
             auto damage = getWeaponManager().getDamage(args.at("item"));
             auto maybeValue = getRayIntersect(getPlayer().getPosition().toIrrVector3df(), getCameraTarget(length), "enemies");
@@ -209,6 +210,7 @@ void gameLoop()
         if (maybeValue.has_value()) {
             auto& [point, drawable] = *maybeValue;
             if (auto maybeGameObjectId = getGameObjectManager().reverseLookup(drawable); maybeGameObjectId.has_value()) {
+                std::thread([=](){getFuncProvider("inventory.removeItems")({args.at("item"), "1"});}).detach();
                 getGameObjectManager().mutableAccess(*maybeGameObjectId).attachPart(args.at("item"));
             }
         }
