@@ -82,6 +82,6 @@ private:
 
 extern ModuleManager moduleManager;
 
-std::vector <std::string> listModules();
+std::vector<std::string> listModules();
 
 #endif /* end of include guard: MODULES_MODULE_MANAGER_HPP */

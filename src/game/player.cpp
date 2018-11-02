@@ -1,14 +1,14 @@
 #include <cmath>
 #include <tuple>
 
+#include <modbox/core/core.hpp>
+#include <modbox/core/event_manager.hpp>
 #include <modbox/game/player.hpp>
 #include <modbox/geometry/game_position.hpp>
 #include <modbox/geometry/geometry.hpp>
 #include <modbox/graphics/graphics.hpp>
 #include <modbox/log/log.hpp>
 #include <modbox/misc/irrvec.hpp>
-#include <modbox/core/core.hpp>
-#include <modbox/core/event_manager.hpp>
 
 #include <irrlicht_wrapper.hpp>
 
@@ -97,19 +97,14 @@ GamePosition Player::getCameraTarget()
     return GamePosition(camera->getTarget());
 }
 
-
 void Player::hit(double damage)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
     healthLeft = std::max(0.0, healthLeft - damage);
     LOG("Player was attacked! health left: " << healthLeft);
     getEventManager().raiseEvent(
-        "player.health.change",
-        {
-            {"healthLeft", std::to_string(healthLeft)},
-            {"healthMax", std::to_string(healthMax)}
-        }
-    );
+            "player.health.change",
+            {{"healthLeft", std::to_string(healthLeft)}, {"healthMax", std::to_string(healthMax)}});
 }
 double Player::getHealthLeft() const
 {
@@ -125,18 +120,16 @@ void Player::setHealthLeft(double health)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
     getEventManager().raiseEvent(
-        "player.health.change",
-        {{"healthLeft", std::to_string(healthLeft)}, {"healthMax", std::to_string(healthMax)}}
-    );
+            "player.health.change",
+            {{"healthLeft", std::to_string(healthLeft)}, {"healthMax", std::to_string(healthMax)}});
     healthLeft = std::min(health, healthMax);
 }
 void Player::setHealthMax(double health)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
     getEventManager().raiseEvent(
-        "player.health.change",
-        {{"healthLeft", std::to_string(healthLeft)}, {"healthMax", std::to_string(healthMax)}}
-    );
+            "player.health.change",
+            {{"healthLeft", std::to_string(healthLeft)}, {"healthMax", std::to_string(healthMax)}});
     healthMax = health;
     healthLeft = std::min(healthLeft, healthMax);
 }

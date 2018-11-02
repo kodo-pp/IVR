@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <modbox/core/core.hpp>
+#include <modbox/core/event_manager.hpp>
 #include <modbox/game/game_loop.hpp>
 #include <modbox/game/game_object.hpp>
 #include <modbox/geometry/geometry.hpp>
@@ -17,7 +18,6 @@
 #include <modbox/modules/module_io.hpp>
 #include <modbox/util/util.hpp>
 #include <modbox/world/terrain.hpp>
-#include <modbox/core/event_manager.hpp>
 
 #include <irrlicht_wrapper.hpp>
 #include <unistd.h>
@@ -51,9 +51,9 @@ namespace graphics
     HandleStorage<uint64_t, std::pair<irr::core::rectf, irr::video::ITexture*>> images;
     HandleStorage<uint64_t, std::pair<irr::core::rectf, std::string>> texts;
     std::unordered_map<std::string, irr::scene::IMetaTriangleSelector*> selectorKinds;
-    HandleStorage <uint64_t, irr::scene::ITriangleSelector*> selectors;
+    HandleStorage<uint64_t, irr::scene::ITriangleSelector*> selectors;
 } // namespace graphics
- 
+
 irr::gui::IGUIEnvironment* getGuiEnvironment()
 {
     return graphics::irrGuiEnvironment;
@@ -79,11 +79,18 @@ bool IrrEventReceiver::OnEvent(const irr::SEvent& event)
     std::lock_guard<std::recursive_mutex> lock(mutex);
     if (event.EventType == irr::EET_KEY_INPUT_EVENT) {
         if (event.KeyInput.PressedDown) {
-            getEventManager().raiseEvent("keyboard.keyPress", {{"key", std::to_string(event.KeyInput.Key)}}); // TODO: перевести в нормальный строковый вид
+            getEventManager().raiseEvent(
+                    "keyboard.keyPress",
+                    {{"key",
+                      std::to_string(
+                              event.KeyInput.Key)}}); // TODO: перевести в нормальный строковый вид
             pressedKeys.insert(event.KeyInput.Key);
         } else {
             if (pressedKeys.count(event.KeyInput.Key) != 0u) {
-                getEventManager().raiseEvent("keyboard.keyRelease", {{"key", std::to_string(event.KeyInput.Key)}}); // TODO: перевести в нормальный строковый вид
+                getEventManager().raiseEvent(
+                        "keyboard.keyRelease",
+                        {{"key", std::to_string(event.KeyInput.Key)}}); // TODO: перевести в
+                                                                        // нормальный строковый вид
                 pressedKeys.erase(event.KeyInput.Key);
             }
         }
@@ -199,7 +206,8 @@ FuncResult handlerGraphicsMoveObject(const std::vector<std::string>& args)
     double z = getArgument<double>(args, 3);
 
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-    graphicsMoveObject(getGameObjectManager().mutableAccess(objectHandle).sceneNode(), GamePosition(x, y, z));
+    graphicsMoveObject(getGameObjectManager().mutableAccess(objectHandle).sceneNode(),
+                       GamePosition(x, y, z));
 
     return ret;
 }
@@ -285,7 +293,6 @@ FuncResult handlerGraphicsDrawableAddTexture(const std::vector<std::string>& arg
 
     return ret;
 }
-
 
 // Создать куб как модель
 scene::ISceneNode* graphicsCreateDrawableCube();
@@ -597,9 +604,9 @@ FuncResult handlerModify2DText(const std::vector<std::string>& args)
     return ret;
 }
 
-FuncResult handlerGraphicsAddSelectorKind(const std::vector <std::string>& args)
+FuncResult handlerGraphicsAddSelectorKind(const std::vector<std::string>& args)
 {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    std::lock_guard<std::recursive_mutex> lock(selectorMutex);
     FuncResult ret;
     if (args.size() != 1) {
         throw std::logic_error("Invalid number of arguments for handlerGraphicsAddSelectorKind()");
@@ -609,24 +616,26 @@ FuncResult handlerGraphicsAddSelectorKind(const std::vector <std::string>& args)
     addSelectorKind(kind);
     return ret;
 }
-FuncResult handlerGraphicsRemoveSelectorKind(const std::vector <std::string>& args)
+FuncResult handlerGraphicsRemoveSelectorKind(const std::vector<std::string>& args)
 {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    std::lock_guard<std::recursive_mutex> lock(selectorMutex);
     FuncResult ret;
     if (args.size() != 1) {
-        throw std::logic_error("Invalid number of arguments for handlerGraphicsRemoveSelectorKind()");
+        throw std::logic_error(
+                "Invalid number of arguments for handlerGraphicsRemoveSelectorKind()");
     }
 
     auto kind = getArgument<std::string>(args, 0);
     removeSelectorKind(kind);
     return ret;
 }
-FuncResult handlerGraphicsAddSubSelectorForObject(const std::vector <std::string>& args)
+FuncResult handlerGraphicsAddSubSelectorForObject(const std::vector<std::string>& args)
 {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    std::lock_guard<std::recursive_mutex> lock(selectorMutex);
     FuncResult ret;
     if (args.size() != 2) {
-        throw std::logic_error("Invalid number of arguments for handlerGraphicsAddSubSelectorForObject()");
+        throw std::logic_error(
+                "Invalid number of arguments for handlerGraphicsAddSubSelectorForObject()");
     }
     ret.data.resize(1);
 
@@ -634,7 +643,8 @@ FuncResult handlerGraphicsAddSubSelectorForObject(const std::vector <std::string
     auto objectHandle = getArgument<uint64_t>(args, 1);
     auto object = getGameObjectManager().access(objectHandle);
 
-    auto selector = graphics::irrSceneManager->createTriangleSelectorFromBoundingBox(object.sceneNode());
+    auto selector = graphics::irrSceneManager->createTriangleSelectorFromBoundingBox(
+            object.sceneNode());
     if (selector == nullptr) {
         throw std::runtime_error("Unable to create selector");
     }
@@ -642,12 +652,13 @@ FuncResult handlerGraphicsAddSubSelectorForObject(const std::vector <std::string
     setReturn(ret, 0, graphics::selectors.insert(selector));
     return ret;
 }
-FuncResult handlerGraphicsAddSubSelectorForDrawable(const std::vector <std::string>& args)
+FuncResult handlerGraphicsAddSubSelectorForDrawable(const std::vector<std::string>& args)
 {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    std::lock_guard<std::recursive_mutex> lock(selectorMutex);
     FuncResult ret;
     if (args.size() != 2) {
-        throw std::logic_error("Invalid number of arguments for handlerGraphicsAddSubSelectorForDrawable()");
+        throw std::logic_error(
+                "Invalid number of arguments for handlerGraphicsAddSubSelectorForDrawable()");
     }
     ret.data.resize(1);
 
@@ -663,12 +674,13 @@ FuncResult handlerGraphicsAddSubSelectorForDrawable(const std::vector <std::stri
     setReturn(ret, 0, graphics::selectors.insert(selector));
     return ret;
 }
-FuncResult handlerGraphicsRemoveSubSelector(const std::vector <std::string>& args)
+FuncResult handlerGraphicsRemoveSubSelector(const std::vector<std::string>& args)
 {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    std::lock_guard<std::recursive_mutex> lock(selectorMutex);
     FuncResult ret;
     if (args.size() != 2) {
-        throw std::logic_error("Invalid number of arguments for handlerGraphicsRemoveSubSelector()");
+        throw std::logic_error(
+                "Invalid number of arguments for handlerGraphicsRemoveSubSelector()");
     }
 
     auto kind = getArgument<std::string>(args, 0);
@@ -678,12 +690,13 @@ FuncResult handlerGraphicsRemoveSubSelector(const std::vector <std::string>& arg
     removeSubSelector(kind, selector);
     return ret;
 }
-FuncResult handlerGraphicsGetRayIntersection(const std::vector <std::string>& args)
+FuncResult handlerGraphicsGetRayIntersection(const std::vector<std::string>& args)
 {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    std::lock_guard<std::recursive_mutex> lock(selectorMutex);
     FuncResult ret;
     if (args.size() != 7) {
-        throw std::logic_error("Invalid number of arguments for handlerGraphicsGetRayIntersection()");
+        throw std::logic_error(
+                "Invalid number of arguments for handlerGraphicsGetRayIntersection()");
     }
 
     ret.data.resize(4);
@@ -712,7 +725,7 @@ FuncResult handlerGraphicsGetRayIntersection(const std::vector <std::string>& ar
     return ret;
 }
 
-FuncResult handlerGraphicsGetCameraTarget(const std::vector <std::string>& args)
+FuncResult handlerGraphicsGetCameraTarget(const std::vector<std::string>& args)
 {
     FuncResult ret;
     if (args.size() != 1) {
@@ -730,12 +743,13 @@ FuncResult handlerGraphicsGetCameraTarget(const std::vector <std::string>& args)
     return ret;
 }
 
-FuncResult handlerGraphicsGetRayIntersectionDrawable(const std::vector <std::string>& args)
+FuncResult handlerGraphicsGetRayIntersectionDrawable(const std::vector<std::string>& args)
 {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    std::lock_guard<std::recursive_mutex> lock(selectorMutex);
     FuncResult ret;
     if (args.size() != 7) {
-        throw std::logic_error("Invalid number of arguments for handlerGraphicsGetRayIntersectionDrawable()");
+        throw std::logic_error(
+                "Invalid number of arguments for handlerGraphicsGetRayIntersectionDrawable()");
     }
 
     ret.data.resize(2);
@@ -750,7 +764,8 @@ FuncResult handlerGraphicsGetRayIntersectionDrawable(const std::vector <std::str
 
     auto result = getRayIntersect({x1, y1, z1}, {x2, y2, z2}, kind);
     if (result.has_value()) {
-        if (auto maybeHandle = drawablesManager.reverseLookup(result->second); maybeHandle.has_value()) {
+        if (auto maybeHandle = drawablesManager.reverseLookup(result->second);
+            maybeHandle.has_value()) {
             setReturn(ret, 0, 1);
             setReturn(ret, 1, *maybeHandle);
             return ret;
@@ -760,12 +775,13 @@ FuncResult handlerGraphicsGetRayIntersectionDrawable(const std::vector <std::str
     setReturn(ret, 1, 0);
     return ret;
 }
-FuncResult handlerGraphicsGetRayIntersectionEnemy(const std::vector <std::string>& args)
+FuncResult handlerGraphicsGetRayIntersectionEnemy(const std::vector<std::string>& args)
 {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    std::lock_guard<std::recursive_mutex> lock(selectorMutex);
     FuncResult ret;
     if (args.size() != 7) {
-        throw std::logic_error("Invalid number of arguments for handlerGraphicsGetRayIntersectionEnemy()");
+        throw std::logic_error(
+                "Invalid number of arguments for handlerGraphicsGetRayIntersectionEnemy()");
     }
 
     ret.data.resize(2);
@@ -780,7 +796,8 @@ FuncResult handlerGraphicsGetRayIntersectionEnemy(const std::vector <std::string
 
     auto result = getRayIntersect({x1, y1, z1}, {x2, y2, z2}, kind);
     if (result.has_value()) {
-        if (auto maybeHandle = enemyManager.reverseLookup(result->second); maybeHandle.has_value()) {
+        if (auto maybeHandle = enemyManager.reverseLookup(result->second);
+            maybeHandle.has_value()) {
             setReturn(ret, 0, 1);
             setReturn(ret, 1, *maybeHandle);
             return ret;
@@ -791,9 +808,9 @@ FuncResult handlerGraphicsGetRayIntersectionEnemy(const std::vector <std::string
     return ret;
 }
 
-FuncResult handlerGraphicsScaleDrawable(const std::vector <std::string>& args)
+FuncResult handlerGraphicsScaleDrawable(const std::vector<std::string>& args)
 {
-    std::lock_guard <std::recursive_mutex> lock(irrlichtMutex);
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
     FuncResult ret;
     if (args.size() != 4) {
         throw std::logic_error("Invalid number of arguments for handlerGraphicsScaleDrawable()");
@@ -827,7 +844,9 @@ static inline void initializeGraphicsFuncProviders()
     registerFuncProvider(
             FuncProvider("graphics.drawable.createCube", handlerCreateDrawableCube), "", "u");
     registerFuncProvider(
-            FuncProvider("graphics.drawable.createFromMeshFile", handlerCreateDrawableFromMeshFile), "s", "u");
+            FuncProvider("graphics.drawable.createFromMeshFile", handlerCreateDrawableFromMeshFile),
+            "s",
+            "u");
     registerFuncProvider(
             FuncProvider("graphics.drawable.enablePhysics", handlerDrawableEnablePhysics),
             "ufff",
@@ -845,37 +864,49 @@ static inline void initializeGraphicsFuncProviders()
             "u",
             "");
     registerFuncProvider(
-            FuncProvider("graphics.drawable.setScale", handlerGraphicsScaleDrawable),
-            "ufff",
-            "");
+            FuncProvider("graphics.drawable.setScale", handlerGraphicsScaleDrawable), "ufff", "");
     registerFuncProvider(
             FuncProvider("graphics.2d.addRectangle", handlerAdd2DRectangle), "ffffiiii", "u");
     registerFuncProvider(FuncProvider("graphics.2d.addLine", handlerAdd2DLine), "ffffiiii", "u");
     registerFuncProvider(FuncProvider("graphics.2d.addImage", handlerAdd2DImage), "ffffu", "u");
     registerFuncProvider(FuncProvider("graphics.2d.addText", handlerAdd2DText), "ffffs", "u");
-    registerFuncProvider(FuncProvider("graphics.2d.modifyRectangle", handlerModify2DRectangle),
-                         "uffffiiii",
-                         "");
+    registerFuncProvider(
+            FuncProvider("graphics.2d.modifyRectangle", handlerModify2DRectangle), "uffffiiii", "");
     registerFuncProvider(
             FuncProvider("graphics.2d.modifyLine", handlerModify2DLine), "uffffiiii", "");
     registerFuncProvider(
             FuncProvider("graphics.2d.modifyImage", handlerModify2DImage), "uffffu", "");
-    registerFuncProvider(
-            FuncProvider("graphics.2d.modifyText", handlerModify2DText), "uffffs", "");
+    registerFuncProvider(FuncProvider("graphics.2d.modifyText", handlerModify2DText), "uffffs", "");
     registerFuncProvider(
             FuncProvider("graphics.2d.removeRectangle", handlerRemove2DRectangle), "u", "");
     registerFuncProvider(FuncProvider("graphics.2d.removeLine", handlerRemove2DLine), "u", "");
     registerFuncProvider(FuncProvider("graphics.2d.removeImage", handlerRemove2DImage), "u", "");
     registerFuncProvider(FuncProvider("graphics.2d.removeText", handlerRemove2DText), "u", "");
-    
+
     registerFuncProvider(FuncProvider("selector.addKind", handlerGraphicsAddSelectorKind), "s", "");
-    registerFuncProvider(FuncProvider("selector.removeKind", handlerGraphicsRemoveSelectorKind), "s", "");
-    registerFuncProvider(FuncProvider("selector.addForObject", handlerGraphicsAddSubSelectorForObject), "su", "u");
-    registerFuncProvider(FuncProvider("selector.addForDrawable", handlerGraphicsAddSubSelectorForDrawable), "su", "u");
-    registerFuncProvider(FuncProvider("selector.remove", handlerGraphicsRemoveSubSelector), "su", "");
-    registerFuncProvider(FuncProvider("selector.rayIntersect", handlerGraphicsGetRayIntersection), "sffffff", "ifff");
-    registerFuncProvider(FuncProvider("selector.rayIntersectDrawable", handlerGraphicsGetRayIntersectionDrawable), "sffffff", "iu");
-    registerFuncProvider(FuncProvider("selector.rayIntersectEnemy", handlerGraphicsGetRayIntersectionEnemy), "sffffff", "iu");
+    registerFuncProvider(
+            FuncProvider("selector.removeKind", handlerGraphicsRemoveSelectorKind), "s", "");
+    registerFuncProvider(
+            FuncProvider("selector.addForObject", handlerGraphicsAddSubSelectorForObject),
+            "su",
+            "u");
+    registerFuncProvider(
+            FuncProvider("selector.addForDrawable", handlerGraphicsAddSubSelectorForDrawable),
+            "su",
+            "u");
+    registerFuncProvider(
+            FuncProvider("selector.remove", handlerGraphicsRemoveSubSelector), "su", "");
+    registerFuncProvider(FuncProvider("selector.rayIntersect", handlerGraphicsGetRayIntersection),
+                         "sffffff",
+                         "ifff");
+    registerFuncProvider(FuncProvider("selector.rayIntersectDrawable",
+                                      handlerGraphicsGetRayIntersectionDrawable),
+                         "sffffff",
+                         "iu");
+    registerFuncProvider(
+            FuncProvider("selector.rayIntersectEnemy", handlerGraphicsGetRayIntersectionEnemy),
+            "sffffff",
+            "iu");
 }
 
 // Освобождение ресурсов
@@ -982,7 +1013,9 @@ void graphicsDraw()
     }
     for (auto& [_, pt] : graphics::texts) {
         auto& [rect, text] = pt;
-        graphics::irrGuiEnvironment->getBuiltInFont()->draw(wstring_cast(text).c_str(), graphicsViewportize(rect), irr::video::SColor(255, 0, 0, 0));
+        graphics::irrGuiEnvironment->getBuiltInFont()->draw(wstring_cast(text).c_str(),
+                                                            graphicsViewportize(rect),
+                                                            irr::video::SColor(255, 0, 0, 0));
     }
     graphics::irrVideoDriver->endScene();
 }
@@ -1543,9 +1576,7 @@ void graphicsModify2DImage(uint64_t handle,
     graphics::images.access(handle).second->drop();
     graphics::images.mutableAccess(handle) = {rect, texture};
 }
-void graphicsModify2DText(uint64_t handle,
-                           const irr::core::rectf& rect,
-                           const std::string& text)
+void graphicsModify2DText(uint64_t handle, const irr::core::rectf& rect, const std::string& text)
 {
     graphics::texts.mutableAccess(handle) = {rect, text};
 }
@@ -1557,7 +1588,7 @@ irr::core::recti graphicsGetViewport()
 
 void addSelectorKind(const std::string& kind)
 {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    std::lock_guard<std::recursive_mutex> lock(selectorMutex);
     if (graphics::selectorKinds.count(kind) > 0) {
         throw std::runtime_error("Selector kind '" + kind + "' already exists");
     }
@@ -1570,7 +1601,7 @@ void addSelectorKind(const std::string& kind)
 
 void removeSelectorKind(const std::string& kind)
 {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    std::lock_guard<std::recursive_mutex> lock(selectorMutex);
     if (graphics::selectorKinds.count(kind) == 0) {
         throw std::runtime_error("Selector kind '" + kind + "' does not exist");
     }
@@ -1579,18 +1610,22 @@ void removeSelectorKind(const std::string& kind)
 
 void addSubSelector(const std::string& kind, irr::scene::ITriangleSelector* selector)
 {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    std::lock_guard<std::recursive_mutex> lock(selectorMutex);
     graphics::selectorKinds.at(kind)->addTriangleSelector(selector);
 }
 
 void removeSubSelector(const std::string& kind, irr::scene::ITriangleSelector* selector)
 {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+    std::lock_guard<std::recursive_mutex> lock(selectorMutex);
     graphics::selectorKinds.at(kind)->removeTriangleSelector(selector);
 }
 
-std::optional<std::pair <irr::core::vector3df, irr::scene::ISceneNode*>> getRayIntersect(const irr::core::vector3df& origin, const irr::core::vector3df& end, const std::string& kind) {
-    std::lock_guard <std::recursive_mutex> lock(selectorMutex);
+std::optional<std::pair<irr::core::vector3df, irr::scene::ISceneNode*>> getRayIntersect(
+        const irr::core::vector3df& origin,
+        const irr::core::vector3df& end,
+        const std::string& kind)
+{
+    std::lock_guard<std::recursive_mutex> lock(selectorMutex);
     core::line3df ray;
     ray.start = origin;
     ray.end = end;
@@ -1602,12 +1637,7 @@ std::optional<std::pair <irr::core::vector3df, irr::scene::ISceneNode*>> getRayI
     irr::scene::ISceneNode* affectedSceneNode;
 
     bool collisionHappened = collisionManager->getCollisionPoint(
-            ray,                    
-            graphics::selectorKinds.at(kind),
-            hitPoint,
-            dummy,
-            affectedSceneNode
-    );
+            ray, graphics::selectorKinds.at(kind), hitPoint, dummy, affectedSceneNode);
 
     if (collisionHappened) {
         return {{hitPoint, affectedSceneNode}};

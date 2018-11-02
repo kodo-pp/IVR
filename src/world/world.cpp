@@ -1,26 +1,26 @@
+#include <cstring>
+#include <exception>
+#include <fstream>
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <exception>
-#include <stdexcept>
-#include <fstream>
 
+#include <modbox/game/game_loop.hpp>
 #include <modbox/geometry/game_position.hpp>
-#include <modbox/world/chunk.hpp>
-#include <modbox/world/world.hpp>
+#include <modbox/graphics/graphics.hpp>
 #include <modbox/log/log.hpp>
 #include <modbox/modules/module_manager.hpp>
-#include <modbox/graphics/graphics.hpp>
-#include <modbox/game/game_loop.hpp>
+#include <modbox/world/chunk.hpp>
+#include <modbox/world/world.hpp>
 
 #include <boost/filesystem.hpp>
-#include <unistd.h>
-#include <cstring>
-#include <errno.h>
 #include <ctype.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 static std::string savePath;
 
@@ -37,7 +37,7 @@ std::string escape(const std::string& name)
     return s;
 }
 
-void createWorld(const std::string& name, const std::vector <std::string>& modules, bool buildMode)
+void createWorld(const std::string& name, const std::vector<std::string>& modules, bool buildMode)
 {
     if (access("saves/", R_OK | X_OK) != 0) {
         if (mkdir("saves/", 0755) != 0) {
@@ -48,14 +48,15 @@ void createWorld(const std::string& name, const std::vector <std::string>& modul
         throw std::runtime_error("World with this name already exists");
     }
     if (mkdir(("saves/" + escape(name) + "/").c_str(), 0755) != 0) {
-        throw std::runtime_error("Unable to create 'saves/" + escape(name) + ")': " + std::string(strerror(errno)));
+        throw std::runtime_error("Unable to create 'saves/" + escape(name)
+                                 + ")': " + std::string(strerror(errno)));
     }
     std::ofstream out("saves/" + escape(name) + "/world.txt");
     if (!out.is_open()) {
         throw std::runtime_error("Unable to open metadata file");
     }
     out << name << std::endl;
-    std::vector <std::string> mods;
+    std::vector<std::string> mods;
     for (auto& i : modules) {
         if (i != "") {
             mods.emplace_back(i);
@@ -70,13 +71,13 @@ void createWorld(const std::string& name, const std::vector <std::string>& modul
     out.close();
 }
 
-std::vector <std::string> listWorlds()
+std::vector<std::string> listWorlds()
 {
     if (access("saves/", R_OK | X_OK) != 0) {
         return {};
     }
     using namespace boost::filesystem;
-    std::vector <std::string> result;
+    std::vector<std::string> result;
     for (auto& entry : directory_iterator(path("saves/"))) {
         std::ifstream in(entry.path().string() + "/world.txt");
         if (!in.is_open()) {
@@ -126,7 +127,7 @@ void enterWorld(const std::string& name)
     std::getline(worldInfo, _);
     size_t size;
     worldInfo >> size;
-    std::vector <std::string> modules(size);
+    std::vector<std::string> modules(size);
     for (auto& i : modules) {
         worldInfo >> i;
     }

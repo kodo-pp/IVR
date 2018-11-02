@@ -5,9 +5,9 @@
 #include <unordered_set>
 #include <vector>
 
+#include <modbox/game/game_object.hpp>
 #include <modbox/geometry/game_position.hpp>
 #include <modbox/util/handle_storage.hpp>
-#include <modbox/game/game_object.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <irrlicht_wrapper.hpp>
@@ -65,9 +65,7 @@ void graphicsModify2DLine(uint64_t handle,
 void graphicsModify2DImage(uint64_t handle,
                            const irr::core::rectf& rect,
                            irr::video::ITexture* texture);
-void graphicsModify2DText(uint64_t handle,
-                           const irr::core::rectf& rect,
-                           const std::string& text);
+void graphicsModify2DText(uint64_t handle, const irr::core::rectf& rect, const std::string& text);
 
 void graphicsRemove2DRectangle(uint64_t handle);
 void graphicsRemove2DLine(uint64_t handle);
@@ -225,7 +223,10 @@ void addSelectorKind(const std::string& kind);
 void removeSelectorKind(const std::string& kind);
 void addSubSelector(const std::string& kind, irr::scene::ITriangleSelector* selector);
 void removeSubSelector(const std::string& kind, irr::scene::ITriangleSelector* selector);
-std::optional<std::pair<irr::core::vector3df, irr::scene::ISceneNode*>> getRayIntersect(const irr::core::vector3df& origin, const irr::core::vector3df& end, const std::string& kind);
+std::optional<std::pair<irr::core::vector3df, irr::scene::ISceneNode*>> getRayIntersect(
+        const irr::core::vector3df& origin,
+        const irr::core::vector3df& end,
+        const std::string& kind);
 
 irr::core::vector3df getCameraTarget(float len);
 

@@ -9,17 +9,17 @@
 
 #include <modbox/core/core.hpp>
 #include <modbox/core/dyntype.hpp>
+#include <modbox/core/event_manager.hpp>
 #include <modbox/core/init.hpp>
 #include <modbox/game/enemy.hpp>
 #include <modbox/game/game_loop.hpp>
 #include <modbox/game/player.hpp>
 #include <modbox/game/solid_object.hpp>
+#include <modbox/game/weapon.hpp>
 #include <modbox/graphics/graphics.hpp>
 #include <modbox/log/log.hpp>
 #include <modbox/util/util.hpp>
 #include <modbox/world/terrain.hpp>
-#include <modbox/core/event_manager.hpp>
-#include <modbox/game/weapon.hpp>
 
 #include <irrlicht_wrapper.hpp>
 #include <unistd.h>
@@ -176,45 +176,64 @@ void gameLoop()
     getFuncProvider("inventory.addItems")({"rifle", "2"});
     getFuncProvider("inventory.addItems")({"a bit of magic", "1"});
 
-    getEventManager().addEventHandler("mouse.leftButtonDown", [](const std::unordered_map<std::string, std::string>&) {
-        auto currentItem = getFuncProvider("inventory.getCurrentCellItem")({}).data.at(0);
-        getEventManager().raiseEvent("use.l", {{"item", currentItem}});
-    });
+    getEventManager().addEventHandler(
+            "mouse.leftButtonDown", [](const std::unordered_map<std::string, std::string>&) {
+                auto currentItem = getFuncProvider("inventory.getCurrentCellItem")({}).data.at(0);
+                getEventManager().raiseEvent("use.l", {{"item", currentItem}});
+            });
 
-    getEventManager().addEventHandler("mouse.middleButtonDown", [](const std::unordered_map<std::string, std::string>&) {
-        getFuncProvider("inventory.shiftCurrentCell")({"1"});
-        LOG("Shifting inventory");
-    });
+    getEventManager().addEventHandler("mouse.middleButtonDown",
+                                      [](const std::unordered_map<std::string, std::string>&) {
+                                          getFuncProvider("inventory.shiftCurrentCell")({"1"});
+                                          LOG("Shifting inventory");
+                                      });
     getGameObjectManager().addRecipe("testGameObject", "a bit of magic", "anotherGameObject");
-    getEventManager().addEventHandler("gameObject.partAttach", [](const std::unordered_map<std::string, std::string>& args) {
-        LOG("Attached '" << args.at("partKind") << "' to '" << args.at("kind") << "': got '" << args.at("resultingKind") << "'");
-    });
+    getEventManager().addEventHandler(
+            "gameObject.partAttach", [](const std::unordered_map<std::string, std::string>& args) {
+                LOG("Attached '" << args.at("partKind") << "' to '" << args.at("kind") << "': got '"
+                                 << args.at("resultingKind") << "'");
+            });
 
-    getEventManager().addEventHandler("use.l", [](const std::unordered_map<std::string, std::string>& args) {
-        if (getWeaponManager().hasWeapon(args.at("item"))) {
-            // Attack enemy
-            std::thread([=](){getFuncProvider("inventory.removeItems")({args.at("item"), "1"});}).detach();
-            auto length = getWeaponManager().getLength(args.at("item"));
-            auto damage = getWeaponManager().getDamage(args.at("item"));
-            auto maybeValue = getRayIntersect(getPlayer().getPosition().toIrrVector3df(), getCameraTarget(length), "enemies");
-            if (maybeValue.has_value()) {
-                auto& [point, drawable] = *maybeValue;
-                if (auto maybeEnemyId = enemyManager.reverseLookup(drawable); maybeEnemyId.has_value()) {
-                    enemyManager.mutableAccessEnemy(*maybeEnemyId).hit(damage);
+    getEventManager().addEventHandler(
+            "use.l", [](const std::unordered_map<std::string, std::string>& args) {
+                if (getWeaponManager().hasWeapon(args.at("item"))) {
+                    // Attack enemy
+                    std::thread([=]() {
+                        getFuncProvider("inventory.removeItems")({args.at("item"), "1"});
+                    })
+                            .detach();
+                    auto length = getWeaponManager().getLength(args.at("item"));
+                    auto damage = getWeaponManager().getDamage(args.at("item"));
+                    auto maybeValue = getRayIntersect(getPlayer().getPosition().toIrrVector3df(),
+                                                      getCameraTarget(length),
+                                                      "enemies");
+                    if (maybeValue.has_value()) {
+                        auto& [point, drawable] = *maybeValue;
+                        if (auto maybeEnemyId = enemyManager.reverseLookup(drawable);
+                            maybeEnemyId.has_value()) {
+                            enemyManager.mutableAccessEnemy(*maybeEnemyId).hit(damage);
+                        }
+                    }
+                    return;
                 }
-            }
-            return;
-        }
-        // Attach part to object
-        auto maybeValue = getRayIntersect(getPlayer().getPosition().toIrrVector3df(), getCameraTarget(getPlaceLength()), "gameObjects");
-        if (maybeValue.has_value()) {
-            auto& [point, drawable] = *maybeValue;
-            if (auto maybeGameObjectId = getGameObjectManager().reverseLookup(drawable); maybeGameObjectId.has_value()) {
-                std::thread([=](){getFuncProvider("inventory.removeItems")({args.at("item"), "1"});}).detach();
-                getGameObjectManager().mutableAccess(*maybeGameObjectId).attachPart(args.at("item"));
-            }
-        }
-    });
+                // Attach part to object
+                auto maybeValue = getRayIntersect(getPlayer().getPosition().toIrrVector3df(),
+                                                  getCameraTarget(getPlaceLength()),
+                                                  "gameObjects");
+                if (maybeValue.has_value()) {
+                    auto& [point, drawable] = *maybeValue;
+                    if (auto maybeGameObjectId = getGameObjectManager().reverseLookup(drawable);
+                        maybeGameObjectId.has_value()) {
+                        std::thread([=]() {
+                            getFuncProvider("inventory.removeItems")({args.at("item"), "1"});
+                        })
+                                .detach();
+                        getGameObjectManager()
+                                .mutableAccess(*maybeGameObjectId)
+                                .attachPart(args.at("item"));
+                    }
+                }
+            });
 
     int counter = 0;
     double i = 0;

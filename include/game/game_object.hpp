@@ -1,14 +1,13 @@
 #ifndef GAME_GAME_OBJECT_HPP
 #define GAME_GAME_OBJECT_HPP
 
+#include <map>
+#include <mutex>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <modbox/geometry/game_position.hpp>
-#include <mutex>
-#include <unordered_set>
-#include <unordered_map>
-#include <map>
-
 #include <modbox/modules/module.hpp>
 
 #include <irrlicht_wrapper.hpp>
@@ -58,8 +57,10 @@ public:
     std::optional<GameObjectId> reverseLookup(irr::scene::ISceneNode* drawable);
 
     void addKind(const std::string& kind);
-    void addRecipe(const std::string& kind, const std::string& partKind, const std::string& resultingKind);
-    std::optional <std::string> checkRecipe(const std::string& kind, const std::string& partKind);
+    void addRecipe(const std::string& kind,
+                   const std::string& partKind,
+                   const std::string& resultingKind);
+    std::optional<std::string> checkRecipe(const std::string& kind, const std::string& partKind);
 
 private:
     mutable std::recursive_mutex mutex;

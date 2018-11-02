@@ -2,8 +2,8 @@
 #include <unordered_map>
 
 #include <modbox/modules/module_manager.hpp>
-#include <boost/filesystem.hpp>
 
+#include <boost/filesystem.hpp>
 #include <spawn.h>
 #include <unistd.h>
 
@@ -116,23 +116,23 @@ void ModuleManager::addReadyModule(const std::string& moduleName)
 
 ModuleManager moduleManager;
 
-std::vector <std::string> listModules()
+std::vector<std::string> listModules()
 {
     if (access("modules/", R_OK | X_OK) != 0) {
         return {};
     }
     using namespace boost::filesystem;
-    std::vector <std::string> result;
+    std::vector<std::string> result;
     for (auto& entry : directory_iterator(path("modules/"))) {
         if (access((entry.path().string() + "/module").c_str(), R_OK | X_OK) == 0) {
             auto fullPath = entry.path().string();
             if (fullPath.find("/mod_") == fullPath.npos) {
                 continue;
             }
-            std::string moduleName(fullPath.begin() + std::string("modules/mod_").size(), fullPath.end());
+            std::string moduleName(fullPath.begin() + std::string("modules/mod_").size(),
+                                   fullPath.end());
             result.push_back(moduleName);
         }
     }
     return result;
-    
 }

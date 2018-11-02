@@ -2,11 +2,11 @@
 #define GAME_ENEMY_HPP
 
 #include <functional>
+#include <mutex>
 #include <unordered_map>
 
 #include <modbox/game/ai.hpp>
 #include <modbox/geometry/game_position.hpp>
-#include <mutex>
 
 using EnemyId = uint64_t;
 
@@ -74,12 +74,10 @@ public:
     Enemy& mutableAccessEnemy(EnemyId id);
     std::optional<EnemyId> reverseLookup(irr::scene::ISceneNode* drawable);
 
-    void addKind(
-        const std::string& kind,
-        const std::function <void(EnemyId)>& creationFunction,
-        const std::function <std::string(EnemyId)>& aiFunction,
-        double healthMax
-    );
+    void addKind(const std::string& kind,
+                 const std::function<void(EnemyId)>& creationFunction,
+                 const std::function<std::string(EnemyId)>& aiFunction,
+                 double healthMax);
     std::function<std::string(EnemyId)> getAiFunction(const std::string& kind);
 
     void processAi();

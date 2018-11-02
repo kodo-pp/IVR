@@ -9,9 +9,9 @@
 #include <vector>
 
 #include <modbox/core/destroy.hpp>
+#include <modbox/game/player.hpp>
 #include <modbox/log/log.hpp>
 #include <modbox/util/util.hpp>
-#include <modbox/game/player.hpp>
 
 void drawBarrier();
 

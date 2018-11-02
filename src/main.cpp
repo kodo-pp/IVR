@@ -26,7 +26,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-struct CloseMenu {};
+struct CloseMenu
+{
+};
 
 int main(int argc, char** argv)
 {
@@ -73,28 +75,23 @@ int main(int argc, char** argv)
         };
         */
 
-
         auto singleplayerMenuFunc = [&]() {
-                MainMenu singleplayerMenu({
-                    {L"Create new world", createWorldFunc},
-                    {L"Load existing world", loadWorldFunc},
-                    {L"Module configuration", moduleCtlFunc},
-                    {L"Back", []() {throw CloseMenu();}}
-                });
-                try {
-                    singleplayerMenu.show();
-                } catch (const CloseMenu& close) {
-                    // do nothing
-                    singleplayerMenu.setVisible(false);
-                }
+            MainMenu singleplayerMenu({{L"Create new world", createWorldFunc},
+                                       {L"Load existing world", loadWorldFunc},
+                                       {L"Module configuration", moduleCtlFunc},
+                                       {L"Back", []() { throw CloseMenu(); }}});
+            try {
+                singleplayerMenu.show();
+            } catch (const CloseMenu& close) {
+                // do nothing
+                singleplayerMenu.setVisible(false);
+            }
         };
 
         std::thread gameThread([&]() {
             try {
-                MainMenu mainMenu({
-                    {L"Singleplayer", singleplayerMenuFunc},
-                    {L"Quit", []() { destroy(); }}
-                });
+                MainMenu mainMenu(
+                        {{L"Singleplayer", singleplayerMenuFunc}, {L"Quit", []() { destroy(); }}});
                 try {
                     mainMenu.show();
                 } catch (const std::exception& e) {

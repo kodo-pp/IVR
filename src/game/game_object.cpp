@@ -1,13 +1,13 @@
 #include <mutex>
 
+#include <modbox/core/core.hpp>
+#include <modbox/core/event_manager.hpp>
 #include <modbox/game/game_object.hpp>
 #include <modbox/graphics/graphics.hpp>
 #include <modbox/log/log.hpp>
+#include <modbox/modules/module_io.hpp>
 #include <modbox/util/handle_storage.hpp>
 #include <modbox/util/util.hpp>
-#include <modbox/modules/module_io.hpp>
-#include <modbox/core/event_manager.hpp>
-#include <modbox/core/core.hpp>
 
 GameObject::GameObject(irr::scene::ISceneNode* _node, const std::string& _kind, GameObjectId _id)
         : node(_node), kind(_kind), id(_id)
@@ -70,23 +70,28 @@ irr::scene::ISceneNode* GameObject::sceneNode() const
     return node;
 }
 
-std::string GameObject::getKind() const {
+std::string GameObject::getKind() const
+{
     return kind;
 }
 
-GameObjectId GameObjectManager::createGameObject(const std::string& kind, irr::scene::ISceneNode* model)
+GameObjectId GameObjectManager::createGameObject(const std::string& kind,
+                                                 irr::scene::ISceneNode* model)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
     ++idCounter;
     gameObjects.emplace(idCounter, GameObject(model, kind, idCounter));
-    getEventManager().raiseEvent("gameObject.create", {{"kind", kind}, {"id", std::to_string(idCounter)}});
+    getEventManager().raiseEvent("gameObject.create",
+                                 {{"kind", kind}, {"id", std::to_string(idCounter)}});
     return idCounter;
 }
 
 void GameObjectManager::deleteGameObject(GameObjectId id)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
-    getEventManager().raiseEvent("gameObject.delete", {{"kind", gameObjects.at(id).getKind()}, {"id", std::to_string(id)}});
+    getEventManager().raiseEvent(
+            "gameObject.delete",
+            {{"kind", gameObjects.at(id).getKind()}, {"id", std::to_string(id)}});
     gameObjects.erase(id);
 }
 
@@ -107,8 +112,9 @@ GameObjectManager& getGameObjectManager()
     return manager;
 }
 
-void GameObjectManager::addKind(const std::string& kind) {
-    std::lock_guard <std::recursive_mutex> lock(mutex);
+void GameObjectManager::addKind(const std::string& kind)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     if (kinds.count(kind) > 0) {
         throw std::runtime_error("Game object kind '" + kind + "' already registered");
     }
@@ -126,7 +132,7 @@ std::optional<GameObjectId> GameObjectManager::reverseLookup(irr::scene::ISceneN
     }
     return {};
 }
-FuncResult handlerAddGameObjectKind(const std::vector <std::string>& args)
+FuncResult handlerAddGameObjectKind(const std::vector<std::string>& args)
 {
     FuncResult ret;
     if (args.size() != 1) {
@@ -137,7 +143,7 @@ FuncResult handlerAddGameObjectKind(const std::vector <std::string>& args)
     getGameObjectManager().addKind(kind);
     return ret;
 }
-FuncResult handlerAddGameObject(const std::vector <std::string>& args)
+FuncResult handlerAddGameObject(const std::vector<std::string>& args)
 {
     FuncResult ret;
     ret.data.resize(1);
@@ -149,14 +155,12 @@ FuncResult handlerAddGameObject(const std::vector <std::string>& args)
     auto drawableHandle = getArgument<uint64_t>(args, 1);
 
     auto gameObjectId = getGameObjectManager().createGameObject(
-        kind,
-        drawablesManager.access(drawableHandle)
-    );
-    
+            kind, drawablesManager.access(drawableHandle));
+
     setReturn(ret, 0, gameObjectId);
     return ret;
 }
-FuncResult handlerRemoveGameObject(const std::vector <std::string>& args)
+FuncResult handlerRemoveGameObject(const std::vector<std::string>& args)
 {
     FuncResult ret;
     if (args.size() != 1) {
@@ -167,7 +171,7 @@ FuncResult handlerRemoveGameObject(const std::vector <std::string>& args)
     getGameObjectManager().deleteGameObject(gameObjectId);
     return ret;
 }
-FuncResult handlerGameObjectAddRecipe(const std::vector <std::string>& args)
+FuncResult handlerGameObjectAddRecipe(const std::vector<std::string>& args)
 {
     FuncResult ret;
     if (args.size() != 3) {
@@ -180,7 +184,7 @@ FuncResult handlerGameObjectAddRecipe(const std::vector <std::string>& args)
     getGameObjectManager().addRecipe(kind, partKind, resultingKind);
     return ret;
 }
-FuncResult handlerGameObjectAttachPart(const std::vector <std::string>& args)
+FuncResult handlerGameObjectAttachPart(const std::vector<std::string>& args)
 {
     FuncResult ret;
     if (args.size() != 2) {
@@ -203,13 +207,17 @@ void initializeGameObjects()
     registerFuncProvider(FuncProvider("gameObject.addKind", handlerAddGameObjectKind), "s", "");
     registerFuncProvider(FuncProvider("gameObject.add", handlerAddGameObject), "su", "u");
     registerFuncProvider(FuncProvider("gameObject.remove", handlerRemoveGameObject), "su", "");
-    registerFuncProvider(FuncProvider("gameObject.addRecipe", handlerGameObjectAddRecipe), "sss", "");
-    registerFuncProvider(FuncProvider("gameObject.attachPart", handlerGameObjectAttachPart), "us", "i");
+    registerFuncProvider(
+            FuncProvider("gameObject.addRecipe", handlerGameObjectAddRecipe), "sss", "");
+    registerFuncProvider(
+            FuncProvider("gameObject.attachPart", handlerGameObjectAttachPart), "us", "i");
 }
 
-void GameObjectManager::addRecipe(const std::string& kind, const std::string& partKind, const std::string& resultingKind)
+void GameObjectManager::addRecipe(const std::string& kind,
+                                  const std::string& partKind,
+                                  const std::string& resultingKind)
 {
-    std::lock_guard <std::recursive_mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     if (kinds.count(kind) == 0) {
         throw std::runtime_error("No such kind: '" + kind + "'");
     }
@@ -225,19 +233,21 @@ void GameObjectManager::addRecipe(const std::string& kind, const std::string& pa
 bool GameObject::attachPart(const std::string& partKind)
 {
     if (auto res = getGameObjectManager().checkRecipe(kind, partKind); res.has_value()) {
-        getEventManager().raiseEvent(
-            "gameObject.partAttach",
-            {{"id", std::to_string(id)}, {"kind", kind}, {"partKind", partKind}, {"resultingKind", *res}}
-        );
+        getEventManager().raiseEvent("gameObject.partAttach",
+                                     {{"id", std::to_string(id)},
+                                      {"kind", kind},
+                                      {"partKind", partKind},
+                                      {"resultingKind", *res}});
         kind = *res;
         return true;
     }
     return false;
 }
 
-std::optional <std::string> GameObjectManager::checkRecipe(const std::string& kind, const std::string& partKind)
+std::optional<std::string> GameObjectManager::checkRecipe(const std::string& kind,
+                                                          const std::string& partKind)
 {
-    std::lock_guard <std::recursive_mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     if (auto it = recipes.find({kind, partKind}); it != recipes.end()) {
         return it->second;
     }

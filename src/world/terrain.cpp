@@ -236,7 +236,8 @@ void TerrainManager::writeTerrain(offset_t x, offset_t y, irr::video::IImage* hm
 
 std::string TerrainManager::getTerrainFilename(offset_t x, offset_t y) const
 {
-    return getSavePath() + "terrain/heightmaps/" + std::to_string(x) + "_" + std::to_string(y) + ".png";
+    return getSavePath() + "terrain/heightmaps/" + std::to_string(x) + "_" + std::to_string(y)
+           + ".png";
 }
 
 std::string TerrainManager::getCreateTerrainFilename(offset_t x, offset_t y)
@@ -254,7 +255,8 @@ std::string TerrainManager::getCreateTerrainFilename(offset_t x, offset_t y)
                     + strerror(errno));
         }
     }
-    return getSavePath() + "terrain/heightmaps/" + std::to_string(x) + "_" + std::to_string(y) + ".png";
+    return getSavePath() + "terrain/heightmaps/" + std::to_string(x) + "_" + std::to_string(y)
+           + ".png";
 }
 
 // void TerrainManager::trackObject(GameObjectId objectId);

@@ -1,10 +1,11 @@
-#include <modbox/game/weapon.hpp>
-#include <stdexcept>
 #include <exception>
+#include <stdexcept>
+
+#include <modbox/game/weapon.hpp>
 
 void WeaponManager::addWeapon(const std::string& name, double length, double damage)
 {
-    std::lock_guard <std::recursive_mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     if (weapons.count(name) > 0) {
         throw std::runtime_error("Weapon '" + name + "' already exists");
     }
@@ -12,7 +13,7 @@ void WeaponManager::addWeapon(const std::string& name, double length, double dam
 }
 void WeaponManager::removeWeapon(const std::string& name)
 {
-    std::lock_guard <std::recursive_mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     if (weapons.count(name) == 0) {
         throw std::runtime_error("Weapon '" + name + "' does not exist");
     }
@@ -20,7 +21,7 @@ void WeaponManager::removeWeapon(const std::string& name)
 }
 double WeaponManager::getDamage(const std::string& name)
 {
-    std::lock_guard <std::recursive_mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     if (weapons.count(name) == 0) {
         throw std::runtime_error("Weapon '" + name + "' does not exist");
     }
@@ -28,7 +29,7 @@ double WeaponManager::getDamage(const std::string& name)
 }
 double WeaponManager::getLength(const std::string& name)
 {
-    std::lock_guard <std::recursive_mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     if (weapons.count(name) == 0) {
         throw std::runtime_error("Weapon '" + name + "' does not exist");
     }
@@ -36,7 +37,7 @@ double WeaponManager::getLength(const std::string& name)
 }
 bool WeaponManager::hasWeapon(const std::string& name)
 {
-    std::lock_guard <std::recursive_mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     return weapons.count(name) > 0;
 }
 

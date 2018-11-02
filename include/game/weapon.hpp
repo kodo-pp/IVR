@@ -1,9 +1,9 @@
 #ifndef GAME_WEAPON_HPP
 #define GAME_WEAPON_HPP
 
+#include <mutex>
 #include <string>
 #include <unordered_map>
-#include <mutex>
 
 class WeaponManager
 {
@@ -16,7 +16,7 @@ public:
 
 private:
     std::recursive_mutex mutex;
-    std::unordered_map <std::string, std::pair <double, double>> weapons;
+    std::unordered_map<std::string, std::pair<double, double>> weapons;
 };
 
 WeaponManager& getWeaponManager();

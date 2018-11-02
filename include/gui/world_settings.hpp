@@ -1,17 +1,17 @@
 #pragma once
 
 #include <functional>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <mutex>
 
 #include <modbox/gui/gui.hpp>
 
 class WorldSettings
 {
 public:
-    std::optional<std::tuple<std::string, std::vector <std::string>, bool>> show();
+    std::optional<std::tuple<std::string, std::vector<std::string>, bool>> show();
 
 private:
     irr::gui::IGUIButton* ok;
@@ -24,7 +24,7 @@ private:
     std::condition_variable cv;
     bool doClose = false;
     mutable std::mutex cvMutex;
-    std::optional<std::tuple<std::string, std::vector <std::string>, bool>> result;
+    std::optional<std::tuple<std::string, std::vector<std::string>, bool>> result;
 };
 
 class WorldList
@@ -39,7 +39,7 @@ private:
     irr::gui::IGUIButton* cancel;
     std::condition_variable cv;
     bool doClose = false;
-    std::optional <std::string> worldName;
+    std::optional<std::string> worldName;
     mutable std::mutex cvMutex;
 };
 
