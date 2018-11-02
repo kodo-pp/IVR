@@ -34,26 +34,6 @@ int main(int argc, char** argv)
         createModuleListenerThread();
         LOG("Creating game thread");
 
-        LOG("Testing event manager...");
-        getEventManager().addEventHandler(
-                "test event",
-                [](const std::unordered_map<std::string, std::string>&) { LOG("First handler"); });
-        getEventManager().addEventHandler(
-                "test event",
-                [](const std::unordered_map<std::string, std::string>&) { LOG("Second handler"); });
-        getEventManager().addEventHandler(
-                "not a test event",
-                [](const std::unordered_map<std::string, std::string>&) { LOG("Not a handler"); });
-        getEventManager().addEventHandler(
-                "test event",
-                [](const std::unordered_map<std::string, std::string>&) { LOG("Third handler"); });
-
-        // Expected output:
-        // First handler
-        // Second handler
-        // Third handler
-        getEventManager().raiseEvent("test event");
-
         std::thread gameThread([]() {
             try {
                 MainMenu mainMenu({{L"Singleplayer",
@@ -63,6 +43,7 @@ int main(int argc, char** argv)
                                             moduleManager.loadModule("aim");
                                             moduleManager.loadModule("inventory");
                                             moduleManager.loadModule("test_enemy");
+                                            moduleManager.loadModule("test_game_object");
                                         } catch (const std::exception& e) {
                                             LOG("Failed to load module: " << e.what());
                                             return;

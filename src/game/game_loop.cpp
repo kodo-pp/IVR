@@ -29,8 +29,6 @@ std::atomic<bool> canPlaceObject(true);
 std::atomic<bool> gameStarted(false);
 std::atomic<bool> safeDrawFunctionsRun(false); // Костыль, но работает (теперь нет)
 
-// TODO: use TerrainManager or something like that
-std::vector<GameObjCube> placedCubes;
 std::vector<std::pair<std::string, uint64_t>> eachTickFuncs;
 
 std::recursive_mutex drawFunctionsMutex;
@@ -154,27 +152,6 @@ static void processKeys(Player& player)
         const double speed = 2.0 / desiredFps * 30;
         player.turn(speed * dx, speed * dy);
     }
-
-    // Place object
-    {
-        if (canPlaceObject && receiver.isKeyPressed(irr::KEY_KEY_C)) {
-            bool hasHit;
-            GamePosition hitPoint;
-            std::tie(hasHit, hitPoint) = graphicsGetPlacePosition(player.getPosition(),
-                                                                  player.getCameraTarget());
-
-            if (hasHit) {
-                LOG("Object placed at " << hitPoint);
-                placedCubes.push_back(graphicsCreateCube());
-                placedCubes.back().setPosition(hitPoint);
-                placedCubes.back().sceneNode()->setScale({10, 10, 10});
-                graphicsAddTexture(placedCubes.back(), graphicsLoadTexture("textures/cube3.png"));
-                graphicsHandleCollisionsBoundingBox(placedCubes.back().sceneNode());
-                canPlaceObject = false;
-                delayedAssign(canPlaceObject, 0.4, true);
-            }
-        }
-    }
 }
 
 void gameLoop()
@@ -183,24 +160,7 @@ void gameLoop()
     Player& player = getPlayer();
     drawBarrier();
 
-    GameObjCube object = graphicsCreateCube();
-
-    std::vector<GameObject> staticCubes;
     addSelectorKind("enemies");
-
-    for (int i = 0; i < 10; ++i) {
-        for (int j = 0; j < 2; ++j) {
-            staticCubes.push_back(graphicsCreateCube());
-            staticCubes.back().setPosition(GamePosition(i * 20, j * 20, 0));
-            staticCubes.back().setPhysicsEnabled(true);
-        }
-    }
-    graphicsAddTexture(object, graphicsLoadTexture("textures/cube1.png"));
-
-    auto tex2 = graphicsLoadTexture("textures/cube2.png");
-    for (auto& cube : staticCubes) {
-        graphicsAddTexture(cube, tex2);
-    }
 
     getEventManager().addEventHandler("mouse.leftButtonDown", [](const std::unordered_map<std::string, std::string>&) {
         auto maybeValue = getRayIntersect(getPlayer().getPosition().toIrrVector3df(), getCameraTarget(700), "enemies"); // XXX: configure this number
@@ -247,9 +207,6 @@ void gameLoop()
         toRemove.clear();
 
         std::ignore = graphicsGetPlacePosition(player.getPosition(), player.getCameraTarget());
-        object.setPosition(GamePosition(sin(i) * 20, cos(i) * 20, (sin(i) + cos(i)) * 20));
-        object.setRotation(i * 100, i * 50, i * 20);
-
         double timeForFrame = 1.0 / desiredFps;
         i += timeForFrame;
         usleep(1000000 / 60);

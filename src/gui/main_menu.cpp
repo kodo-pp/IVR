@@ -25,7 +25,6 @@ MainMenu::MainMenu(const std::unordered_map<std::wstring, std::function<void()>>
 void MainMenu::show()
 {
     while (true) {
-        setAimVisible(false);
         itemList.draw({0, 0, 400, 300});
         std::wstring selected = itemList.getSelectedItem();
         if (actions.count(selected) == 0) {
@@ -39,9 +38,6 @@ void MainMenu::show()
 
 void MainMenu::setVisible(bool visible)
 {
-    if (visible) {
-        setAimVisible(false);
-    }
     std::lock_guard<std::recursive_mutex> lock(getIrrlichtMutex());
     LOG("MainMenu: setting visibility: " << visible);
     if (!visible) {

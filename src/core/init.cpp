@@ -23,6 +23,7 @@ void init(std::vector<std::string>& args)
     initilaizeCore(args);
     initializeGraphics(args);
     initializeEnemies();
+    initializeGameObjects();
 
     signal(SIGINT, sigIntHandler);
     signal(SIGABRT, sigAbrtHandler);

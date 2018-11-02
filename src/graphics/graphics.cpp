@@ -8,7 +8,7 @@
 
 #include <modbox/core/core.hpp>
 #include <modbox/game/game_loop.hpp>
-#include <modbox/game/objects/objects.hpp>
+#include <modbox/game/game_object.hpp>
 #include <modbox/geometry/geometry.hpp>
 #include <modbox/graphics/graphics.hpp>
 #include <modbox/graphics/texture.hpp>
@@ -43,9 +43,6 @@ namespace graphics
     scene::ITerrainSceneNode* rootTerrainSceneNode;
 
     scene::IMetaTriangleSelector* terrainSelector;
-
-    std::atomic<bool> hasCollision(false);
-    std::atomic<bool> aimVisible(false);
 
     std::unordered_map<std::string, irr::video::ITexture*> textureCache;
 
@@ -179,29 +176,8 @@ void IrrEventReceiver::deleteEventHandler(uint64_t id)
     eventHandlers.remove(id);
 }
 
-// Включает/выключает видимость прицела
-void setAimVisible(bool visible)
-{
-    graphics::aimVisible = visible;
-}
-
 // Инициализация графического движко
 static void initializeIrrlicht(std::vector<std::string>& args);
-
-// Внешнее API: создание куба как объекта
-FuncResult handlerGraphicsCreateCube(UNUSED const std::vector<std::string>& args)
-{
-    FuncResult ret;
-    ret.data.resize(1);
-
-    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
-
-    GameObject* obj = new GameObject(graphicsCreateCube());
-    auto objectHandle = registerGameObject(obj);
-
-    setReturn<uint64_t>(ret, 0, objectHandle);
-    return ret;
-}
 
 // Внешнее API: перемещение оъекта
 FuncResult handlerGraphicsMoveObject(const std::vector<std::string>& args)
@@ -211,15 +187,14 @@ FuncResult handlerGraphicsMoveObject(const std::vector<std::string>& args)
     }
     FuncResult ret;
 
-    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
-
     uint64_t objectHandle = getArgument<uint64_t>(args, 0);
 
     double x = getArgument<double>(args, 1);
     double y = getArgument<double>(args, 2);
     double z = getArgument<double>(args, 3);
 
-    graphicsMoveObject(getGameObject(objectHandle)->sceneNode(), GamePosition(x, y, z));
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+    graphicsMoveObject(getGameObjectManager().mutableAccess(objectHandle).sceneNode(), GamePosition(x, y, z));
 
     return ret;
 }
@@ -232,12 +207,10 @@ FuncResult handlerGraphicsDeleteObject(const std::vector<std::string>& args)
     }
     FuncResult ret;
 
-    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
-
     uint64_t objectHandle = getArgument<uint64_t>(args, 0);
 
-    graphicsDeleteObject(getGameObject(objectHandle));
-    unregisterGameObject(objectHandle);
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+    getGameObjectManager().deleteGameObject(objectHandle);
 
     return ret;
 }
@@ -250,7 +223,6 @@ FuncResult handlerGraphicsRotateObject(const std::vector<std::string>& args)
     }
 
     FuncResult ret;
-    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
 
     uint64_t objectHandle = getArgument<uint64_t>(args, 0);
 
@@ -258,7 +230,8 @@ FuncResult handlerGraphicsRotateObject(const std::vector<std::string>& args)
     double roll = getArgument<double>(args, 2);
     double yaw = getArgument<double>(args, 3);
 
-    graphicsRotateObject(getGameObject(objectHandle)->sceneNode(),
+    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
+    graphicsRotateObject(getGameObjectManager().mutableAccess(objectHandle).sceneNode(),
                          core::vector3df(pitch, roll, yaw));
 
     return ret;
@@ -288,39 +261,14 @@ FuncResult handlerGraphicsLoadTexture(const std::vector<std::string>& args)
     return ret;
 }
 
-// Внешнее API: добавить текстуру к объекту
-FuncResult handlerGraphicsAddTexture(const std::vector<std::string>& args)
-{
-    if (args.size() != 2) {
-        throw std::logic_error("Wrong number of arguments for handlerGraphicsAddTexture()");
-    }
-
-    FuncResult ret;
-    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
-
-    uint64_t objectHandle = getArgument<uint64_t>(args, 0);
-    uint64_t textureHandle = getArgument<uint64_t>(args, 1);
-
-    GameObject* obj = getGameObject(objectHandle);
-    ITexture* texture = accessTexture(textureHandle);
-
-    LOG(L"Adding texture " << textureHandle << L" to object " << objectHandle);
-
-    obj->sceneNode()->setMaterialTexture(0, texture);
-
-    return ret;
-}
-
 // Внешнее API: добавить текстуру к модели
 FuncResult handlerGraphicsDrawableAddTexture(const std::vector<std::string>& args)
 {
     if (args.size() != 2) {
-        throw std::logic_error("Wrong number of arguments for handlerGraphicsAddTexture()");
+        throw std::logic_error("Wrong number of arguments for handlerGraphicsDrawableAddTexture()");
     }
 
     FuncResult ret;
-    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
-
     uint64_t drawableHandle = getArgument<uint64_t>(args, 0);
     uint64_t textureHandle = getArgument<uint64_t>(args, 1);
 
@@ -347,7 +295,7 @@ FuncResult handlerCreateDrawableCube(const std::vector<std::string>& args)
     FuncResult ret;
     ret.data.resize(1);
 
-    LOG(L"Creating drawable cube");
+    LOG("Creating drawable cube");
     setReturn<uint64_t>(ret, 0, drawablesManager.track(graphicsCreateDrawableCube()));
     return ret;
 }
@@ -407,6 +355,39 @@ FuncResult handlerDrawableDisablePhysics(const std::vector<std::string>& args)
     return ret;
 }
 
+// Внешнее API: включить взаимодействие с моделью
+FuncResult handlerDrawableEnableCollisions(const std::vector<std::string>& args)
+{
+    if (args.size() != 1) {
+        throw std::logic_error("Wrong number of arguments for handlerDrawableEnableCollisions()");
+    }
+
+    auto drawableHandle = getArgument<uint64_t>(args, 0);
+
+    auto drawable = drawablesManager.access(drawableHandle);
+    graphicsHandleCollisionsBoundingBox(drawable);
+
+    FuncResult ret;
+    return ret;
+}
+
+// Внешнее API: отключить взаимодействие с моделью
+FuncResult handlerDrawableDisableCollisions(const std::vector<std::string>& args)
+{
+    if (args.size() != 1) {
+        throw std::logic_error("Wrong number of arguments for handlerDrawableDisableCollisions()");
+    }
+
+    auto drawableHandle = getArgument<uint64_t>(args, 0);
+
+    auto drawable = drawablesManager.access(drawableHandle);
+    graphicsStopHandlingCollisions(drawable);
+
+    FuncResult ret;
+    return ret;
+}
+
+// Внешнее API: отключить физику для модели
 FuncResult handlerAdd2DRectangle(const std::vector<std::string>& args)
 {
     if (args.size() != 8) {
@@ -599,9 +580,9 @@ FuncResult handlerGraphicsAddSubSelectorForObject(const std::vector <std::string
 
     auto kind = getArgument<std::string>(args, 0);
     auto objectHandle = getArgument<uint64_t>(args, 1);
-    auto objectPtr = getGameObject(objectHandle);
+    auto object = getGameObjectManager().access(objectHandle);
 
-    auto selector = graphics::irrSceneManager->createTriangleSelectorFromBoundingBox(objectPtr->sceneNode());
+    auto selector = graphics::irrSceneManager->createTriangleSelectorFromBoundingBox(object.sceneNode());
     if (selector == nullptr) {
         throw std::runtime_error("Unable to create selector");
     }
@@ -779,7 +760,6 @@ FuncResult handlerGraphicsScaleDrawable(const std::vector <std::string>& args)
 // Инициализация внешнего API
 static inline void initializeGraphicsFuncProviders()
 {
-    registerFuncProvider(FuncProvider("graphics.createCube", handlerGraphicsCreateCube), "", "u");
     registerFuncProvider(
             FuncProvider("graphics.moveObject", handlerGraphicsMoveObject), "ufff", "");
     registerFuncProvider(
@@ -788,7 +768,6 @@ static inline void initializeGraphicsFuncProviders()
             FuncProvider("graphics.deleteObject", handlerGraphicsDeleteObject), "u", "");
     registerFuncProvider(
             FuncProvider("graphics.texture.loadFromFile", handlerGraphicsLoadTexture), "s", "u");
-    registerFuncProvider(FuncProvider("graphics.texture.add", handlerGraphicsAddTexture), "uu", "");
     registerFuncProvider(
             FuncProvider("graphics.texture.addToDrawable", handlerGraphicsDrawableAddTexture),
             "uu",
@@ -803,6 +782,14 @@ static inline void initializeGraphicsFuncProviders()
             "");
     registerFuncProvider(
             FuncProvider("graphics.drawable.disablePhysics", handlerDrawableDisablePhysics),
+            "u",
+            "");
+    registerFuncProvider(
+            FuncProvider("graphics.drawable.enableCollisions", handlerDrawableEnableCollisions),
+            "u",
+            "");
+    registerFuncProvider(
+            FuncProvider("graphics.drawable.disableCollisions", handlerDrawableDisableCollisions),
             "u",
             "");
     registerFuncProvider(
@@ -903,21 +890,6 @@ static void initializeIrrlicht(UNUSED std::vector<std::string>& args)
     // graphicsInitializeCollisions();
 }
 
-// Создать куб как объект
-GameObjCube graphicsCreateCube()
-{
-    std::lock_guard<std::recursive_mutex> lock(gameObjectMutex);
-    scene::ISceneNode* node = graphics::irrSceneManager->addCubeSceneNode();
-    if (node == nullptr) {
-        // return (ISceneNode*)nullptr;
-        throw std::runtime_error("failed to create a cube scene node");
-    }
-
-    node->setMaterialFlag(EMF_LIGHTING, false);
-
-    return GameObjCube(node);
-}
-
 // Отрисовать кадр
 void graphicsDraw()
 {
@@ -938,18 +910,6 @@ void graphicsDraw()
 
     graphics::irrGuiEnvironment->drawAll();
     graphics::irrSceneManager->drawAll();
-    if (graphics::aimVisible) {
-        core::recti viewport = graphics::irrVideoDriver->getViewPort();
-        auto lt = viewport.getCenter() - irr::core::vector2di(10, 10);
-        auto rb = viewport.getCenter() + irr::core::vector2di(10);
-        if (graphics::hasCollision) {
-            graphics::irrVideoDriver->draw2DRectangle(video::SColor(180, 0, 255, 0),
-                                                      core::recti(lt, rb));
-        } else {
-            graphics::irrVideoDriver->draw2DRectangle(video::SColor(180, 255, 0, 0),
-                                                      core::recti(lt, rb));
-        }
-    }
     for (auto& [_, rc] : graphics::rectangles) {
         auto& [rect, color] = rc;
         graphics::irrVideoDriver->draw2DRectangle(color, graphicsViewportize(rect));
@@ -1082,20 +1042,6 @@ ITexture* graphicsLoadTexture(const std::string& textureFileName)
     });
 }
 
-// Добавить текстуру к объекту
-void graphicsAddTexture(const GameObject& obj, ITexture* tex)
-{
-    std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
-    LOG(L"Adding texture");
-    if ((obj.sceneNode() == nullptr) || (tex == nullptr)) {
-        LOG(L"Adding texture failed");
-        return;
-    }
-
-    obj.sceneNode()->setMaterialTexture(0, tex);
-    LOG(L"Texture added successfully");
-}
-
 // Загрузить чанк в память
 // Код частично взят с http://irrlicht.sourceforge.net/docu/example012.html
 void graphicsLoadTerrain(int64_t off_x,
@@ -1168,7 +1114,7 @@ void graphicsHandleCollisions(scene::ITerrainSceneNode* node)
 }
 
 // Выключить взаимодействие других объектов и игрока с данным объектом
-void graphicsStopHandlingCollisions(scene::ITerrainSceneNode* node)
+void graphicsStopHandlingCollisions(scene::ISceneNode* node)
 {
     std::lock_guard<std::recursive_mutex> lock(irrlichtMutex);
 
@@ -1291,12 +1237,6 @@ bool irrDeviceRun()
     return x;
 }
 
-// Возвращает обработчик событий графического движка
-[[deprecated]] const IrrEventReceiver& getKeyboardEventReceiver()
-{
-    return graphics::getIrrEventReceiver();
-}
-
 // Определяет, куда поставить объект, если даны положение камеры и точка, куда камера
 // направлена
 std::pair<bool, GamePosition> graphicsGetPlacePosition(const GamePosition& pos,
@@ -1321,7 +1261,6 @@ std::pair<bool, GamePosition> graphicsGetPlacePosition(const GamePosition& pos,
             dummy2 // EVEN MORE I SAID
     );
 
-    graphics::hasCollision = collisionHappened;
     return {collisionHappened, GamePosition(hitPoint)};
 }
 

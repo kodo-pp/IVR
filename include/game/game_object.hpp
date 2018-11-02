@@ -4,58 +4,68 @@
 #include <string>
 
 #include <modbox/geometry/game_position.hpp>
-
-// XXX: очередной костыль
-//#include <graphics/graphics.hpp>
 #include <mutex>
+#include <unordered_set>
+#include <unordered_map>
 
 #include <modbox/modules/module.hpp>
 
 #include <irrlicht_wrapper.hpp>
 
-using irr::scene::ISceneNode;
-
 using GameObjectId = uint64_t;
 
-extern std::recursive_mutex gameObjectMutex;
-
-/**
- * A class which represents an abstract game object
- *
- * WARNING: instantiate not this class but its derived classes
- */
 class GameObject
 {
 public:
-    GameObject();
-    GameObject(const GameObject&) = default;
-    GameObject(GameObject&&) = default;
-    GameObject(ISceneNode*);
+    GameObject(irr::scene::ISceneNode* _node, const std::string& _kind, GameObjectId _id);
+    GameObject(const GameObject& other);
+    GameObject(GameObject&& other);
     virtual ~GameObject();
+
+    GameObject& operator=(const GameObject& other);
+    GameObject& operator=(GameObject&& other);
+
+    std::string getKind() const;
 
     GamePosition getPosition() const;
     void setPosition(const GamePosition& newPosition);
-    void setRotation(double, double, double);
-
-    GameObject& operator=(const GameObject&) = default;
-    GameObject& operator=(GameObject&&) = default;
-
-    ISceneNode* sceneNode() const;
-    GameObjectId getId() const;
-
-    bool getPhysicsEnabled();
-    void setPhysicsEnabled(bool value);
+    irr::scene::ISceneNode* sceneNode() const;
 
 protected:
-    bool physicsEnabled;
-    GamePosition position;
     GameObjectId id;
-
-    ISceneNode* _sceneNode;
+    std::string kind;
+    irr::scene::ISceneNode* node;
+    irr::scene::ITriangleSelector* selector;
 };
 
-uint64_t registerGameObject(GameObject* obj);
-GameObject* getGameObject(uint64_t idx);
-void unregisterGameObject(uint64_t idx);
+class GameObjectManager
+{
+public:
+    GameObjectManager() = default;
+    GameObjectManager(const GameObjectManager& other) = default;
+    GameObjectManager(GameObjectManager&& other) = default;
+    virtual ~GameObjectManager() = default;
+
+    GameObjectManager& operator=(const GameObjectManager& other) = default;
+    GameObjectManager& operator=(GameObjectManager&& other) = default;
+
+    GameObjectId createGameObject(const std::string& kind, irr::scene::ISceneNode* model);
+    void deleteGameObject(GameObjectId id);
+    const GameObject& access(GameObjectId id);
+    GameObject& mutableAccess(GameObjectId id);
+    std::optional<GameObjectId> reverseLookup(irr::scene::ISceneNode* drawable);
+
+    void addKind(const std::string& kind);
+
+private:
+    mutable std::recursive_mutex mutex;
+    std::unordered_set<std::string> kinds;
+    std::unordered_map<GameObjectId, GameObject> gameObjects;
+    GameObjectId idCounter = 0;
+};
+
+GameObjectManager& getGameObjectManager();
+
+void initializeGameObjects();
 
 #endif /* end of include guard: GAME_GAME_OBJECT_HPP */

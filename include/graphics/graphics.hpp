@@ -5,9 +5,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include <modbox/game/objects/objects.hpp>
 #include <modbox/geometry/game_position.hpp>
 #include <modbox/util/handle_storage.hpp>
+#include <modbox/game/game_object.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <irrlicht_wrapper.hpp>
@@ -29,9 +29,6 @@ void cleanupGraphics();
 
 // ===== Managing objects =====
 
-/// Create a cube and return the GameObject instance
-GameObjCube graphicsCreateCube();
-
 /// Move a scene node to the specified location
 void graphicsMoveObject(ISceneNode*, double, double, double);
 void graphicsMoveObject(ISceneNode*, const core::vector3df&);
@@ -39,9 +36,6 @@ void graphicsMoveObject(ISceneNode*, const GamePosition&);
 
 /// Rotate a scene node
 void graphicsRotateObject(ISceneNode* obj, const core::vector3df& rot);
-
-/// Delete and unregister a game object
-void graphicsDeleteObject(GameObject*);
 
 std::pair<bool, GamePosition> graphicsGetPlacePosition(const GamePosition& pos,
                                                        const GamePosition& target);
@@ -112,6 +106,7 @@ void graphicsInitializeCollisions();
 void graphicsHandleCollisions(scene::ITerrainSceneNode* node);
 void graphicsHandleCollisionsMesh(scene::IMesh* mesh, scene::ISceneNode* node);
 void graphicsHandleCollisionsBoundingBox(scene::ISceneNode* node);
+void graphicsStopHandlingCollisions(irr::scene::ISceneNode* node);
 
 // ===== Utility functions =====
 
@@ -196,53 +191,7 @@ irr::gui::IGUIListBox* createListBox(const std::vector<std::wstring>& strings,
 
 void graphicsInitializeCollisions();
 
-uint64_t addEventHandler(const std::function<bool(const irr::SEvent&)>& callback);
-
-// Это ужасный код, но он поможет при отладке
-static inline std::string getGuiEventDebugName(irr::gui::EGUI_EVENT_TYPE type)
-{
-#define ENTRY(name)                                                                                \
-    case irr::gui::EGET_##name:                                                                    \
-        return "EGET_" #name;
-
-    switch (type) {
-        ENTRY(ELEMENT_FOCUS_LOST);
-        ENTRY(ELEMENT_FOCUSED);
-        ENTRY(ELEMENT_HOVERED);
-        ENTRY(ELEMENT_LEFT);
-        ENTRY(ELEMENT_CLOSED);
-        ENTRY(BUTTON_CLICKED);
-        ENTRY(SCROLL_BAR_CHANGED);
-        ENTRY(CHECKBOX_CHANGED);
-        ENTRY(LISTBOX_CHANGED);
-        ENTRY(LISTBOX_SELECTED_AGAIN);
-        ENTRY(FILE_SELECTED);
-        ENTRY(DIRECTORY_SELECTED);
-        ENTRY(FILE_CHOOSE_DIALOG_CANCELLED);
-        ENTRY(MESSAGEBOX_YES);
-        ENTRY(MESSAGEBOX_NO);
-        ENTRY(MESSAGEBOX_OK);
-        ENTRY(MESSAGEBOX_CANCEL);
-        ENTRY(EDITBOX_ENTER);
-        ENTRY(EDITBOX_CHANGED);
-        ENTRY(EDITBOX_MARKING_CHANGED);
-        ENTRY(TAB_CHANGED);
-        ENTRY(MENU_ITEM_SELECTED);
-        ENTRY(COMBO_BOX_CHANGED);
-        ENTRY(SPINBOX_CHANGED);
-        ENTRY(TABLE_CHANGED);
-        ENTRY(TABLE_HEADER_CHANGED);
-        ENTRY(TABLE_SELECTED_AGAIN);
-        ENTRY(TREEVIEW_NODE_DESELECT);
-        ENTRY(TREEVIEW_NODE_SELECT);
-        ENTRY(TREEVIEW_NODE_EXPAND);
-        ENTRY(TREEVIEW_NODE_COLLAPSE);
-    default:
-        return std::string("Unknown GUI event type ") + std::to_string(type);
-    }
-
-#undef ENTRY
-}
+uint64_t addIrrlichtEventHandler(const std::function<bool(const irr::SEvent&)>& callback);
 
 void setAimVisible(bool visible);
 void graphicsModifyTerrain(ITerrainSceneNode* terrain,
