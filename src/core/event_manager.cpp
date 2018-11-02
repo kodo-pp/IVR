@@ -52,7 +52,11 @@ void EventManager::raiseEvent(const std::string& event,
         return;
     }
     for (const auto& handler : eventHandlers.at(event)) {
-        handler(args);
+        try {
+            handler(args);
+        } catch (const StopEventPropagation& stop) {
+            break;
+        }
     }
 }
 

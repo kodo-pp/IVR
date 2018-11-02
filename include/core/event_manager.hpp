@@ -8,6 +8,10 @@
 #include <string>
 #include <unordered_map>
 
+struct StopEventPropagation
+{
+};
+
 class EventHandler
 {
 public:

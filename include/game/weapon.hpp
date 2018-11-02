@@ -1,34 +1,24 @@
 #ifndef GAME_WEAPON_HPP
 #define GAME_WEAPON_HPP
 
-// XXX: maybe add class Tool and derive Weapon from it
+#include <string>
+#include <unordered_map>
+#include <mutex>
 
-/**
- * Represents an abstract weapon
- */
-
-class Weapon
+class WeaponManager
 {
 public:
-    // XXX: maybe c-tor should exist
-    Weapon() = delete;
-    virtual ~Weapon();
+    void addWeapon(const std::string& name, double length, double damage);
+    void removeWeapon(const std::string& name);
+    double getDamage(const std::string& name);
+    double getLength(const std::string& name);
+    bool hasWeapon(const std::string& name);
 
-    virtual void use() = 0;
-
-    double getDurabilityLeft();
-    void setDurabilityLeft(double durability);
-
-    double getDurabilityMax();
-    void setDurabilityMax(double durability);
-
-    double getBaseDamage();
-    // NOTICE: no setter
-
-protected:
-    double healthLeft;
-    double healthMax;
-    double baseDamage;
+private:
+    std::recursive_mutex mutex;
+    std::unordered_map <std::string, std::pair <double, double>> weapons;
 };
+
+WeaponManager& getWeaponManager();
 
 #endif /* end of include guard: GAME_WEAPON_HPP */

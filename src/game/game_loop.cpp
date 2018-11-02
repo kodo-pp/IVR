@@ -19,6 +19,7 @@
 #include <modbox/util/util.hpp>
 #include <modbox/world/terrain.hpp>
 #include <modbox/core/event_manager.hpp>
+#include <modbox/game/weapon.hpp>
 
 #include <irrlicht_wrapper.hpp>
 #include <unistd.h>
@@ -154,37 +155,61 @@ static void processKeys(Player& player)
     }
 }
 
+double getPlaceLength()
+{
+    return 500.0;
+}
+
 void gameLoop()
 {
     gameStarted = true;
     Player& player = getPlayer();
     drawBarrier();
 
+    getWeaponManager().addWeapon("sword", 500.0, 1.0);
+    getWeaponManager().addWeapon("rifle", 10000.0, 5.0);
+
     addSelectorKind("enemies");
 
     getFuncProvider("inventory.addItems")({"literally nothing", "10"});
-    getFuncProvider("inventory.addItems")({"[melee] sword", "1"});
+    getFuncProvider("inventory.addItems")({"sword", "1"});
+    getFuncProvider("inventory.addItems")({"rifle", "1"});
+    getFuncProvider("inventory.addItems")({"a bit of magic", "1"});
 
     getEventManager().addEventHandler("mouse.leftButtonDown", [](const std::unordered_map<std::string, std::string>&) {
         auto currentItem = getFuncProvider("inventory.getCurrentCellItem")({}).data.at(0);
         getEventManager().raiseEvent("use.l", {{"item", currentItem}});
-        LOG("Left mouse down");
     });
 
     getEventManager().addEventHandler("mouse.middleButtonDown", [](const std::unordered_map<std::string, std::string>&) {
         getFuncProvider("inventory.shiftCurrentCell")({"1"});
         LOG("Shifting inventory");
     });
+    getGameObjectManager().addRecipe("testGameObject", "a bit of magic", "anotherGameObject");
+    getEventManager().addEventHandler("gameObject.partAttach", [](const std::unordered_map<std::string, std::string>& args) {
+        LOG("Attached '" << args.at("partKind") << "' to '" << args.at("kind") << "': got '" << args.at("resultingKind") << "'");
+    });
 
-    // TODO: перенести в модуль
     getEventManager().addEventHandler("use.l", [](const std::unordered_map<std::string, std::string>& args) {
-        if (args.at("item").find("[melee]") != std::string::npos) {
-            auto maybeValue = getRayIntersect(getPlayer().getPosition().toIrrVector3df(), getCameraTarget(700), "enemies"); // XXX: configure this number
+        if (getWeaponManager().hasWeapon(args.at("item"))) {
+            // Attack enemy
+            auto length = getWeaponManager().getLength(args.at("item"));
+            auto damage = getWeaponManager().getDamage(args.at("item"));
+            auto maybeValue = getRayIntersect(getPlayer().getPosition().toIrrVector3df(), getCameraTarget(length), "enemies");
             if (maybeValue.has_value()) {
                 auto& [point, drawable] = *maybeValue;
                 if (auto maybeEnemyId = enemyManager.reverseLookup(drawable); maybeEnemyId.has_value()) {
-                    enemyManager.mutableAccessEnemy(*maybeEnemyId).hit(1.0);
+                    enemyManager.mutableAccessEnemy(*maybeEnemyId).hit(damage);
                 }
+            }
+            return;
+        }
+        // Attach part to object
+        auto maybeValue = getRayIntersect(getPlayer().getPosition().toIrrVector3df(), getCameraTarget(getPlaceLength()), "gameObjects");
+        if (maybeValue.has_value()) {
+            auto& [point, drawable] = *maybeValue;
+            if (auto maybeGameObjectId = getGameObjectManager().reverseLookup(drawable); maybeGameObjectId.has_value()) {
+                getGameObjectManager().mutableAccess(*maybeGameObjectId).attachPart(args.at("item"));
             }
         }
     });
