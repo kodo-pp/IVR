@@ -58,6 +58,10 @@ int main(int argc, char** argv)
             WorldList wl;
             wl.show();
         };
+        auto moduleCtlFunc = []() {
+            ModuleList ml;
+            ml.show();
+        };
         /*
         auto enterWorldFunc = []() {
             moduleManager.loadModule("aim");
@@ -74,6 +78,7 @@ int main(int argc, char** argv)
                 MainMenu singleplayerMenu({
                     {L"Create new world", createWorldFunc},
                     {L"Load existing world", loadWorldFunc},
+                    {L"Module configuration", moduleCtlFunc},
                     {L"Back", []() {throw CloseMenu();}}
                 });
                 try {

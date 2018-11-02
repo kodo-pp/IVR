@@ -5,6 +5,7 @@
 #include <modbox/core/destroy.hpp>
 #include <modbox/modules/module_manager.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/filesystem.hpp>
 
 std::optional<std::tuple <std::string, std::vector <std::string>, bool>> WorldSettings::show()
 {
@@ -134,4 +135,63 @@ void WorldList::show()
         enterWorld(*worldName);
         destroy();
     }
+}
+
+void ModuleList::show()
+{
+    std::unique_lock<std::mutex> cvLock(cvMutex);
+    irr::core::rectf lsRect(.1, .1, .9, .7);
+    irr::core::rectf removeRect(.1, .8, .45, .9);
+    irr::core::rectf cancelRect(.55, .8, .9, .9);
+    remove = getGuiEnvironment()->addButton(graphicsViewportize(removeRect), nullptr, 1, L"Remove");
+    back = getGuiEnvironment()->addButton(graphicsViewportize(cancelRect), nullptr, 2, L"Back");
+    ls = getGuiEnvironment()->addListBox(graphicsViewportize(lsRect));
+    auto list = listModules();
+    for (auto& i : list) {
+        ls->addItem(wstring_cast(i).c_str());
+    }
+
+    eventHandlerId = getEventReceiver().addEventHandler([this](const irr::SEvent& event) -> bool {
+        // If this is not a GUI event, skip it
+        if (event.EventType != irr::EET_GUI_EVENT) {
+            return false;
+        }
+        auto caller = event.GUIEvent.Caller;
+        if (caller != remove && caller != back && caller != msg) {
+            return false;
+        }
+
+        if (event.GUIEvent.EventType == irr::gui::EGET_BUTTON_CLICKED) {
+            if (caller == back) {
+                doClose = true;
+                std::unique_lock<std::mutex> cvLock(cvMutex);
+                cvLock.unlock();
+                cv.notify_one();
+                cvLock.lock();
+                return true;
+            } else if (caller == remove) {
+                if (msg != nullptr) {
+                    return true;
+                }
+                msg = getGuiEnvironment()->addMessageBox(
+                    L"Confirm deletion",
+                    L"Do you really want to delete this module?",
+                    true,
+                    irr::gui::EMBF_YES | irr::gui::EMBF_NO
+                );
+                return true;
+            }
+        } else if (event.GUIEvent.EventType == irr::gui::EGET_MESSAGEBOX_YES) {
+            boost::filesystem::remove_all("modules/mod_" + bytes_pack(ls->getListItem(ls->getSelected())));
+            msg->remove();
+            msg = nullptr;
+        }
+        return true;
+    });
+
+    cv.wait(cvLock, [this]() { usleep(100000); return doClose; });
+    getEventReceiver().deleteEventHandler(eventHandlerId);
+    remove->remove();
+    back->remove();
+    ls->remove();
 }

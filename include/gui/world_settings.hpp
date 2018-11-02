@@ -42,3 +42,19 @@ private:
     std::optional <std::string> worldName;
     mutable std::mutex cvMutex;
 };
+
+class ModuleList
+{
+public:
+    void show();
+
+private:
+    uint64_t eventHandlerId;
+    irr::gui::IGUIListBox* ls;
+    irr::gui::IGUIButton* back;
+    irr::gui::IGUIButton* remove;
+    irr::gui::IGUIWindow* msg = nullptr;
+    std::condition_variable cv;
+    bool doClose = false;
+    mutable std::mutex cvMutex;
+};
