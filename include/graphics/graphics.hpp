@@ -49,6 +49,8 @@ void graphicsStep(scene::ISceneNode* node, float distance);
 void graphicsLookAt(scene::ISceneNode* node, float x, float y, float z);
 void graphicsGetPosition(scene::ISceneNode* node, float& x, float& y, float& z);
 
+irr::gui::IGUIEnvironment* getGuiEnvironment();
+
 uint64_t graphicsAdd2DRectangle(const irr::core::rectf& rect, const irr::video::SColor& color);
 uint64_t graphicsAdd2DLine(const irr::core::line2df& line, const irr::video::SColor& color);
 uint64_t graphicsAdd2DImage(const irr::core::rectf& rect, irr::video::ITexture* texture);

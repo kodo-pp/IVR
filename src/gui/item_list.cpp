@@ -11,7 +11,6 @@ GuiItemList::GuiItemList(const std::vector<std::wstring>& _strings)
         , closeMenu(false)
         , isVisible(false)
 {
-    LOG("GuiItemList created");
 }
 
 void GuiItemList::setClickHandler(const std::function<bool()>& callback)
@@ -29,7 +28,6 @@ void GuiItemList::draw(const irr::core::recti& position)
 
 void GuiItemList::show()
 {
-    LOG("showing GuiItemList");
     if (isVisible) {
         return;
     }
@@ -54,7 +52,6 @@ void GuiItemList::show()
         }
         return true;
     });
-    LOG("EvH id = " << eventHandlerId);
     selectedItemIndex = -1;
     isVisible = true;
     closeMenu = false;
@@ -82,7 +79,6 @@ GuiItemList::~GuiItemList()
         getEventReceiver().deleteEventHandler(eventHandlerId);
         listbox->remove();
     }
-    LOG("GuiItemList removed");
 }
 
 void GuiItemList::hide()
@@ -96,5 +92,4 @@ void GuiItemList::hide()
     getEventReceiver().deleteEventHandler(eventHandlerId);
     listbox->remove();
     listbox = nullptr;
-    LOG("ItemList hidden");
 }

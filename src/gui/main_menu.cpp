@@ -39,11 +39,9 @@ void MainMenu::show()
 void MainMenu::setVisible(bool visible)
 {
     std::lock_guard<std::recursive_mutex> lock(getIrrlichtMutex());
-    LOG("MainMenu: setting visibility: " << visible);
     if (!visible) {
         itemList.hide();
     } else {
         itemList.show();
     }
-    LOG("MainMenu: successfully set visibility: " << visible);
 }

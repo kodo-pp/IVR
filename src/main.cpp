@@ -14,6 +14,7 @@
 #include <modbox/graphics/graphics.hpp>
 #include <modbox/gui/gui.hpp>
 #include <modbox/gui/main_menu.hpp>
+#include <modbox/gui/world_settings.hpp>
 #include <modbox/log/log.hpp>
 #include <modbox/modules/module_manager.hpp>
 #include <modbox/net/net.hpp>
@@ -23,6 +24,8 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+struct CloseMenu {};
 
 int main(int argc, char** argv)
 {
@@ -34,35 +37,56 @@ int main(int argc, char** argv)
         createModuleListenerThread();
         LOG("Creating game thread");
 
-        std::thread gameThread([]() {
+        auto createWorldFunc = []() {
+            WorldSettings ws;
+            auto maybeResult = ws.show();
+            if (!maybeResult.has_value()) {
+                return;
+            } else {
+                auto [name, modules, buildMode] = *maybeResult;
+                LOG("name = " << name);
+                LOG("modules.size() = " << modules.size());
+                LOG("buildMode = " << buildMode);
+            }
+            LOG("I am a duck");
+        };
+        auto loadWorldFunc = []() {
+            // Not implemented
+            LOG("No u");
+            assert("not" == "implemented");
+        };
+        /*
+        auto enterWorldFunc = []() {
+            moduleManager.loadModule("aim");
+            moduleManager.loadModule("inventory");
+            moduleManager.loadModule("test_enemy");
+            moduleManager.loadModule("test_game_object");
+            graphicsInitializeCollisions();
+            gameLoop();
+        };
+        */
+
+
+        auto singleplayerMenuFunc = [&]() {
+                MainMenu singleplayerMenu({
+                    {L"Create new world", createWorldFunc},
+                    {L"Load existing world", loadWorldFunc},
+                    {L"Back", []() {throw CloseMenu();}}
+                });
+                try {
+                    singleplayerMenu.show();
+                } catch (const CloseMenu& close) {
+                    // do nothing
+                    singleplayerMenu.setVisible(false);
+                }
+        };
+
+        std::thread gameThread([&]() {
             try {
-                MainMenu mainMenu({{L"Singleplayer",
-                                    []() {
-                                        try {
-                                            // moduleManager.loadModule("test");
-                                            moduleManager.loadModule("aim");
-                                            moduleManager.loadModule("inventory");
-                                            moduleManager.loadModule("test_enemy");
-                                            moduleManager.loadModule("test_game_object");
-                                        } catch (const std::exception& e) {
-                                            LOG("Failed to load module: " << e.what());
-                                            return;
-                                        }
-                                        // setAimVisible(true);
-                                        graphicsInitializeCollisions();
-                                        gameLoop();
-                                    }},
-
-                                   // {L"Load test module",
-                                   //  []() {
-                                   //      try {
-                                   //          moduleManager.loadModule("test");
-                                   //      } catch (const std::exception& e) {
-                                   //          LOG("Failed to load module: " << e.what());
-                                   //      }
-                                   //  }},
-
-                                   {L"Quit", []() { destroy(); }}});
+                MainMenu mainMenu({
+                    {L"Singleplayer", singleplayerMenuFunc},
+                    {L"Quit", []() { destroy(); }}
+                });
                 try {
                     mainMenu.show();
                 } catch (const std::exception& e) {

@@ -54,6 +54,10 @@ namespace graphics
     HandleStorage <uint64_t, irr::scene::ITriangleSelector*> selectors;
 } // namespace graphics
  
+irr::gui::IGUIEnvironment* getGuiEnvironment()
+{
+    return graphics::irrGuiEnvironment;
+}
 
 static std::recursive_mutex selectorMutex;
 extern std::recursive_mutex irrlichtMutex;
