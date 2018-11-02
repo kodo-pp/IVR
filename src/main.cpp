@@ -55,9 +55,8 @@ int main(int argc, char** argv)
             }
         };
         auto loadWorldFunc = []() {
-            // Not implemented
-            LOG("No u");
-            assert("not" == "implemented");
+            WorldList wl;
+            wl.show();
         };
         /*
         auto enterWorldFunc = []() {

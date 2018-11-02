@@ -20,5 +20,9 @@
 #include <sys/types.h>
 
 void createWorld(const std::string& name, const std::vector <std::string>& modules, bool buildMode);
+std::vector <std::string> listWorlds();
+void enterWorld(const std::string& name);
+
+std::string getSavePath();
 
 #endif /* end of include guard: WORLD_WORLD_HPP */

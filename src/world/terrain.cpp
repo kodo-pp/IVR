@@ -4,6 +4,7 @@
 #include <modbox/graphics/graphics.hpp>
 #include <modbox/log/log.hpp>
 #include <modbox/world/terrain.hpp>
+#include <modbox/world/world.hpp>
 
 #include <irrlicht_wrapper.hpp>
 #include <sys/stat.h>
@@ -235,25 +236,25 @@ void TerrainManager::writeTerrain(offset_t x, offset_t y, irr::video::IImage* hm
 
 std::string TerrainManager::getTerrainFilename(offset_t x, offset_t y) const
 {
-    return "terrain/heightmaps/" + std::to_string(x) + "_" + std::to_string(y) + ".png";
+    return getSavePath() + "terrain/heightmaps/" + std::to_string(x) + "_" + std::to_string(y) + ".png";
 }
 
 std::string TerrainManager::getCreateTerrainFilename(offset_t x, offset_t y)
 {
-    if (access("terrain", R_OK | X_OK) < 0) {
-        if (mkdir("terrain", 0755) < 0) {
+    if (access((getSavePath() + "terrain").c_str(), R_OK | X_OK) < 0) {
+        if (mkdir((getSavePath() + "terrain").c_str(), 0755) < 0) {
             throw std::runtime_error(std::string("Unable to create directory 'terrain': ")
                                      + strerror(errno));
         }
     }
-    if (access("terrain/heightmaps", R_OK | X_OK) < 0) {
-        if (mkdir("terrain/heightmaps", 0755) < 0) {
+    if (access((getSavePath() + "terrain/heightmaps").c_str(), R_OK | X_OK) < 0) {
+        if (mkdir((getSavePath() + "terrain/heightmaps").c_str(), 0755) < 0) {
             throw std::runtime_error(
                     std::string("Unable to create directory 'terrain/heightmaps': ")
                     + strerror(errno));
         }
     }
-    return "terrain/heightmaps/" + std::to_string(x) + "_" + std::to_string(y) + ".png";
+    return getSavePath() + "terrain/heightmaps/" + std::to_string(x) + "_" + std::to_string(y) + ".png";
 }
 
 // void TerrainManager::trackObject(GameObjectId objectId);

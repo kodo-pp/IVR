@@ -26,3 +26,19 @@ private:
     mutable std::mutex cvMutex;
     std::optional<std::tuple<std::string, std::vector <std::string>, bool>> result;
 };
+
+class WorldList
+{
+public:
+    void show();
+
+private:
+    uint64_t eventHandlerId;
+    irr::gui::IGUIListBox* ls;
+    irr::gui::IGUIButton* ok;
+    irr::gui::IGUIButton* cancel;
+    std::condition_variable cv;
+    bool doClose = false;
+    std::optional <std::string> worldName;
+    mutable std::mutex cvMutex;
+};

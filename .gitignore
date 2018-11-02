@@ -52,3 +52,5 @@ vgcore.*
 __pycache__
 *.pyc
 *.pyd
+
+saves/

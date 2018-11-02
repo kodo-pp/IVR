@@ -151,7 +151,7 @@ fi
 # Link path, e.g. "-L/usr/lib/mylib/"
 LINK_PATH=""
 # Libraries to link, e.g. "-lmylib"
-LIBS="-lIrrlicht -lpthread -ldl"
+LIBS="-lIrrlicht -lpthread -ldl -lboost_system -lboost_filesystem"
 # Append these to linker flags, don't change this line
 LDFLAGS="${LDFLAGS} ${LINK_PATH} ${LIBS}"
 
